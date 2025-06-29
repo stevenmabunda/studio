@@ -14,7 +14,7 @@ export default function HomePage() {
     media,
   }: {
     text: string;
-    media: Media | null;
+    media: Media[];
   }) => {
     const newPost: PostType = {
       id: `post-${Date.now()}`,
@@ -26,9 +26,7 @@ export default function HomePage() {
       comments: 0,
       reposts: 0,
       likes: 0,
-      mediaUrl: media?.url,
-      mediaType: media?.type,
-      mediaHint: media?.type === 'image' ? 'user uploaded content' : undefined,
+      media: media.map(m => ({ ...m, hint: 'user uploaded content' })),
     };
     setPosts([newPost, ...posts]);
   };

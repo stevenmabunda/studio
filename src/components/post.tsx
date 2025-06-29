@@ -18,9 +18,11 @@ type PostProps = {
   comments: number;
   reposts: number;
   likes: number;
-  mediaUrl?: string;
-  mediaType?: 'image' | 'video';
-  mediaHint?: string;
+  media?: Array<{
+    url: string;
+    type: 'image' | 'video';
+    hint?: string;
+  }>;
 };
 
 export function Post({
@@ -33,9 +35,7 @@ export function Post({
   comments,
   reposts: initialReposts,
   likes: initialLikes,
-  mediaUrl,
-  mediaType,
-  mediaHint,
+  media
 }: PostProps) {
   const [likeCount, setLikeCount] = useState(initialLikes);
   const [isLiked, setIsLiked] = useState(false);
@@ -62,6 +62,18 @@ export function Post({
   }
   
   const isOwnPost = authorHandle === 'yourhandle';
+
+  const mediaExists = media && media.length > 0;
+  const isVideo = mediaExists && media[0].type === 'video';
+  const imageCount = mediaExists && !isVideo ? media.length : 0;
+
+  const gridClasses = {
+    1: 'grid-cols-1 grid-rows-1',
+    2: 'grid-cols-2 grid-rows-1',
+    3: 'grid-cols-2 grid-rows-2',
+    4: 'grid-cols-2 grid-rows-2',
+  }[imageCount] || '';
+
 
   return (
     <Link href={`/post/${id}`} className="block p-4 cursor-pointer hover:bg-accent/20">
@@ -92,23 +104,30 @@ export function Post({
             )}
           </div>
           <p className="mt-2 whitespace-pre-wrap">{content}</p>
-          {mediaUrl && (
-            <div className="mt-3 mr-4 rounded-2xl overflow-hidden border">
-              {mediaType === 'video' ? (
+          {mediaExists && (
+            <div className="mt-3 mr-4 rounded-2xl overflow-hidden border max-h-[500px]">
+              {isVideo ? (
                 <video
-                  src={mediaUrl}
+                  src={media[0].url}
                   controls
                   className="w-full h-auto"
+                  onClick={(e) => e.stopPropagation()}
                 />
               ) : (
-                <Image
-                  src={mediaUrl}
-                  alt="Post image"
-                  width={500}
-                  height={300}
-                  className="w-full h-auto object-cover"
-                  data-ai-hint={mediaHint}
-                />
+                <div className={cn("grid gap-0.5", gridClasses)}>
+                  {media.map((item, index) => (
+                     <div key={index} className={cn("relative", imageCount === 3 && index === 0 && "row-span-2")}>
+                      <Image
+                        src={item.url}
+                        alt={item.hint || `Post image ${index + 1}`}
+                        width={500}
+                        height={500}
+                        className="w-full h-full object-cover"
+                        data-ai-hint={item.hint}
+                      />
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           )}

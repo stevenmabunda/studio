@@ -9,9 +9,11 @@ export type PostType = {
   comments: number;
   reposts: number;
   likes: number;
-  mediaUrl?: string;
-  mediaType?: 'image' | 'video';
-  mediaHint?: string;
+  media?: Array<{
+    url: string;
+    type: 'image' | 'video';
+    hint?: string;
+  }>;
 };
 
 export const initialPosts: PostType[] = [
@@ -26,9 +28,13 @@ export const initialPosts: PostType[] = [
     comments: 1200,
     reposts: 5400,
     likes: 22000,
-    mediaUrl: 'https://placehold.co/600x400.png',
-    mediaType: 'image',
-    mediaHint: 'football player signing',
+    media: [
+      {
+        url: 'https://placehold.co/600x400.png',
+        type: 'image',
+        hint: 'football player signing',
+      }
+    ]
   },
   {
     id: 'post-2',
@@ -52,22 +58,45 @@ export const initialPosts: PostType[] = [
     comments: 302,
     reposts: 45,
     likes: 530,
-    mediaUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
-    mediaType: 'video',
+    media: [
+        {
+            url: 'https://www.w3schools.com/html/mov_bbb.mp4',
+            type: 'video',
+        }
+    ]
   },
   {
     id: 'post-4',
     authorName: 'Football Fans',
     authorHandle: 'FootyHumor',
     authorAvatar: 'https://placehold.co/40x40.png',
-    content: 'Who is the most underrated player in the Premier League right now? 🤔',
+    content: 'Some great moments from the weekend! Who is the most underrated player in the Premier League right now? 🤔',
     timestamp: '8h',
     comments: 1500,
     reposts: 200,
     likes: 1800,
-    mediaUrl: 'https://placehold.co/600x400.png',
-    mediaType: 'image',
-    mediaHint: 'premier league trophy',
+    media: [
+      {
+        url: 'https://placehold.co/600x400.png',
+        type: 'image',
+        hint: 'premier league trophy',
+      },
+      {
+        url: 'https://placehold.co/600x400.png',
+        type: 'image',
+        hint: 'football players celebrating',
+      },
+      {
+        url: 'https://placehold.co/600x300.png',
+        type: 'image',
+        hint: 'stadium wide shot',
+      },
+      {
+        url: 'https://placehold.co/300x400.png',
+        type: 'image',
+        hint: 'goalkeeper save',
+      }
+    ],
   },
 ];
 
