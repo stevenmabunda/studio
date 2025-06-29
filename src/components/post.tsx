@@ -14,6 +14,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { CommentDialogContent } from './comment-dialog';
+import { useRouter } from "next/navigation";
 
 type PostProps = {
   id: string;
@@ -47,6 +48,8 @@ export function Post(props: PostProps) {
     media,
     isStandalone = false,
   } = props;
+  
+  const router = useRouter();
 
   const [likeCount, setLikeCount] = useState(initialLikes);
   const [isLiked, setIsLiked] = useState(false);
@@ -190,8 +193,8 @@ export function Post(props: PostProps) {
   }
 
   return (
-    <Link href={`/post/${id}`} className="block p-4 cursor-pointer hover:bg-accent/20">
+    <div onClick={() => router.push(`/post/${id}`)} className="block p-4 cursor-pointer hover:bg-accent/20">
       {postUiContent}
-    </Link>
+    </div>
   );
 }
