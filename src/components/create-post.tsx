@@ -3,7 +3,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Image as ImageIcon, X, Film } from "lucide-react";
+import { Image as ImageIcon, X, Film, ListOrdered, Smile, MapPin } from "lucide-react";
 import React, { useState, useRef } from "react";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
@@ -109,7 +109,7 @@ export function CreatePost({ onPost }: { onPost: (data: { text: string; media: M
           <Textarea
             placeholder="What is happening?!"
             className="w-full resize-none border-0 bg-transparent px-0 text-lg focus-visible:ring-0 focus-visible:ring-offset-0"
-            rows={2}
+            rows={1}
             value={text}
             onChange={(e) => setText(e.target.value)}
           />
@@ -166,6 +166,15 @@ export function CreatePost({ onPost }: { onPost: (data: { text: string; media: M
               </Button>
                <Button variant="ghost" size="icon" onClick={handleVideoClick} disabled={hasImages}>
                 <Film className="h-5 w-5 text-primary" />
+              </Button>
+              <Button variant="ghost" size="icon" disabled>
+                <ListOrdered className="h-5 w-5 text-primary" />
+              </Button>
+              <Button variant="ghost" size="icon" disabled>
+                <Smile className="h-5 w-5 text-primary" />
+              </Button>
+              <Button variant="ghost" size="icon" disabled>
+                <MapPin className="h-5 w-5 text-primary" />
               </Button>
             </div>
             <Button disabled={!isPostable} onClick={handlePost}>Chatter</Button>
