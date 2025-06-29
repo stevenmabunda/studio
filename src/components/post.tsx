@@ -9,6 +9,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 type PostProps = {
+  id: string;
   authorName: string;
   authorHandle: string;
   authorAvatar: string;
@@ -23,6 +24,7 @@ type PostProps = {
 };
 
 export function Post({
+  id,
   authorName,
   authorHandle,
   authorAvatar,
@@ -62,7 +64,7 @@ export function Post({
   const isOwnPost = authorHandle === 'yourhandle';
 
   return (
-    <div className="p-4">
+    <Link href={`/post/${id}`} className="block p-4 cursor-pointer hover:bg-accent/20">
       <div className="flex space-x-4">
         <Avatar>
           <AvatarImage src={authorAvatar} alt={authorName} data-ai-hint="user avatar"/>
@@ -129,6 +131,6 @@ export function Post({
           </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

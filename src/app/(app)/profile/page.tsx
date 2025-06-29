@@ -74,6 +74,7 @@ export default function ProfilePage() {
         <TabsContent value="posts">
           <div className="divide-y divide-border">
             <Post
+              id="post-profile-1"
               authorName="Your Name"
               authorHandle="yourhandle"
               authorAvatar="https://placehold.co/40x40.png"
