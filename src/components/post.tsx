@@ -164,7 +164,7 @@ export function Post(props: PostProps) {
           <p className="mt-2 whitespace-pre-wrap">{content}</p>
           {poll && <Poll poll={poll} postId={id} />}
           {mediaExists && (
-            <div className={cn("mt-3 rounded-2xl overflow-hidden border", !singleImage && "aspect-video")}>
+            <div className={cn("mt-3 rounded-2xl overflow-hidden border", imageCount > 1 && "aspect-video")}>
               {isVideo ? (
                 <video
                   src={media[0].url}
