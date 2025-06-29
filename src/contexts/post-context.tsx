@@ -89,7 +89,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
         })
     );
 
-    await addDoc(collection(db, "posts"), {
+    const postData = {
       authorName: user.displayName || 'Anonymous User',
       authorHandle: user.email?.split('@')[0] || 'user',
       authorAvatar: user.photoURL || 'https://placehold.co/40x40.png',
@@ -99,7 +99,24 @@ export function PostProvider({ children }: { children: ReactNode }) {
       reposts: 0,
       likes: 0,
       media: mediaUrls,
-    });
+    };
+
+    const docRef = await addDoc(collection(db, "posts"), postData);
+
+    const newPost: PostType = {
+        id: docRef.id,
+        authorName: postData.authorName,
+        authorHandle: postData.authorHandle,
+        authorAvatar: postData.authorAvatar,
+        content: postData.content,
+        timestamp: 'Just now',
+        comments: postData.comments,
+        reposts: postData.reposts,
+        likes: postData.likes,
+        media: postData.media,
+    };
+
+    setPosts((prevPosts) => [newPost, ...prevPosts]);
   };
 
   return (
