@@ -46,8 +46,12 @@ export function LoginForm() {
       router.push('/');
       router.refresh();
     } catch (err: any) {
-      setError('Invalid login credentials. Please try again.');
-      console.error(err);
+      if (err.code === 'auth/invalid-credential') {
+        setError('Invalid login credentials. Please try again.');
+      } else {
+        setError('An unexpected error occurred. Please try again.');
+      }
+      console.error("Login failed:", err);
     } finally {
       setLoading(false);
     }
