@@ -176,7 +176,7 @@ export function CreatePost({ onPost }: { onPost: (data: { text: string; media: M
                 <MapPin className="h-5 w-5 text-primary" />
               </Button>
             </div>
-            <Button disabled={!isPostable} onClick={handlePost}>Chatter</Button>
+            <Button disabled={!isPostable} onClick={handlePost}>Kick-It!</Button>
           </div>
         </div>
       </div>

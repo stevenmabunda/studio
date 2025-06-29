@@ -79,7 +79,7 @@ export function SidebarNav() {
           ))}
         </SidebarMenu>
         <div className="px-2 mt-4">
-            <Button className="w-full h-14 text-lg rounded-full">Chatter</Button>
+            <Button className="w-full h-14 text-lg rounded-full">Kick-It!</Button>
         </div>
       </SidebarContent>
     </Sidebar>
