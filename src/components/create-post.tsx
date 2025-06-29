@@ -114,34 +114,36 @@ export function CreatePost({ onPost }: { onPost: (data: { text: string; media: M
             onChange={(e) => setText(e.target.value)}
           />
           {media.length > 0 && (
-            <div className={cn("grid gap-2", gridClasses)}>
-              {media.map((item, index) => (
-                <div key={index} className={cn("relative", media.length === 3 && index === 0 && 'row-span-2')}>
-                  {item.type === 'image' ? (
-                    <Image
-                      src={item.url}
-                      alt={`Preview ${index + 1}`}
-                      width={500}
-                      height={500}
-                      className="rounded-2xl w-full h-full object-cover aspect-square"
-                    />
-                  ) : (
-                    <video
-                      src={item.url}
-                      controls
-                      className="rounded-2xl max-h-[400px] w-full"
-                    />
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute top-2 right-2 h-8 w-8 rounded-full bg-black/50 hover:bg-black/75 text-white hover:text-white"
-                    onClick={() => removeMedia(index)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
+            <div className="rounded-2xl overflow-hidden border">
+                <div className={cn("grid gap-0.5", gridClasses)}>
+                {media.map((item, index) => (
+                    <div key={index} className={cn("relative bg-black", media.length === 3 && index === 0 && 'row-span-2')}>
+                    {item.type === 'image' ? (
+                        <Image
+                        src={item.url}
+                        alt={`Preview ${index + 1}`}
+                        width={500}
+                        height={500}
+                        className="w-full h-full object-contain"
+                        />
+                    ) : (
+                        <video
+                        src={item.url}
+                        controls
+                        className="w-full h-auto max-h-[400px]"
+                        />
+                    )}
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-2 right-2 h-8 w-8 rounded-full bg-black/50 hover:bg-black/75 text-white hover:text-white"
+                        onClick={() => removeMedia(index)}
+                    >
+                        <X className="h-4 w-4" />
+                    </Button>
+                    </div>
+                ))}
                 </div>
-              ))}
             </div>
           )}
           <div className="flex justify-between items-center">

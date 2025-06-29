@@ -116,13 +116,13 @@ export function Post({
               ) : (
                 <div className={cn("grid gap-0.5", gridClasses)}>
                   {media.map((item, index) => (
-                     <div key={index} className={cn("relative", imageCount === 3 && index === 0 && "row-span-2")}>
+                     <div key={index} className={cn("relative bg-black", imageCount === 3 && index === 0 && "row-span-2")}>
                       <Image
                         src={item.url}
                         alt={item.hint || `Post image ${index + 1}`}
                         width={500}
                         height={500}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain"
                         data-ai-hint={item.hint}
                       />
                     </div>
