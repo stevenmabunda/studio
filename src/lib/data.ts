@@ -60,18 +60,6 @@ export const stories: StoryType[] = [
     avatar: 'https://placehold.co/64x64.png',
     hint: 'real madrid logo',
   },
-   {
-    id: 'story-7',
-    username: 'manutd',
-    avatar: 'https://placehold.co/64x64.png',
-    hint: 'manchester united logo',
-  },
-   {
-    id: 'story-8',
-    username: 'liverpoolfc',
-    avatar: 'https://placehold.co/64x64.png',
-    hint: 'liverpool fc logo',
-  },
 ];
 
 export const initialPosts: PostType[] = [
