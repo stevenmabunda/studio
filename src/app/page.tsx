@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { usePosts } from '@/contexts/post-context';
+import { StoryReel } from '@/components/story-reel';
 
 const liveMatches = [
     {
@@ -79,6 +80,7 @@ export default function HomePage() {
         </header>
         <main className="flex-1">
           <TabsContent value="foryou">
+            <StoryReel />
             <CreatePost onPost={addPost} />
             <div className="divide-y divide-border">
               {posts.map((post) => (
