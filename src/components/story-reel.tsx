@@ -224,7 +224,7 @@ export function StoryReel() {
 
     return (
         <div className="p-4 border-b">
-        <div className="flex items-center gap-4 overflow-x-auto no-scrollbar">
+        <div className="flex items-center justify-center gap-4 overflow-x-auto no-scrollbar">
             <AddStoryDialog onStoryAdded={handleStoryAdded} />
             {stories.map((story) => (
             <Dialog key={story.id} open={openStory?.id === story.id} onOpenChange={(isOpen) => { if(!isOpen) setOpenStory(null)}}>
