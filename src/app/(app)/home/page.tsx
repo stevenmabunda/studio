@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { usePosts } from '@/contexts/post-context';
 import { StoryReel } from '@/components/story-reel';
 import { PostSkeleton } from '@/components/post-skeleton';
+import { DiscoverFeed } from '@/components/discover-feed';
 
 const liveMatches = [
     {
@@ -104,12 +105,15 @@ export default function HomePage() {
             </div>
           </TabsContent>
           <TabsContent value="discover">
-            <div className="p-8 text-center text-muted-foreground">
-              <h2 className="text-xl font-bold">
-                Find your next favorite creator
-              </h2>
-              <p>Trending posts and accounts will appear here.</p>
-            </div>
+            {loading ? (
+              <>
+                <PostSkeleton />
+                <PostSkeleton />
+                <PostSkeleton />
+              </>
+            ) : (
+              <DiscoverFeed posts={posts} />
+            )}
           </TabsContent>
           <TabsContent value="video">
              {videoPosts.length > 0 ? (
