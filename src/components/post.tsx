@@ -7,7 +7,7 @@ import { MessageCircle, Repeat, Heart, Share2, CheckCircle2 } from "lucide-react
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useMemo } from "react";
-import { cn } from "@/lib/utils";
+import { cn, linkify } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -161,7 +161,7 @@ export function Post(props: PostProps) {
               </Button>
             )}
           </div>
-          <p className="mt-2 whitespace-pre-wrap">{content}</p>
+          <p className="mt-2 whitespace-pre-wrap">{linkify(content)}</p>
           {poll && <Poll poll={poll} postId={id} />}
           {mediaExists && (
             <div className={cn("mt-3 rounded-2xl overflow-hidden border", imageCount > 1 && "aspect-video")}>
