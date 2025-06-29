@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -82,15 +81,16 @@ export function SidebarNav() {
         <SidebarMenu>
           {navItems.map((item) => (
             <SidebarMenuItem key={item.href}>
-              <Link href={item.href} legacyBehavior passHref>
-                <SidebarMenuButton
-                  isActive={pathname === item.href || (item.href === '/home' && pathname === '/')}
-                  className="text-lg h-14"
-                >
+              <SidebarMenuButton
+                asChild
+                isActive={pathname === item.href || (item.href === '/home' && pathname === '/')}
+                className="text-lg h-14"
+              >
+                <Link href={item.href}>
                   <item.icon className="h-7 w-7" />
                   <span className={pathname === item.href ? 'font-bold' : 'font-normal'}>{item.label}</span>
-                </SidebarMenuButton>
-              </Link>
+                </Link>
+              </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
