@@ -7,13 +7,14 @@ import type { PostType } from '@/lib/data';
 import type { Media } from '@/components/create-post';
 import { useAuth } from '@/hooks/use-auth';
 import { db, storage } from '@/lib/firebase/config';
-import { collection, addDoc, serverTimestamp, getDocs, query, type Timestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDocs, query, type Timestamp, doc, updateDoc, runTransaction } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { formatDistanceToNow } from 'date-fns';
 
 type PostContextType = {
   posts: PostType[];
-  addPost: (data: { text: string; media: Media[] }) => Promise<void>;
+  addPost: (data: { text: string; media: Media[], poll?: PostType['poll'] }) => Promise<void>;
+  addVote: (postId: string, choiceIndex: number) => Promise<void>;
   loading: boolean;
 };
 
@@ -56,6 +57,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
                     reposts: data.reposts,
                     likes: data.likes,
                     media: data.media,
+                    poll: data.poll,
                     timestamp: createdAt ? formatDistanceToNow(createdAt, { addSuffix: true }) : 'Just now',
                 } as PostType;
             });
@@ -71,7 +73,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
     fetchPosts();
   }, [user]);
 
-  const addPost = async ({ text, media }: { text: string; media: Media[] }) => {
+  const addPost = async ({ text, media, poll }: { text: string; media: Media[]; poll?: PostType['poll'] }) => {
     if (!user || !db || !storage) {
         throw new Error("Cannot add post: user not logged in or Firebase not configured.");
     }
@@ -89,7 +91,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
         })
     );
 
-    const postData = {
+    const postData: Omit<PostType, 'id' | 'timestamp'> & { createdAt: any } = {
       authorName: user.displayName || 'Anonymous User',
       authorHandle: user.email?.split('@')[0] || 'user',
       authorAvatar: user.photoURL || 'https://placehold.co/40x40.png',
@@ -100,6 +102,10 @@ export function PostProvider({ children }: { children: ReactNode }) {
       likes: 0,
       media: mediaUrls,
     };
+
+    if (poll) {
+        postData.poll = poll;
+    }
 
     const docRef = await addDoc(collection(db, "posts"), postData);
 
@@ -114,13 +120,60 @@ export function PostProvider({ children }: { children: ReactNode }) {
         reposts: postData.reposts,
         likes: postData.likes,
         media: postData.media,
+        poll: postData.poll,
     };
 
     setPosts((prevPosts) => [newPost, ...prevPosts]);
   };
 
+  const addVote = async (postId: string, choiceIndex: number) => {
+    if (!db) throw new Error("Firestore not initialized");
+
+    const postRef = doc(db, "posts", postId);
+
+    // Optimistically update the UI
+    setPosts(prevPosts =>
+      prevPosts.map(p => {
+        if (p.id === postId && p.poll) {
+          const newChoices = p.poll.choices.map((choice, index) => 
+            index === choiceIndex ? { ...choice, votes: choice.votes + 1 } : choice
+          );
+          return { ...p, poll: { ...p.poll, choices: newChoices } };
+        }
+        return p;
+      })
+    );
+
+    // Update in Firestore using a transaction for safety
+    try {
+      await runTransaction(db, async (transaction) => {
+        const postDoc = await transaction.get(postRef);
+        if (!postDoc.exists()) {
+          throw "Document does not exist!";
+        }
+        
+        const postData = postDoc.data() as PostType;
+        const currentChoices = postData.poll?.choices || [];
+        
+        const newChoices = currentChoices.map((choice, index) => {
+          if (index === choiceIndex) {
+            return { ...choice, votes: choice.votes + 1 };
+          }
+          return choice;
+        });
+
+        transaction.update(postRef, { "poll.choices": newChoices });
+      });
+    } catch (error) {
+      console.error("Failed to update vote in Firestore:", error);
+      // Revert the optimistic update on failure
+      const fetchPosts = async () => { /* re-fetch logic from above */ };
+      fetchPosts();
+    }
+  };
+
   return (
-    <PostContext.Provider value={{ posts, addPost, loading }}>
+    <PostContext.Provider value={{ posts, addPost, addVote, loading }}>
       {children}
     </PostContext.Provider>
   );

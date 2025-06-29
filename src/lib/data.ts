@@ -14,6 +14,9 @@ export type PostType = {
     type: 'image' | 'video';
     hint?: string;
   }>;
+  poll?: {
+    choices: { text: string; votes: number }[];
+  };
 };
 
 export type StoryType = {

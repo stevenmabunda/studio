@@ -4,19 +4,21 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Image as ImageIcon, X, Film, ListOrdered, Smile, MapPin, Loader2 } from "lucide-react";
+import { Image as ImageIcon, X, Film, ListOrdered, Smile, MapPin, Loader2, Trash2 } from "lucide-react";
 import React, { useState, useRef } from "react";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
+import { Input } from "./ui/input";
+import type { PostType } from "@/lib/data";
 
 export type Media = {
   url: string;
   type: 'image' | 'video';
 };
 
-export function CreatePost({ onPost }: { onPost: (data: { text: string; media: Media[] }) => Promise<void> }) {
+export function CreatePost({ onPost }: { onPost: (data: { text: string; media: Media[], poll?: PostType['poll'] }) => Promise<void> }) {
   const { user } = useAuth();
   const [text, setText] = useState("");
   const [media, setMedia] = useState<Media[]>([]);
@@ -24,6 +26,9 @@ export function CreatePost({ onPost }: { onPost: (data: { text: string; media: M
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  const [showPoll, setShowPoll] = useState(false);
+  const [pollChoices, setPollChoices] = useState<string[]>(['', '']);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
@@ -82,10 +87,25 @@ export function CreatePost({ onPost }: { onPost: (data: { text: string; media: M
     if (!isPostable || posting) return;
     setPosting(true);
     
+    let pollData: PostType['poll'] | undefined = undefined;
+    if (showPoll) {
+        const validChoices = pollChoices.map(c => c.trim()).filter(Boolean);
+        if (validChoices.length < 2) {
+            toast({ variant: 'destructive', description: "A poll must have at least 2 choices." });
+            setPosting(false);
+            return;
+        }
+        pollData = {
+            choices: validChoices.map(choiceText => ({ text: choiceText, votes: 0 }))
+        };
+    }
+
     try {
-        await onPost({ text, media });
+        await onPost({ text, media, poll: pollData });
         setText("");
         setMedia([]);
+        setShowPoll(false);
+        setPollChoices(['', '']);
         if (imageInputRef.current) imageInputRef.current.value = "";
         if (videoInputRef.current) videoInputRef.current.value = "";
     } catch (error) {
@@ -95,8 +115,33 @@ export function CreatePost({ onPost }: { onPost: (data: { text: string; media: M
         setPosting(false);
     }
   };
+  
+  const handlePollChoiceChange = (index: number, value: string) => {
+    const newChoices = [...pollChoices];
+    newChoices[index] = value;
+    setPollChoices(newChoices);
+  };
 
-  const isPostable = text.trim().length > 0 || media.length > 0;
+  const addPollChoice = () => {
+    if (pollChoices.length < 3) {
+      setPollChoices([...pollChoices, '']);
+    }
+  };
+
+  const removePollChoice = (index: number) => {
+    if (pollChoices.length > 2) {
+      setPollChoices(pollChoices.filter((_, i) => i !== index));
+    }
+  };
+
+  const togglePoll = () => {
+    if (!showPoll) {
+        setMedia([]);
+    }
+    setShowPoll(!showPoll);
+  };
+
+  const isPostable = text.trim().length > 0 || media.length > 0 || (showPoll && pollChoices.some(c => c.trim()));
   const hasVideo = media.length > 0 && media[0].type === 'video';
   const hasImages = media.length > 0 && media[0].type === 'image';
   const maxImagesReached = media.length >= 4;
@@ -124,6 +169,35 @@ export function CreatePost({ onPost }: { onPost: (data: { text: string; media: M
             value={text}
             onChange={(e) => setText(e.target.value)}
           />
+
+          {showPoll && (
+            <div className="space-y-2 border p-4 rounded-lg">
+                <div className="space-y-3">
+                    {pollChoices.map((choice, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                             <Input 
+                                placeholder={`Choice ${index + 1}`} 
+                                value={choice} 
+                                onChange={(e) => handlePollChoiceChange(index, e.target.value)}
+                                maxLength={25}
+                             />
+                             {index > 1 && (
+                                <Button variant="ghost" size="icon" onClick={() => removePollChoice(index)}>
+                                    <X className="h-4 w-4" />
+                                </Button>
+                             )}
+                        </div>
+                    ))}
+                </div>
+                <div className="flex justify-between items-center pt-2">
+                    <Button variant="outline" size="sm" onClick={addPollChoice} disabled={pollChoices.length >= 3}>Add choice</Button>
+                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => setShowPoll(false)}>
+                        <Trash2 className="mr-2 h-4 w-4" /> Remove poll
+                    </Button>
+                </div>
+            </div>
+          )}
+
           {media.length > 0 && (
             <div className="mt-3 rounded-2xl overflow-hidden border max-h-[60vh] overflow-y-auto">
                 {hasVideo ? (
@@ -173,13 +247,13 @@ export function CreatePost({ onPost }: { onPost: (data: { text: string; media: M
                 className="hidden"
                 disabled={posting}
               />
-              <Button variant="ghost" size="icon" onClick={handleImageClick} disabled={hasVideo || maxImagesReached || posting}>
+              <Button variant="ghost" size="icon" onClick={handleImageClick} disabled={showPoll || hasVideo || maxImagesReached || posting}>
                 <ImageIcon className="h-5 w-5 text-primary" />
               </Button>
-               <Button variant="ghost" size="icon" onClick={handleVideoClick} disabled={hasImages || posting}>
+               <Button variant="ghost" size="icon" onClick={handleVideoClick} disabled={showPoll || hasImages || posting}>
                 <Film className="h-5 w-5 text-primary" />
               </Button>
-              <Button variant="ghost" size="icon" disabled>
+              <Button variant="ghost" size="icon" onClick={togglePoll} disabled={posting}>
                 <ListOrdered className="h-5 w-5 text-primary" />
               </Button>
               <Button variant="ghost" size="icon" disabled>

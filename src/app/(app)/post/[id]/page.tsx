@@ -75,6 +75,7 @@ export default function PostPage({ params }: { params: { id: string } }) {
                     reposts: data.reposts,
                     likes: data.likes,
                     media: data.media,
+                    poll: data.poll,
                     timestamp: createdAt ? formatDistanceToNow(createdAt, { addSuffix: true }) : 'Just now',
                 } as PostType);
             } else {

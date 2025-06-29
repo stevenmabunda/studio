@@ -3,10 +3,10 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { MessageCircle, Repeat, Heart, Share2 } from "lucide-react";
+import { MessageCircle, Repeat, Heart, Share2, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import {
   Dialog,
@@ -15,24 +15,67 @@ import {
 } from '@/components/ui/dialog';
 import { CommentDialogContent } from './comment-dialog';
 import { useRouter } from "next/navigation";
+import type { PostType } from "@/lib/data";
+import { Progress } from "./ui/progress";
+import { usePosts } from "@/contexts/post-context";
 
-type PostProps = {
-  id: string;
-  authorName: string;
-  authorHandle: string;
-  authorAvatar: string;
-  content: string;
-  timestamp: string;
-  comments: number;
-  reposts: number;
-  likes: number;
-  media?: Array<{
-    url: string;
-    type: 'image' | 'video';
-    hint?: string;
-  }>;
+type PostProps = PostType & {
   isStandalone?: boolean;
 };
+
+function Poll({ poll, postId }: { poll: NonNullable<PostType['poll']>, postId: string }) {
+  const [votedChoice, setVotedChoice] = useState<number | null>(null);
+  const { addVote } = usePosts();
+
+  const totalVotes = useMemo(() => {
+    return poll.choices.reduce((acc, choice) => acc + choice.votes, 0);
+  }, [poll.choices]);
+
+  const handleVote = (index: number) => {
+    if (votedChoice !== null) return;
+    setVotedChoice(index);
+    addVote(postId, index);
+  };
+
+  return (
+    <div className="mt-3 space-y-2">
+      {poll.choices.map((choice, index) => {
+        const percentage = totalVotes > 0 ? (choice.votes / totalVotes) * 100 : 0;
+        const hasVotedThisChoice = votedChoice === index;
+
+        return (
+          <div key={index}>
+            {votedChoice !== null ? (
+              <div className="space-y-1">
+                <div className="flex justify-between items-center text-sm">
+                  <div className="flex items-center font-medium">
+                    {choice.text}
+                    {hasVotedThisChoice && <CheckCircle2 className="ml-2 h-4 w-4 text-primary" />}
+                  </div>
+                  <span className="font-bold">{percentage.toFixed(0)}%</span>
+                </div>
+                <Progress value={percentage} className="h-2" />
+              </div>
+            ) : (
+              <Button
+                variant="outline"
+                className="w-full justify-start font-medium"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    handleVote(index);
+                }}
+              >
+                {choice.text}
+              </Button>
+            )}
+          </div>
+        );
+      })}
+      {votedChoice !== null && <p className="text-xs text-muted-foreground">{totalVotes} vote{totalVotes !== 1 && 's'}</p>}
+    </div>
+  );
+}
+
 
 export function Post(props: PostProps) {
   const {
@@ -46,6 +89,7 @@ export function Post(props: PostProps) {
     reposts: initialReposts,
     likes: initialLikes,
     media,
+    poll,
     isStandalone = false,
   } = props;
   
@@ -118,6 +162,7 @@ export function Post(props: PostProps) {
             )}
           </div>
           <p className="mt-2 whitespace-pre-wrap">{content}</p>
+          {poll && <Poll poll={poll} postId={id} />}
           {mediaExists && (
             <div className={cn("mt-3 rounded-2xl overflow-hidden border", !singleImage && "aspect-video")}>
               {isVideo ? (
