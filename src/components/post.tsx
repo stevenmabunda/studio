@@ -13,8 +13,9 @@ type PostProps = {
   comments: number;
   reposts: number;
   likes: number;
-  imageUrl?: string;
-  imageHint?: string;
+  mediaUrl?: string;
+  mediaType?: 'image' | 'video';
+  mediaHint?: string;
 };
 
 export function Post({
@@ -26,8 +27,9 @@ export function Post({
   comments,
   reposts,
   likes,
-  imageUrl,
-  imageHint,
+  mediaUrl,
+  mediaType,
+  mediaHint,
 }: PostProps) {
   return (
     <div className="p-4">
@@ -46,16 +48,24 @@ export function Post({
             <span className="text-sm text-muted-foreground">{timestamp}</span>
           </div>
           <p className="mt-2 whitespace-pre-wrap">{content}</p>
-          {imageUrl && (
+          {mediaUrl && (
             <div className="mt-3 mr-4 rounded-2xl overflow-hidden border">
-              <Image
-                src={imageUrl}
-                alt="Post image"
-                width={500}
-                height={300}
-                className="w-full h-auto object-cover"
-                data-ai-hint={imageHint}
-              />
+              {mediaType === 'video' ? (
+                <video
+                  src={mediaUrl}
+                  controls
+                  className="w-full h-auto"
+                />
+              ) : (
+                <Image
+                  src={mediaUrl}
+                  alt="Post image"
+                  width={500}
+                  height={300}
+                  className="w-full h-auto object-cover"
+                  data-ai-hint={mediaHint}
+                />
+              )}
             </div>
           )}
           <div className="mt-4 flex justify-between text-muted-foreground">

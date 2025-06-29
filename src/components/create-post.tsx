@@ -3,21 +3,30 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Image as ImageIcon, X } from "lucide-react";
+import { Image as ImageIcon, X, Film } from "lucide-react";
 import React, { useState, useRef } from "react";
 import Image from "next/image";
 
+type Media = {
+  url: string;
+  type: 'image' | 'video';
+};
+
 export function CreatePost() {
   const [text, setText] = useState("");
-  const [image, setImage] = useState<string | null>(null);
+  const [media, setMedia] = useState<Media | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImage(reader.result as string);
+        const fileType = file.type.startsWith('image/') ? 'image' : 'video';
+        setMedia({
+            url: reader.result as string,
+            type: fileType,
+        });
       };
       reader.readAsDataURL(file);
     }
@@ -27,14 +36,14 @@ export function CreatePost() {
     fileInputRef.current?.click();
   };
 
-  const removeImage = () => {
-    setImage(null);
+  const removeMedia = () => {
+    setMedia(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   }
 
-  const isPostable = text.trim().length > 0 || image;
+  const isPostable = text.trim().length > 0 || media;
 
   return (
     <div className="p-4 border-b">
@@ -51,20 +60,28 @@ export function CreatePost() {
             value={text}
             onChange={(e) => setText(e.target.value)}
           />
-          {image && (
+          {media && (
             <div className="relative">
-              <Image
-                src={image}
-                alt="Preview"
-                width={500}
-                height={300}
-                className="rounded-2xl max-h-[400px] w-auto object-cover"
-              />
+              {media.type === 'image' ? (
+                <Image
+                  src={media.url}
+                  alt="Preview"
+                  width={500}
+                  height={300}
+                  className="rounded-2xl max-h-[400px] w-auto object-cover"
+                />
+              ) : (
+                <video
+                  src={media.url}
+                  controls
+                  className="rounded-2xl max-h-[400px] w-full"
+                />
+              )}
               <Button
                 variant="ghost"
                 size="icon"
                 className="absolute top-2 right-2 h-8 w-8 rounded-full bg-black/50 hover:bg-black/75 text-white hover:text-white"
-                onClick={removeImage}
+                onClick={removeMedia}
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -74,13 +91,16 @@ export function CreatePost() {
             <div>
               <input
                 type="file"
-                accept="image/*"
+                accept="image/*,video/*"
                 ref={fileInputRef}
-                onChange={handleImageChange}
+                onChange={handleFileChange}
                 className="hidden"
               />
               <Button variant="ghost" size="icon" onClick={handleIconClick}>
                 <ImageIcon className="h-5 w-5 text-primary" />
+              </Button>
+               <Button variant="ghost" size="icon" onClick={handleIconClick}>
+                <Film className="h-5 w-5 text-primary" />
               </Button>
             </div>
             <Button disabled={!isPostable}>Chatter</Button>

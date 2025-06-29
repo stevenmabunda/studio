@@ -13,8 +13,9 @@ const posts = [
     comments: 1200,
     reposts: 5400,
     likes: 22000,
-    imageUrl: "https://placehold.co/600x400.png",
-    imageHint: "football player signing",
+    mediaUrl: "https://placehold.co/600x400.png",
+    mediaType: "image",
+    mediaHint: "football player signing",
   },
   {
     authorName: "Fabrizio Romano",
@@ -30,11 +31,13 @@ const posts = [
     authorName: "Jane Doe",
     authorHandle: "janedoe_footy",
     authorAvatar: "https://placehold.co/40x40.png",
-    content: "Can't believe that VAR decision in the United game. Robbed. 😡 #MUNLIV #VAR",
+    content: "Check out this amazing goal! What a strike! #goal #football",
     timestamp: "5h",
     comments: 302,
     reposts: 45,
     likes: 530,
+    mediaUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+    mediaType: "video",
   },
   {
     authorName: "Football Fans",
@@ -45,8 +48,9 @@ const posts = [
     comments: 1500,
     reposts: 200,
     likes: 1800,
-    imageUrl: "https://placehold.co/600x400.png",
-    imageHint: "premier league trophy"
+    mediaUrl: "https://placehold.co/600x400.png",
+    mediaType: "image",
+    mediaHint: "premier league trophy"
   },
 ];
 
