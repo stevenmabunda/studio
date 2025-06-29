@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { usePosts } from '@/contexts/post-context';
 import { StoryReel } from '@/components/story-reel';
+import { PostSkeleton } from '@/components/post-skeleton';
 
 const liveMatches = [
     {
@@ -44,7 +45,7 @@ const upcomingMatches = [
 ];
 
 export default function HomePage() {
-  const { posts, addPost } = usePosts();
+  const { posts, addPost, loading } = usePosts();
 
   const videoPosts = posts.filter(post => post.media?.some(m => m.type === 'video'));
 
@@ -84,9 +85,22 @@ export default function HomePage() {
             <StoryReel />
             <CreatePost onPost={addPost} />
             <div className="divide-y divide-border">
-              {posts.map((post) => (
-                <Post key={post.id} {...post} />
-              ))}
+              {loading ? (
+                <>
+                    <PostSkeleton />
+                    <PostSkeleton />
+                    <PostSkeleton />
+                </>
+              ) : posts.length > 0 ? (
+                posts.map((post) => (
+                    <Post key={post.id} {...post} />
+                ))
+              ) : (
+                <div className="p-8 text-center text-muted-foreground">
+                    <h2 className="text-xl font-bold">No posts yet!</h2>
+                    <p>Be the first one to kick-it!</p>
+                </div>
+              )}
             </div>
           </TabsContent>
           <TabsContent value="discover">

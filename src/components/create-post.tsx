@@ -4,7 +4,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Image as ImageIcon, X, Film, ListOrdered, Smile, MapPin } from "lucide-react";
+import { Image as ImageIcon, X, Film, ListOrdered, Smile, MapPin, Loader2 } from "lucide-react";
 import React, { useState, useRef } from "react";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
@@ -16,10 +16,11 @@ export type Media = {
   type: 'image' | 'video';
 };
 
-export function CreatePost({ onPost }: { onPost: (data: { text: string; media: Media[] }) => void }) {
+export function CreatePost({ onPost }: { onPost: (data: { text: string; media: Media[] }) => Promise<void> }) {
   const { user } = useAuth();
   const [text, setText] = useState("");
   const [media, setMedia] = useState<Media[]>([]);
+  const [posting, setPosting] = useState(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -77,15 +78,22 @@ export function CreatePost({ onPost }: { onPost: (data: { text: string; media: M
     if (videoInputRef.current) videoInputRef.current.value = "";
   }
 
-  const handlePost = () => {
-    if (!isPostable) return;
+  const handlePost = async () => {
+    if (!isPostable || posting) return;
+    setPosting(true);
     
-    onPost({ text, media });
-    
-    setText("");
-    setMedia([]);
-    if (imageInputRef.current) imageInputRef.current.value = "";
-    if (videoInputRef.current) videoInputRef.current.value = "";
+    try {
+        await onPost({ text, media });
+        setText("");
+        setMedia([]);
+        if (imageInputRef.current) imageInputRef.current.value = "";
+        if (videoInputRef.current) videoInputRef.current.value = "";
+    } catch (error) {
+        console.error("Failed to create post:", error);
+        toast({ variant: 'destructive', description: "Failed to create post. Please try again." });
+    } finally {
+        setPosting(false);
+    }
   };
 
   const isPostable = text.trim().length > 0 || media.length > 0;
@@ -155,6 +163,7 @@ export function CreatePost({ onPost }: { onPost: (data: { text: string; media: M
                 onChange={handleFileChange}
                 className="hidden"
                 multiple
+                disabled={posting}
               />
                <input
                 type="file"
@@ -162,11 +171,12 @@ export function CreatePost({ onPost }: { onPost: (data: { text: string; media: M
                 ref={videoInputRef}
                 onChange={handleFileChange}
                 className="hidden"
+                disabled={posting}
               />
-              <Button variant="ghost" size="icon" onClick={handleImageClick} disabled={hasVideo || maxImagesReached}>
+              <Button variant="ghost" size="icon" onClick={handleImageClick} disabled={hasVideo || maxImagesReached || posting}>
                 <ImageIcon className="h-5 w-5 text-primary" />
               </Button>
-               <Button variant="ghost" size="icon" onClick={handleVideoClick} disabled={hasImages}>
+               <Button variant="ghost" size="icon" onClick={handleVideoClick} disabled={hasImages || posting}>
                 <Film className="h-5 w-5 text-primary" />
               </Button>
               <Button variant="ghost" size="icon" disabled>
@@ -179,7 +189,10 @@ export function CreatePost({ onPost }: { onPost: (data: { text: string; media: M
                 <MapPin className="h-5 w-5 text-primary" />
               </Button>
             </div>
-            <Button disabled={!isPostable} onClick={handlePost}>Kick-It!</Button>
+            <Button disabled={!isPostable || posting} onClick={handlePost}>
+                {posting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {posting ? 'Posting...' : 'Kick-It!'}
+            </Button>
           </div>
         </div>
       </div>

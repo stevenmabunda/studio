@@ -8,10 +8,11 @@ import Image from "next/image";
 import { MapPin, Link as LinkIcon, CalendarDays } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { usePosts } from "@/contexts/post-context";
+import { PostSkeleton } from "@/components/post-skeleton";
 
 export default function ProfilePage() {
   const { user } = useAuth();
-  const { posts } = usePosts();
+  const { posts, loading } = usePosts();
 
   // This page is protected by the layout, so user should always exist.
   if (!user) return null;
@@ -86,7 +87,12 @@ export default function ProfilePage() {
         </TabsList>
         <TabsContent value="posts">
           <div className="divide-y divide-border">
-            {userPosts.length > 0 ? (
+            {loading ? (
+                <>
+                    <PostSkeleton />
+                    <PostSkeleton />
+                </>
+            ) : userPosts.length > 0 ? (
                 userPosts.map(post => <Post key={post.id} {...post} />)
             ) : (
                 <div className="p-8 text-center text-muted-foreground">No posts yet.</div>

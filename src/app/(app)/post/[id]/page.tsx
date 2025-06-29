@@ -2,14 +2,18 @@
 'use client';
 
 import { Post } from '@/components/post';
-import { initialPosts } from '@/lib/data';
 import { notFound, useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { CreateComment } from '@/components/create-comment';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
+import type { PostType } from '@/lib/data';
+import { db } from '@/lib/firebase/config';
+import { doc, getDoc, type Timestamp } from 'firebase/firestore';
+import { formatDistanceToNow } from 'date-fns';
+import { PostSkeleton } from '@/components/post-skeleton';
 
 type CommentType = {
   id: string;
@@ -42,11 +46,50 @@ const initialComments: CommentType[] = [
 export default function PostPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const { user } = useAuth();
-  // In a real app, you would fetch the post and its comments
-  // For now, we'll find the post in our static data.
-  // Note: This means newly created posts on the home page won't be found here.
-  const post = initialPosts.find((p) => p.id === params.id);
+  const [post, setPost] = useState<PostType | null>(null);
+  const [loading, setLoading] = useState(true);
   const [comments, setComments] = useState<CommentType[]>(initialComments);
+
+  useEffect(() => {
+    if (!db || !params.id) {
+        setLoading(false);
+        return;
+    };
+
+    const fetchPost = async () => {
+        setLoading(true);
+        try {
+            const postRef = doc(db, 'posts', params.id);
+            const postSnap = await getDoc(postRef);
+
+            if (postSnap.exists()) {
+                const data = postSnap.data();
+                const createdAt = (data.createdAt as Timestamp)?.toDate();
+                setPost({
+                    id: postSnap.id,
+                    authorName: data.authorName,
+                    authorHandle: data.authorHandle,
+                    authorAvatar: data.authorAvatar,
+                    content: data.content,
+                    comments: data.comments,
+                    reposts: data.reposts,
+                    likes: data.likes,
+                    media: data.media,
+                    timestamp: createdAt ? formatDistanceToNow(createdAt, { addSuffix: true }) : 'Just now',
+                } as PostType);
+            } else {
+                setPost(null);
+            }
+        } catch (error) {
+            console.error("Error fetching post:", error);
+            setPost(null);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    fetchPost();
+  }, [params.id]);
 
   const handleCreateComment = (text: string) => {
     if (!user) return;
@@ -60,6 +103,22 @@ export default function PostPage({ params }: { params: { id: string } }) {
         timestamp: 'Just now',
     };
     setComments([newComment, ...comments]);
+  }
+
+  if (loading) {
+    return (
+        <div className="flex h-full min-h-screen flex-col">
+            <header className="sticky top-0 z-10 flex items-center gap-4 border-b bg-background/80 p-4 backdrop-blur-sm">
+                <button onClick={() => router.back()} className="p-2 rounded-full hover:bg-accent">
+                <ArrowLeft className="h-5 w-5" />
+                </button>
+                <h1 className="text-xl font-bold">Post</h1>
+            </header>
+            <main>
+                <PostSkeleton />
+            </main>
+        </div>
+    )
   }
 
   if (!post) {

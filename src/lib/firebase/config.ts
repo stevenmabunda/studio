@@ -1,6 +1,8 @@
 
 import { initializeApp, getApps, getApp, type FirebaseApp, type FirebaseOptions } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
+import { getFirestore, type Firestore } from 'firebase/firestore';
+import { getStorage, type FirebaseStorage } from 'firebase/storage';
 
 // In a real app, you would also initialize Firestore and Storage here
 // import { getFirestore } from 'firebase/firestore';
@@ -17,6 +19,8 @@ const firebaseConfig: FirebaseOptions = {
 
 let app: FirebaseApp | undefined;
 let auth: Auth | undefined;
+let db: Firestore | undefined;
+let storage: FirebaseStorage | undefined;
 
 // This check prevents the app from crashing on the server if the environment
 // variables are not set. It's crucial for the Next.js build process.
@@ -24,11 +28,15 @@ if (firebaseConfig.apiKey) {
   try {
     app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
     auth = getAuth(app);
+    db = getFirestore(app);
+    storage = getStorage(app);
   } catch (error) {
     console.error("Failed to initialize Firebase. Please check your credentials.", error);
     // If initialization fails, we set auth to undefined so the app can still run.
     app = undefined;
     auth = undefined;
+    db = undefined;
+    storage = undefined;
   }
 } else {
     // If the keys are not present, we log a warning.
@@ -36,7 +44,4 @@ if (firebaseConfig.apiKey) {
     console.warn("Firebase config not found. Auth features will be disabled.")
 }
 
-// const db = app ? getFirestore(app) : undefined;
-// const storage = app ? getStorage(app) : undefined;
-
-export { app, auth };
+export { app, auth, db, storage };

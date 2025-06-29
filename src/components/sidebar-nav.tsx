@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -29,6 +30,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useToast } from '@/hooks/use-toast';
 
 
 const navItems = [
@@ -45,11 +47,18 @@ export function SidebarNav() {
   const router = useRouter();
   const { addPost } = usePosts();
   const { user } = useAuth();
+  const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const handlePost = (data: { text: string; media: Media[] }) => {
-    addPost(data);
-    setIsDialogOpen(false);
+  const handlePost = async (data: { text: string; media: Media[] }) => {
+    try {
+        await addPost(data);
+        setIsDialogOpen(false);
+        toast({ description: "Your post has been published!" });
+    } catch (error) {
+        console.error("Failed to create post from dialog:", error);
+        toast({ variant: 'destructive', description: "Something went wrong. Please try again." });
+    }
   };
 
   const handleLogout = async () => {
