@@ -9,7 +9,7 @@ import {
   SidebarMenuButton,
   SidebarFooter,
 } from '@/components/ui/sidebar';
-import { Home, Hash, CalendarClock, Bell, User, Goal } from 'lucide-react';
+import { Home, Hash, CalendarClock, Bell, User, Goal, MessageSquare } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -20,6 +20,7 @@ const navItems = [
   { href: '/explore', label: 'Explore', icon: Hash },
   { href: '/threads', label: 'Match Threads', icon: CalendarClock },
   { href: '/notifications', label: 'Notifications', icon: Bell },
+  { href: '/messages', label: 'Messages', icon: MessageSquare },
   { href: '/profile', label: 'Profile', icon: User },
 ];
 
@@ -30,13 +31,12 @@ export function SidebarNav() {
     <Sidebar>
       <SidebarHeader>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0" asChild>
+          <Button variant="ghost" size="icon" className="h-12 w-12 shrink-0" asChild>
             <Link href="/">
-              <Goal className="h-6 w-6 text-primary" />
+              <Goal className="h-8 w-8 text-primary" />
               <span className="sr-only">Goal Chatter</span>
             </Link>
           </Button>
-          <h1 className="text-xl font-bold">Goal Chatter</h1>
         </div>
       </SidebarHeader>
       <SidebarContent>
@@ -46,20 +46,23 @@ export function SidebarNav() {
               <Link href={item.href} legacyBehavior passHref>
                 <SidebarMenuButton
                   isActive={pathname === item.href}
-                  className="text-base font-medium"
+                  className="text-lg h-14"
                 >
-                  <item.icon className="h-5 w-5" />
-                  <span>{item.label}</span>
+                  <item.icon className="h-7 w-7" />
+                  <span className={pathname === item.href ? 'font-bold' : 'font-normal'}>{item.label}</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
+        <div className="px-2 mt-4">
+            <Button className="w-full h-14 text-lg rounded-full">Chatter</Button>
+        </div>
       </SidebarContent>
       <SidebarFooter>
         <Link href="/profile" className="w-full">
-            <div className="flex w-full items-center gap-2 rounded-md p-2 hover:bg-sidebar-accent">
-                <Avatar className="h-9 w-9">
+            <div className="flex w-full items-center gap-2 rounded-full p-2 hover:bg-sidebar-accent">
+                <Avatar className="h-10 w-10">
                     <AvatarImage src="https://placehold.co/40x40.png" alt="User Avatar" data-ai-hint="user avatar" />
                     <AvatarFallback>U</AvatarFallback>
                 </Avatar>

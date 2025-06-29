@@ -25,9 +25,9 @@ const usersToFollow = [
 
 export function WhoToFollow() {
   return (
-    <Card>
+    <Card className="border-none bg-secondary">
       <CardHeader>
-        <CardTitle>Who to follow</CardTitle>
+        <CardTitle className="text-xl font-bold">Who to follow</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col gap-4">
@@ -43,7 +43,7 @@ export function WhoToFollow() {
                   <p className="text-sm text-muted-foreground">@{user.handle}</p>
                 </div>
               </div>
-              <Button variant="outline" size="sm" className="shrink-0">
+              <Button variant="default" size="sm" className="shrink-0 rounded-full bg-foreground text-background hover:bg-foreground/90">
                 Follow
               </Button>
             </div>

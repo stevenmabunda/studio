@@ -16,7 +16,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="light">
+    <html lang="en" className="dark">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -26,8 +26,8 @@ export default function RootLayout({
         <SidebarProvider>
           <SidebarNav />
           <SidebarInset>
-            <div className="flex">
-              <div className="flex-1">{children}</div>
+            <div className="flex w-full">
+              <div className="flex-1 w-full max-w-2xl border-r">{children}</div>
               <RightSidebar />
             </div>
           </SidebarInset>

@@ -1,6 +1,8 @@
 import { CreatePost } from "@/components/create-post";
 import { Post } from "@/components/post";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 
 const posts = [
   {
@@ -49,18 +51,31 @@ const posts = [
 export default function HomePage() {
   return (
     <div className="flex h-full min-h-screen flex-col">
-      <header className="sticky top-0 z-10 border-b bg-background/80 p-4 backdrop-blur-sm">
-        <h1 className="text-xl font-bold">Home</h1>
-      </header>
-      <main className="flex-1">
-        <CreatePost />
-        <Separator />
-        <div className="divide-y divide-border">
-          {posts.map((post, index) => (
-            <Post key={index} {...post} />
-          ))}
-        </div>
-      </main>
+      <Tabs defaultValue="foryou" className="w-full">
+        <header className="sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur-sm">
+          <TabsList className="grid w-full grid-cols-2 bg-transparent p-0">
+            <TabsTrigger value="foryou" className="h-auto rounded-none py-4 text-base font-bold data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none">For You</TabsTrigger>
+            <TabsTrigger value="following" className="h-auto rounded-none py-4 text-base font-bold data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none">Following</TabsTrigger>
+          </TabsList>
+        </header>
+        <main className="flex-1">
+          <TabsContent value="foryou">
+            <CreatePost />
+            <Separator />
+            <div className="divide-y divide-border">
+              {posts.map((post, index) => (
+                <Post key={index} {...post} />
+              ))}
+            </div>
+          </TabsContent>
+          <TabsContent value="following">
+            <div className="p-8 text-center text-muted-foreground">
+                <h2 className="text-xl font-bold">You aren't following anyone yet</h2>
+                <p>Once you follow people, you'll see their posts here.</p>
+            </div>
+          </TabsContent>
+        </main>
+      </Tabs>
     </div>
   );
 }

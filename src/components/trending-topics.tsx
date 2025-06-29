@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getTrendingTopics } from '@/app/(app)/explore/actions';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from './ui/button';
-import { RefreshCw } from 'lucide-react';
 
 export function TrendingTopics() {
   const [topics, setTopics] = useState<string[]>([]);
@@ -28,34 +27,35 @@ export function TrendingTopics() {
   }, []);
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Trends for you</CardTitle>
-        <Button variant="ghost" size="icon" onClick={fetchTopics} disabled={loading}>
-          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-        </Button>
+    <Card className="border-none bg-secondary">
+      <CardHeader>
+        <CardTitle className="text-xl font-bold">Trends for you</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           {loading ? (
             Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="space-y-1">
+              <div key={i} className="space-y-2">
                 <Skeleton className="h-4 w-2/5" />
-                <Skeleton className="h-4 w-3/5" />
+                <Skeleton className="h-5 w-3/5" />
+                <Skeleton className="h-4 w-1/5" />
               </div>
             ))
           ) : (
-            topics.map((topic, index) => (
-              <div key={index} className="group cursor-pointer">
-                <p className="text-sm text-muted-foreground">
-                  {index + 1} · Trending
-                </p>
-                <p className="font-bold group-hover:underline">#{topic.replace(/\s+/g, '')}</p>
-                <p className="text-sm text-muted-foreground">
-                    {Math.floor(Math.random() * 20 + 5)}k posts
-                </p>
-              </div>
-            ))
+            <>
+              {topics.map((topic, index) => (
+                <div key={index} className="group cursor-pointer">
+                  <p className="text-sm text-muted-foreground">
+                    Trending in Football
+                  </p>
+                  <p className="font-bold group-hover:underline">{topic}</p>
+                  <p className="text-sm text-muted-foreground">
+                      {Math.floor(Math.random() * 20 + 5)}k posts
+                  </p>
+                </div>
+              ))}
+              <Button variant="link" className="p-0 text-primary">Show more</Button>
+            </>
           )}
         </div>
       </CardContent>
