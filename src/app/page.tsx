@@ -31,11 +31,13 @@ export default function HomePage() {
     setPosts([newPost, ...posts]);
   };
 
+  const videoPosts = posts.filter(post => post.media?.some(m => m.type === 'video'));
+
   return (
     <div className="flex h-full min-h-screen flex-col">
       <Tabs defaultValue="foryou" className="w-full">
         <header className="sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur-sm">
-          <TabsList className="grid w-full grid-cols-2 bg-transparent p-0">
+          <TabsList className="grid w-full grid-cols-3 bg-transparent p-0">
             <TabsTrigger
               value="foryou"
               className="data-[state=active]:border-primary data-[state=active]:shadow-none h-auto rounded-none py-4 text-base font-bold data-[state=active]:border-b-2"
@@ -43,10 +45,16 @@ export default function HomePage() {
               For You
             </TabsTrigger>
             <TabsTrigger
-              value="following"
+              value="discover"
               className="data-[state=active]:border-primary data-[state=active]:shadow-none h-auto rounded-none py-4 text-base font-bold data-[state=active]:border-b-2"
             >
-              Following
+              Discover
+            </TabsTrigger>
+            <TabsTrigger
+              value="video"
+              className="data-[state=active]:border-primary data-[state=active]:shadow-none h-auto rounded-none py-4 text-base font-bold data-[state=active]:border-b-2"
+            >
+              Video
             </TabsTrigger>
           </TabsList>
         </header>
@@ -59,13 +67,27 @@ export default function HomePage() {
               ))}
             </div>
           </TabsContent>
-          <TabsContent value="following">
+          <TabsContent value="discover">
             <div className="p-8 text-center text-muted-foreground">
               <h2 className="text-xl font-bold">
-                You aren&apos;t following anyone yet
+                Find your next favorite creator
               </h2>
-              <p>Once you follow people, you&apos;ll see their posts here.</p>
+              <p>Trending posts and accounts will appear here.</p>
             </div>
+          </TabsContent>
+          <TabsContent value="video">
+             {videoPosts.length > 0 ? (
+                <div className="divide-y divide-border">
+                {videoPosts.map((post) => (
+                    <Post key={post.id} {...post} />
+                ))}
+                </div>
+            ) : (
+                <div className="p-8 text-center text-muted-foreground">
+                <h2 className="text-xl font-bold">No videos yet</h2>
+                <p>When users post videos, they'll appear here.</p>
+                </div>
+            )}
           </TabsContent>
         </main>
       </Tabs>
