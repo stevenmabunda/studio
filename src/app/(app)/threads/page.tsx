@@ -46,7 +46,7 @@ export default function MatchThreadsPage() {
             <h2 className="text-lg font-semibold mb-4">Live Now</h2>
             <div className="grid gap-4 md:grid-cols-2">
                 {liveMatches.map((match, index) => (
-                    <Card key={index} className="hover:bg-secondary/50 cursor-pointer">
+                    <Card key={index} className="hover:bg-accent cursor-pointer">
                         <CardHeader>
                             <div className="flex justify-between items-center">
                                 <CardTitle className="text-base">{match.league}</CardTitle>
@@ -70,7 +70,7 @@ export default function MatchThreadsPage() {
             <h2 className="text-lg font-semibold mb-4">Upcoming</h2>
             <div className="grid gap-4 md:grid-cols-2">
                 {upcomingMatches.map((match, index) => (
-                    <Card key={index} className="hover:bg-secondary/50 cursor-pointer">
+                    <Card key={index} className="hover:bg-accent cursor-pointer">
                         <CardHeader>
                             <CardTitle className="text-base">{match.league}</CardTitle>
                         </CardHeader>

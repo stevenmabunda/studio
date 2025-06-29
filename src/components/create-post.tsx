@@ -43,6 +43,19 @@ export function CreatePost() {
     }
   }
 
+  const handlePost = () => {
+    if (!isPostable) return;
+    // In a real app, you'd send this data to your server
+    console.log("New post:", { text, media });
+    
+    // Reset state after posting
+    setText("");
+    setMedia(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   const isPostable = text.trim().length > 0 || media;
 
   return (
@@ -103,7 +116,7 @@ export function CreatePost() {
                 <Film className="h-5 w-5 text-primary" />
               </Button>
             </div>
-            <Button disabled={!isPostable}>Chatter</Button>
+            <Button disabled={!isPostable} onClick={handlePost}>Chatter</Button>
           </div>
         </div>
       </div>

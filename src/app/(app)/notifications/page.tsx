@@ -31,7 +31,7 @@ export default function NotificationsPage() {
       <main className="flex-1">
         <ul>
             {notifications.map((notification, index) => (
-                <li key={index} className="flex items-start gap-4 border-b p-4 hover:bg-secondary/50">
+                <li key={index} className="flex items-start gap-4 border-b p-4 hover:bg-accent">
                     <div className="w-8 pt-1">
                         {notification.icon}
                     </div>
