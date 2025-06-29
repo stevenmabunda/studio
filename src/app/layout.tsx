@@ -26,12 +26,12 @@ export default function RootLayout({
         <SidebarProvider>
             <div className="flex w-full justify-center">
               <div className="flex w-full max-w-[1275px]">
-                <header className="w-[275px] shrink-0">
+                <header className="w-[275px] shrink-0 hidden md:block">
                   <div className="sticky top-0 h-screen">
                     <SidebarNav />
                   </div>
                 </header>
-                <main className="w-full max-w-[624px] border-x">{children}</main>
+                <main className="w-full max-w-[624px] md:border-x">{children}</main>
                 <aside className="w-[350px] shrink-0 hidden lg:block">
                   <div className="sticky top-0 h-screen">
                     <RightSidebar />
