@@ -7,7 +7,7 @@ import type { PostType } from '@/lib/data';
 import type { Media } from '@/components/create-post';
 import { useAuth } from '@/hooks/use-auth';
 import { db, storage } from '@/lib/firebase/config';
-import { collection, addDoc, serverTimestamp, onSnapshot, query, type Timestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDocs, query, type Timestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -30,41 +30,46 @@ export function PostProvider({ children }: { children: ReactNode }) {
         return;
     }
 
-    const q = query(collection(db, 'posts'));
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-        const docsWithData = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
-        
-        docsWithData.sort((a, b) => {
-            const aDate = (a.createdAt as Timestamp)?.toDate() || new Date(0);
-            const bDate = (b.createdAt as Timestamp)?.toDate() || new Date(0);
-            return bDate.getTime() - aDate.getTime();
-        });
+    const fetchPosts = async () => {
+        setLoading(true);
+        try {
+            const q = query(collection(db, 'posts'));
+            const querySnapshot = await getDocs(q);
 
-        const postsData = docsWithData.map(data => {
-            const createdAt = (data.createdAt as Timestamp)?.toDate();
-            return {
-                id: data.id,
-                authorName: data.authorName,
-                authorHandle: data.authorHandle,
-                authorAvatar: data.authorAvatar,
-                content: data.content,
-                comments: data.comments,
-                reposts: data.reposts,
-                likes: data.likes,
-                media: data.media,
-                timestamp: createdAt ? formatDistanceToNow(createdAt, { addSuffix: true }) : 'Just now',
-            } as PostType;
-        });
+            const docsWithData = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+            
+            docsWithData.sort((a, b) => {
+                const aDate = (a.createdAt as Timestamp)?.toDate() || new Date(0);
+                const bDate = (b.createdAt as Timestamp)?.toDate() || new Date(0);
+                return bDate.getTime() - aDate.getTime();
+            });
+    
+            const postsData = docsWithData.map(data => {
+                const createdAt = (data.createdAt as Timestamp)?.toDate();
+                return {
+                    id: data.id,
+                    authorName: data.authorName,
+                    authorHandle: data.authorHandle,
+                    authorAvatar: data.authorAvatar,
+                    content: data.content,
+                    comments: data.comments,
+                    reposts: data.reposts,
+                    likes: data.likes,
+                    media: data.media,
+                    timestamp: createdAt ? formatDistanceToNow(createdAt, { addSuffix: true }) : 'Just now',
+                } as PostType;
+            });
+    
+            setPosts(postsData);
+        } catch (error) {
+            console.error("Error fetching posts:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-        setPosts(postsData);
-        setLoading(false);
-    }, (error) => {
-      console.error("Error fetching posts:", error);
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
+    fetchPosts();
+  }, [user]);
 
   const addPost = async ({ text, media }: { text: string; media: Media[] }) => {
     if (!user || !db || !storage) {
@@ -78,7 +83,6 @@ export function PostProvider({ children }: { children: ReactNode }) {
             const response = await fetch(m.url);
             const blob = await response.blob();
 
-            // Explicitly set content type for robustness.
             await uploadBytes(mediaRef, blob, { contentType: blob.type });
             const downloadURL = await getDownloadURL(mediaRef);
             return { url: downloadURL, type: m.type, hint: 'user uploaded content' };

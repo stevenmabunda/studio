@@ -4,10 +4,6 @@ import { getAuth, type Auth } from 'firebase/auth';
 import { getFirestore, type Firestore } from 'firebase/firestore';
 import { getStorage, type FirebaseStorage } from 'firebase/storage';
 
-// In a real app, you would also initialize Firestore and Storage here
-// import { getFirestore } from 'firebase/firestore';
-// import { getStorage } from 'firebase/storage';
-
 const firebaseConfig: FirebaseOptions = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -28,7 +24,7 @@ if (firebaseConfig.apiKey) {
   try {
     app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
     auth = getAuth(app);
-    db = getFirestore(app, 'bholo');
+    db = getFirestore(app);
     storage = getStorage(app);
   } catch (error) {
     console.error("Failed to initialize Firebase. Please check your credentials.", error);
