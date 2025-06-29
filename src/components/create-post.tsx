@@ -8,6 +8,7 @@ import React, { useState, useRef } from "react";
 import Image from "next/image";
 
 export function CreatePost() {
+  const [text, setText] = useState("");
   const [image, setImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -33,6 +34,8 @@ export function CreatePost() {
     }
   }
 
+  const isPostable = text.trim().length > 0 || image;
+
   return (
     <div className="p-4 border-b">
       <div className="flex space-x-4">
@@ -45,6 +48,8 @@ export function CreatePost() {
             placeholder="What is happening?!"
             className="w-full resize-none border-0 bg-transparent px-0 text-lg focus-visible:ring-0 focus-visible:ring-offset-0"
             rows={2}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
           />
           {image && (
             <div className="relative">
@@ -78,7 +83,7 @@ export function CreatePost() {
                 <ImageIcon className="h-5 w-5 text-primary" />
               </Button>
             </div>
-            <Button>Chatter</Button>
+            <Button disabled={!isPostable}>Chatter</Button>
           </div>
         </div>
       </div>

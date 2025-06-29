@@ -1,7 +1,7 @@
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
+import { SidebarProvider } from '@/components/ui/sidebar';
 import { SidebarNav } from '@/components/sidebar-nav';
 import { RightSidebar } from '@/components/right-sidebar';
 
@@ -24,17 +24,21 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <SidebarProvider>
-          <SidebarNav />
-          <SidebarInset>
             <div className="flex w-full justify-center">
-              <div className="flex w-full max-w-[974px]">
-                <div className="w-full max-w-[624px] border-x">{children}</div>
-                <div className="w-[350px] hidden lg:block">
-                  <RightSidebar />
-                </div>
+              <div className="flex w-full max-w-[1275px]">
+                <header className="w-[275px] shrink-0">
+                  <div className="sticky top-0 h-screen">
+                    <SidebarNav />
+                  </div>
+                </header>
+                <main className="w-full max-w-[624px] border-x">{children}</main>
+                <aside className="w-[350px] shrink-0 hidden lg:block">
+                  <div className="sticky top-0 h-screen">
+                    <RightSidebar />
+                  </div>
+                </aside>
               </div>
             </div>
-          </SidebarInset>
         </SidebarProvider>
         <Toaster />
       </body>
