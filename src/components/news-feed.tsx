@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const newsItems = [
   {
@@ -17,22 +16,14 @@ const newsItems = [
     headline: "Euro 2024: Germany thrash Scotland in tournament opener.",
     handle: "BBCSport",
   },
-  {
-    source: "The Guardian",
-    headline: "Jude Bellingham ready to carry England's hopes at Euro 2024.",
-    handle: "GuardianSport",
-  }
 ];
 
 export function NewsFeed() {
   return (
-    <Card className="bg-secondary">
-      <CardHeader className="p-4">
-        <CardTitle className="text-lg font-bold">News Feed</CardTitle>
-      </CardHeader>
-      <CardContent className="p-4 pt-0">
+    <div className="border rounded-lg p-4 bg-secondary space-y-4">
+        <h3 className="font-bold text-lg">News Feed</h3>
         <div className="flex flex-col gap-3">
-          {newsItems.slice(0, 3).map((item) => (
+          {newsItems.map((item) => (
             <div key={item.handle} className="flex items-start justify-between gap-3 group cursor-pointer">
               <div className="flex-1">
                 <p className="font-bold text-sm">{item.source}</p>
@@ -45,7 +36,6 @@ export function NewsFeed() {
           ))}
            <Button variant="link" className="p-0 text-primary w-fit text-sm">Show more</Button>
         </div>
-      </CardContent>
-    </Card>
+    </div>
   );
 }
