@@ -52,28 +52,28 @@ export default function HomePage() {
     <div className="flex h-full min-h-screen flex-col">
       <Tabs defaultValue="foryou" className="w-full">
         <header className="sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur-sm">
-          <TabsList className="grid w-full grid-cols-4 bg-transparent p-0">
+          <TabsList className="flex w-full overflow-x-auto bg-transparent p-0 no-scrollbar sm:grid sm:grid-cols-4">
             <TabsTrigger
               value="foryou"
-              className="data-[state=active]:border-primary data-[state=active]:shadow-none h-auto rounded-none py-4 text-base font-bold data-[state=active]:border-b-2"
+              className="h-auto shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold data-[state=active]:border-primary data-[state=active]:shadow-none px-4"
             >
               For You
             </TabsTrigger>
             <TabsTrigger
               value="discover"
-              className="data-[state=active]:border-primary data-[state=active]:shadow-none h-auto rounded-none py-4 text-base font-bold data-[state=active]:border-b-2"
+              className="h-auto shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold data-[state=active]:border-primary data-[state=active]:shadow-none px-4"
             >
               Discover
             </TabsTrigger>
             <TabsTrigger
               value="video"
-              className="data-[state=active]:border-primary data-[state=active]:shadow-none h-auto rounded-none py-4 text-base font-bold data-[state=active]:border-b-2"
+              className="h-auto shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold data-[state=active]:border-primary data-[state=active]:shadow-none px-4"
             >
               Video
             </TabsTrigger>
              <TabsTrigger
               value="live"
-              className="data-[state=active]:border-primary data-[state=active]:shadow-none h-auto rounded-none py-4 text-base font-bold data-[state=active]:border-b-2"
+              className="h-auto shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold data-[state=active]:border-primary data-[state=active]:shadow-none px-4"
             >
               Live
             </TabsTrigger>
@@ -115,7 +115,7 @@ export default function HomePage() {
             <div className="p-4 space-y-8">
                 <div>
                     <h2 className="text-lg font-semibold mb-4">Live Now</h2>
-                    <div className="grid gap-4 md:grid-cols-2">
+                    <div className="grid gap-4 sm:grid-cols-2">
                         {liveMatches.map((match, index) => (
                             <Card key={index} className="hover:bg-accent cursor-pointer">
                                 <CardHeader>
@@ -139,7 +139,7 @@ export default function HomePage() {
 
                 <div>
                     <h2 className="text-lg font-semibold mb-4">Upcoming</h2>
-                    <div className="grid gap-4 md:grid-cols-2">
+                    <div className="grid gap-4 sm:grid-cols-2">
                         {upcomingMatches.map((match, index) => (
                             <Card key={index} className="hover:bg-accent cursor-pointer">
                                 <CardHeader>

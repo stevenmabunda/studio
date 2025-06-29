@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
@@ -44,7 +45,7 @@ export default function MatchThreadsPage() {
       <main className="flex-1 p-4 space-y-8">
         <div>
             <h2 className="text-lg font-semibold mb-4">Live Now</h2>
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2">
                 {liveMatches.map((match, index) => (
                     <Card key={index} className="hover:bg-accent cursor-pointer">
                         <CardHeader>
@@ -68,7 +69,7 @@ export default function MatchThreadsPage() {
 
         <div>
             <h2 className="text-lg font-semibold mb-4">Upcoming</h2>
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2">
                 {upcomingMatches.map((match, index) => (
                     <Card key={index} className="hover:bg-accent cursor-pointer">
                         <CardHeader>

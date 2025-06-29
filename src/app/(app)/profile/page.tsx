@@ -22,7 +22,7 @@ export default function ProfilePage() {
 
   return (
     <div>
-      <div className="relative h-48 w-full bg-muted sm:h-64">
+      <div className="relative h-36 w-full bg-muted sm:h-48">
         <Image
           src="https://placehold.co/1200x400.png"
           alt="Profile banner"
@@ -32,12 +32,12 @@ export default function ProfilePage() {
         />
       </div>
       <div className="p-4">
-        <div className="relative -mt-20 flex justify-between">
+        <div className="relative -mt-16 flex justify-between sm:-mt-20">
           <Avatar className="h-24 w-24 border-4 border-background sm:h-32 sm:w-32">
             <AvatarImage src={user.photoURL || "https://placehold.co/128x128.png"} data-ai-hint="football player" />
             <AvatarFallback>{user.displayName?.charAt(0) || 'U'}</AvatarFallback>
           </Avatar>
-          <Button variant="outline" className="mt-24">
+          <Button variant="outline" className="mt-20 sm:mt-24">
             Edit profile
           </Button>
         </div>
@@ -66,7 +66,7 @@ export default function ProfilePage() {
             <span>Joined {user.metadata.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'recently'}</span>
           </div>
         </div>
-        <div className="mt-4 flex gap-4">
+        <div className="mt-4 flex flex-wrap gap-x-6 gap-y-1">
           <div>
             <span className="font-bold">142</span>
             <span className="text-muted-foreground"> Following</span>
@@ -77,12 +77,12 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
-      <Tabs defaultValue="posts" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="posts">Posts</TabsTrigger>
-          <TabsTrigger value="replies">Replies</TabsTrigger>
-          <TabsTrigger value="media">Media</TabsTrigger>
-          <TabsTrigger value="likes">Likes</TabsTrigger>
+      <Tabs defaultValue="posts" className="w-full border-t">
+        <TabsList className="flex w-full justify-around rounded-none border-b bg-transparent p-0">
+          <TabsTrigger value="posts" className="flex-1 rounded-none py-3 text-sm font-semibold text-muted-foreground data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none">Posts</TabsTrigger>
+          <TabsTrigger value="replies" className="flex-1 rounded-none py-3 text-sm font-semibold text-muted-foreground data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none">Replies</TabsTrigger>
+          <TabsTrigger value="media" className="flex-1 rounded-none py-3 text-sm font-semibold text-muted-foreground data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none">Media</TabsTrigger>
+          <TabsTrigger value="likes" className="flex-1 rounded-none py-3 text-sm font-semibold text-muted-foreground data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none">Likes</TabsTrigger>
         </TabsList>
         <TabsContent value="posts">
           <div className="divide-y divide-border">

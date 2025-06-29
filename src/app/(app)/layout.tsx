@@ -23,7 +23,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <>
+    <div className="flex w-full justify-center">
       <header className="w-[275px] shrink-0 hidden md:block">
         <div className="sticky top-0 h-screen">
           <SidebarNav />
@@ -38,6 +38,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           <RightSidebar />
         </div>
       </aside>
-    </>
+    </div>
   );
 }
