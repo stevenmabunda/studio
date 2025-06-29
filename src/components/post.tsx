@@ -199,24 +199,10 @@ export function Post(props: PostProps) {
             </div>
           )}
           <div className="mt-4 flex justify-between text-muted-foreground max-w-xs">
-            {isStandalone ? (
-                <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-primary" disabled>
-                    <MessageCircle className="h-5 w-5" />
-                    <span>{comments}</span>
-                </Button>
-            ) : (
-                <Dialog>
-                    <DialogTrigger asChild>
-                        <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-primary" onClick={(e) => e.stopPropagation()}>
-                            <MessageCircle className="h-5 w-5" />
-                            <span>{comments}</span>
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[625px] p-0" onClick={(e) => e.stopPropagation()}>
-                        <CommentDialogContent post={props} />
-                    </DialogContent>
-                </Dialog>
-            )}
+            <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-primary" onClick={(e) => { e.stopPropagation(); if(isStandalone) e.preventDefault(); }} disabled={isStandalone}>
+                <MessageCircle className="h-5 w-5" />
+                <span>{comments}</span>
+            </Button>
             <Button variant="ghost" size="sm" className={cn("flex items-center gap-2", isReposted ? 'text-green-500' : 'hover:text-green-500')} onClick={handleRepost}>
               <Repeat className="h-5 w-5" />
               <span>{repostCount}</span>
@@ -238,8 +224,15 @@ export function Post(props: PostProps) {
   }
 
   return (
-    <div onClick={() => router.push(`/post/${id}`)} className="block p-4 cursor-pointer hover:bg-accent/20">
-      {postUiContent}
-    </div>
+    <Dialog>
+        <DialogTrigger asChild>
+            <div className="block p-4 cursor-pointer hover:bg-accent/20">
+                {postUiContent}
+            </div>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[625px] p-0" onClick={(e) => e.stopPropagation()}>
+            <CommentDialogContent post={props} />
+        </DialogContent>
+    </Dialog>
   );
 }
