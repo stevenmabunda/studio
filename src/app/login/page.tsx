@@ -23,7 +23,7 @@ export default function LoginPage() {
   return (
     <AuthLayout
       title="Welcome Back!"
-      description="Sign in to your Goal Chatter account."
+      description="Sign in to your BHOLO account."
     >
       <LoginForm />
     </AuthLayout>

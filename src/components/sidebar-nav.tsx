@@ -10,7 +10,7 @@ import {
   SidebarMenuButton,
   SidebarFooter,
 } from '@/components/ui/sidebar';
-import { Home, Hash, CalendarClock, Bell, User, Goal, MessageSquare, LogOut } from 'lucide-react';
+import { Home, Hash, CalendarClock, Bell, User, MessageSquare, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -77,13 +77,13 @@ export function SidebarNav() {
   return (
     <Sidebar>
       <SidebarHeader>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="h-12 w-12 shrink-0" asChild>
-            <Link href="/home">
-              <Goal className="h-8 w-8 text-primary" />
-              <span className="sr-only">Goal Chatter</span>
+        <div className="flex h-14 items-center justify-start px-4">
+            <Link href="/home" className="font-bold text-white text-2xl group-data-[collapsible=icon]:hidden" aria-label="BHOLO">
+                BHOLO
             </Link>
-          </Button>
+            <Link href="/home" className="hidden font-bold text-white text-3xl group-data-[collapsible=icon]:block" aria-label="BHOLO">
+                B
+            </Link>
         </div>
       </SidebarHeader>
       <SidebarContent>

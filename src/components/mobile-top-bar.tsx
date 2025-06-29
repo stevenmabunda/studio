@@ -1,8 +1,8 @@
+
 'use client';
 
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import Link from "next/link";
-import { Goal } from "lucide-react";
 
 export function MobileTopBar() {
     return (
@@ -10,7 +10,7 @@ export function MobileTopBar() {
             <SidebarTrigger className="h-8 w-8" />
             
             <Link href="/" aria-label="Home">
-                <Goal className="h-8 w-8 text-primary" />
+                <span className="text-2xl font-bold text-white">BHOLO</span>
             </Link>
 
             {/* Dummy element for spacing */}

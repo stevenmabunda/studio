@@ -23,7 +23,7 @@ export default function SignupPage() {
     return (
         <AuthLayout
             title="Create an account"
-            description="Join the conversation on Goal Chatter today."
+            description="Join the conversation on BHOLO today."
         >
             <SignupForm />
         </AuthLayout>

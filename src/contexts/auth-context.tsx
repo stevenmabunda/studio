@@ -4,7 +4,6 @@
 import { createContext, useState, useEffect, type ReactNode } from 'react';
 import { onAuthStateChanged, type User } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
-import { Goal } from 'lucide-react';
 
 type AuthContextType = {
   user: User | null;
@@ -39,8 +38,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return (
         <div className="flex items-center justify-center h-screen bg-background">
             <div className="flex flex-col items-center gap-4">
-                <Goal className="h-16 w-16 text-primary animate-pulse" />
-                <p className="text-muted-foreground animate-pulse">Loading Goal Chatter...</p>
+                <h1 className="text-6xl font-extrabold tracking-tight text-white animate-pulse">BHOLO</h1>
+                <p className="text-muted-foreground animate-pulse">Loading BHOLO...</p>
             </div>
       </div>
     );
