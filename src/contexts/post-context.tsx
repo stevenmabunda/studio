@@ -7,7 +7,7 @@ import type { PostType } from '@/lib/data';
 import type { Media } from '@/components/create-post';
 import { useAuth } from '@/hooks/use-auth';
 import { db, storage } from '@/lib/firebase/config';
-import { collection, addDoc, serverTimestamp, onSnapshot, query, orderBy, type Timestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, onSnapshot, query, type Timestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -30,13 +30,20 @@ export function PostProvider({ children }: { children: ReactNode }) {
         return;
     }
 
-    const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
+    const q = query(collection(db, 'posts'));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-        const postsData = querySnapshot.docs.map(doc => {
-            const data = doc.data();
+        const docsWithData = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+        
+        docsWithData.sort((a, b) => {
+            const aDate = (a.createdAt as Timestamp)?.toDate() || new Date(0);
+            const bDate = (b.createdAt as Timestamp)?.toDate() || new Date(0);
+            return bDate.getTime() - aDate.getTime();
+        });
+
+        const postsData = docsWithData.map(data => {
             const createdAt = (data.createdAt as Timestamp)?.toDate();
             return {
-                id: doc.id,
+                id: data.id,
                 authorName: data.authorName,
                 authorHandle: data.authorHandle,
                 authorAvatar: data.authorAvatar,
@@ -48,6 +55,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
                 timestamp: createdAt ? formatDistanceToNow(createdAt, { addSuffix: true }) : 'Just now',
             } as PostType;
         });
+
         setPosts(postsData);
         setLoading(false);
     }, (error) => {
