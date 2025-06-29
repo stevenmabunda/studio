@@ -65,11 +65,13 @@ export function PostProvider({ children }: { children: ReactNode }) {
 
     const mediaUrls = await Promise.all(
         media.map(async (m) => {
-            const mediaRef = ref(storage, `posts/${user.uid}/${Date.now()}`);
+            const fileName = crypto.randomUUID();
+            const mediaRef = ref(storage, `posts/${user.uid}/${fileName}`);
             const response = await fetch(m.url);
             const blob = await response.blob();
 
-            await uploadBytes(mediaRef, blob);
+            // Explicitly set content type for robustness.
+            await uploadBytes(mediaRef, blob, { contentType: blob.type });
             const downloadURL = await getDownloadURL(mediaRef);
             return { url: downloadURL, type: m.type, hint: 'user uploaded content' };
         })
