@@ -1,12 +1,11 @@
 'use client';
 
-import { CreatePost, type Media } from '@/components/create-post';
+import { CreatePost } from '@/components/create-post';
 import { Post } from '@/components/post';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useState } from 'react';
-import { initialPosts, type PostType } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { usePosts } from '@/contexts/post-context';
 
 const liveMatches = [
     {
@@ -43,29 +42,7 @@ const upcomingMatches = [
 ];
 
 export default function HomePage() {
-  const [posts, setPosts] = useState<PostType[]>(initialPosts);
-
-  const handleCreatePost = ({
-    text,
-    media,
-  }: {
-    text: string;
-    media: Media[];
-  }) => {
-    const newPost: PostType = {
-      id: `post-${Date.now()}`,
-      authorName: 'Your Name',
-      authorHandle: 'yourhandle',
-      authorAvatar: 'https://placehold.co/40x40.png',
-      content: text,
-      timestamp: 'Just now',
-      comments: 0,
-      reposts: 0,
-      likes: 0,
-      media: media.map(m => ({ ...m, hint: 'user uploaded content' })),
-    };
-    setPosts([newPost, ...posts]);
-  };
+  const { posts, addPost } = usePosts();
 
   const videoPosts = posts.filter(post => post.media?.some(m => m.type === 'video'));
 
@@ -102,7 +79,7 @@ export default function HomePage() {
         </header>
         <main className="flex-1">
           <TabsContent value="foryou">
-            <CreatePost onPost={handleCreatePost} />
+            <CreatePost onPost={addPost} />
             <div className="divide-y divide-border">
               {posts.map((post) => (
                 <Post key={post.id} {...post} />

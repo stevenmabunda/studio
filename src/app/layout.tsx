@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { SidebarNav } from '@/components/sidebar-nav';
 import { RightSidebar } from '@/components/right-sidebar';
+import { PostProvider } from '@/contexts/post-context';
 
 export const metadata: Metadata = {
   title: 'Goal Chatter',
@@ -23,23 +24,25 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
-        <SidebarProvider>
-            <div className="flex w-full justify-center">
-              <div className="flex w-full max-w-[1275px]">
-                <header className="w-[275px] shrink-0 hidden md:block">
-                  <div className="sticky top-0 h-screen">
-                    <SidebarNav />
-                  </div>
-                </header>
-                <main className="w-full max-w-[624px] md:border-x">{children}</main>
-                <aside className="w-[350px] shrink-0 hidden lg:block">
-                  <div className="sticky top-0 h-screen">
-                    <RightSidebar />
-                  </div>
-                </aside>
+        <PostProvider>
+          <SidebarProvider>
+              <div className="flex w-full justify-center">
+                <div className="flex w-full max-w-[1275px]">
+                  <header className="w-[275px] shrink-0 hidden md:block">
+                    <div className="sticky top-0 h-screen">
+                      <SidebarNav />
+                    </div>
+                  </header>
+                  <main className="w-full max-w-[624px] md:border-x">{children}</main>
+                  <aside className="w-[350px] shrink-0 hidden lg:block">
+                    <div className="sticky top-0 h-screen">
+                      <RightSidebar />
+                    </div>
+                  </aside>
+                </div>
               </div>
-            </div>
-        </SidebarProvider>
+          </SidebarProvider>
+        </PostProvider>
         <Toaster />
       </body>
     </html>

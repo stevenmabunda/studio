@@ -13,6 +13,11 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
+import { CreatePost, type Media } from './create-post';
+import { usePosts } from '@/contexts/post-context';
+import React, { useState } from 'react';
+
 
 const navItems = [
   { href: '/', label: 'Home', icon: Home },
@@ -25,6 +30,13 @@ const navItems = [
 
 export function SidebarNav() {
   const pathname = usePathname();
+  const { addPost } = usePosts();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const handlePost = (data: { text: string; media: Media[] }) => {
+    addPost(data);
+    setIsDialogOpen(false);
+  };
 
   return (
     <Sidebar>
@@ -79,7 +91,19 @@ export function SidebarNav() {
           ))}
         </SidebarMenu>
         <div className="px-2 mt-4">
-            <Button className="w-full h-14 text-lg rounded-full">Kick-It!</Button>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="w-full h-14 text-lg rounded-full">Kick-It!</Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[625px]">
+                <DialogHeader>
+                  <DialogTitle>Create a new post</DialogTitle>
+                </DialogHeader>
+                <div className='-mx-6'>
+                    <CreatePost onPost={handlePost} />
+                </div>
+              </DialogContent>
+            </Dialog>
         </div>
       </SidebarContent>
     </Sidebar>
