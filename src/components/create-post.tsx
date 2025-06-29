@@ -7,12 +7,12 @@ import { Image as ImageIcon, X, Film } from "lucide-react";
 import React, { useState, useRef } from "react";
 import Image from "next/image";
 
-type Media = {
+export type Media = {
   url: string;
   type: 'image' | 'video';
 };
 
-export function CreatePost() {
+export function CreatePost({ onPost }: { onPost: (data: { text: string; media: Media | null }) => void }) {
   const [text, setText] = useState("");
   const [media, setMedia] = useState<Media | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -45,10 +45,9 @@ export function CreatePost() {
 
   const handlePost = () => {
     if (!isPostable) return;
-    // In a real app, you'd send this data to your server
-    console.log("New post:", { text, media });
     
-    // Reset state after posting
+    onPost({ text, media });
+    
     setText("");
     setMedia(null);
     if (fileInputRef.current) {
