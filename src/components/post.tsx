@@ -105,16 +105,27 @@ export function Post({
           </div>
           <p className="mt-2 whitespace-pre-wrap">{content}</p>
           {mediaExists && (
-            <div className="mt-3 mr-4 rounded-2xl overflow-hidden border max-h-[500px]">
+            <div className="mt-3 rounded-2xl overflow-hidden border">
               {isVideo ? (
                 <video
                   src={media[0].url}
                   controls
-                  className="w-full h-auto"
+                  className="w-full h-auto max-h-96"
                   onClick={(e) => e.stopPropagation()}
                 />
+              ) : imageCount === 1 ? (
+                <div className="relative bg-black">
+                    <Image
+                        src={media[0].url}
+                        alt={media[0].hint || `Post image 1`}
+                        width={500}
+                        height={500}
+                        className="w-full h-auto object-contain max-h-96"
+                        data-ai-hint={media[0].hint}
+                    />
+                </div>
               ) : (
-                <div className={cn("grid gap-0.5", gridClasses)}>
+                <div className={cn("grid max-h-96 gap-0.5", gridClasses)}>
                   {media.map((item, index) => (
                      <div key={index} className={cn("relative bg-black", imageCount === 3 && index === 0 && "row-span-2")}>
                       <Image
