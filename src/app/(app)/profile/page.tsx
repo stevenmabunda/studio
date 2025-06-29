@@ -33,7 +33,7 @@ export default function ProfilePage() {
           <p className="text-muted-foreground">@yourhandle</p>
         </div>
         <div className="mt-4">
-          <p>
+          <p data-ai-hint="user bio">
             Passionate football fan. Favorite team: FC Barcelona. Discussing all things football. ⚽
           </p>
         </div>

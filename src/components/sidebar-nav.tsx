@@ -7,7 +7,6 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarFooter,
 } from '@/components/ui/sidebar';
 import { Home, Hash, CalendarClock, Bell, User, Goal, MessageSquare } from 'lucide-react';
 import Link from 'next/link';
@@ -38,28 +37,6 @@ export function SidebarNav() {
             </Link>
           </Button>
         </div>
-      </SidebarHeader>
-      <SidebarContent>
-        <SidebarMenu>
-          {navItems.map((item) => (
-            <SidebarMenuItem key={item.href}>
-              <Link href={item.href} legacyBehavior passHref>
-                <SidebarMenuButton
-                  isActive={pathname === item.href}
-                  className="text-lg h-14"
-                >
-                  <item.icon className="h-7 w-7" />
-                  <span className={pathname === item.href ? 'font-bold' : 'font-normal'}>{item.label}</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-        <div className="px-2 mt-4">
-            <Button className="w-full h-14 text-lg rounded-full">Chatter</Button>
-        </div>
-      </SidebarContent>
-      <SidebarFooter>
         <Link href="/profile" className="block w-full rounded-lg p-3 hover:bg-sidebar-accent">
             <div className="flex items-center gap-3">
                 <Avatar className="h-10 w-10">
@@ -82,7 +59,27 @@ export function SidebarNav() {
                 </div>
             </div>
         </Link>
-      </SidebarFooter>
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarMenu>
+          {navItems.map((item) => (
+            <SidebarMenuItem key={item.href}>
+              <Link href={item.href} legacyBehavior passHref>
+                <SidebarMenuButton
+                  isActive={pathname === item.href}
+                  className="text-lg h-14"
+                >
+                  <item.icon className="h-7 w-7" />
+                  <span className={pathname === item.href ? 'font-bold' : 'font-normal'}>{item.label}</span>
+                </SidebarMenuButton>
+              </Link>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+        <div className="px-2 mt-4">
+            <Button className="w-full h-14 text-lg rounded-full">Chatter</Button>
+        </div>
+      </SidebarContent>
     </Sidebar>
   );
 }
