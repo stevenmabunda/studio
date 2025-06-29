@@ -1,7 +1,9 @@
+
 import { TrendingTopics } from "@/components/trending-topics";
 import { WhoToFollow } from "./who-to-follow";
 import { Input } from "./ui/input";
 import { Search } from "lucide-react";
+import { LiveMatches } from "./live-matches";
 
 export function RightSidebar() {
   return (
@@ -10,6 +12,7 @@ export function RightSidebar() {
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
         <Input placeholder="Search Goal Chatter" className="pl-11 rounded-full bg-secondary" />
       </div>
+      <LiveMatches />
       <TrendingTopics />
       <WhoToFollow />
     </aside>
