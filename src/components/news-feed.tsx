@@ -26,13 +26,13 @@ const newsItems = [
 
 export function NewsFeed() {
   return (
-    <Card className="border-none bg-secondary">
-      <CardHeader>
-        <CardTitle className="text-xl font-bold">News Feed</CardTitle>
+    <Card className="bg-secondary">
+      <CardHeader className="p-4">
+        <CardTitle className="text-lg font-bold">News Feed</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="flex flex-col gap-4">
-          {newsItems.map((item) => (
+      <CardContent className="p-4 pt-0">
+        <div className="flex flex-col gap-3">
+          {newsItems.slice(0, 3).map((item) => (
             <div key={item.handle} className="flex items-start justify-between gap-3 group cursor-pointer">
               <div className="flex-1">
                 <p className="font-bold text-sm">{item.source}</p>
@@ -43,7 +43,7 @@ export function NewsFeed() {
               </Button>
             </div>
           ))}
-           <Button variant="link" className="p-0 text-primary w-fit">Show more</Button>
+           <Button variant="link" className="p-0 text-primary w-fit text-sm">Show more</Button>
         </div>
       </CardContent>
     </Card>

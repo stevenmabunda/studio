@@ -27,11 +27,11 @@ export function TrendingTopics() {
   }, []);
 
   return (
-    <Card className="border-none bg-secondary">
-      <CardHeader>
-        <CardTitle className="text-xl font-bold">Trends for you</CardTitle>
+    <Card className="bg-secondary">
+      <CardHeader className="p-4">
+        <CardTitle className="text-lg font-bold">Trends for you</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-4 pt-0">
         <div className="space-y-4">
           {loading ? (
             Array.from({ length: 5 }).map((_, i) => (
@@ -54,7 +54,7 @@ export function TrendingTopics() {
                   </p>
                 </div>
               ))}
-              <Button variant="link" className="p-0 text-primary">Show more</Button>
+              <Button variant="link" className="p-0 text-primary text-sm">Show more</Button>
             </>
           )}
         </div>

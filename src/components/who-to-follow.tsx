@@ -25,11 +25,11 @@ const usersToFollow = [
 
 export function WhoToFollow() {
   return (
-    <Card className="border-none bg-secondary">
-      <CardHeader>
-        <CardTitle className="text-xl font-bold">Who to follow</CardTitle>
+    <Card className="bg-secondary">
+      <CardHeader className="p-4">
+        <CardTitle className="text-lg font-bold">Who to follow</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-4 pt-0">
         <div className="flex flex-col gap-4">
           {usersToFollow.map((user) => (
             <div key={user.handle} className="flex items-center justify-between gap-2">
@@ -48,6 +48,7 @@ export function WhoToFollow() {
               </Button>
             </div>
           ))}
+           <Button variant="link" className="p-0 text-primary w-fit text-sm">Show more</Button>
         </div>
       </CardContent>
     </Card>
