@@ -10,7 +10,7 @@ import {
   SidebarMenuButton,
   SidebarFooter,
 } from '@/components/ui/sidebar';
-import { Home, Hash, CalendarClock, Bell, User, MessageSquare, LogOut } from 'lucide-react';
+import { Home, Hash, Users, Bell, User, MessageSquare, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -36,7 +36,7 @@ import { useToast } from '@/hooks/use-toast';
 const navItems = [
   { href: '/home', label: 'Home', icon: Home },
   { href: '/explore', label: 'Explore', icon: Hash },
-  { href: '/threads', label: 'Match Threads', icon: CalendarClock },
+  { href: '/communities', label: 'Communities', icon: Users },
   { href: '/notifications', label: 'Notifications', icon: Bell },
   { href: '/messages', label: 'Messages', icon: MessageSquare },
   { href: '/profile', label: 'Profile', icon: User },
