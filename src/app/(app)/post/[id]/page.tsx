@@ -2,7 +2,7 @@
 'use client';
 
 import { Post } from '@/components/post';
-import { notFound, useRouter } from 'next/navigation';
+import { notFound, useRouter, useParams } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
@@ -43,8 +43,9 @@ const initialComments: CommentType[] = [
   }
 ];
 
-export default function PostPage({ params }: { params: { id: string } }) {
+export default function PostPage() {
   const router = useRouter();
+  const params = useParams<{ id: string }>();
   const { user } = useAuth();
   const [post, setPost] = useState<PostType | null>(null);
   const [loading, setLoading] = useState(true);
