@@ -114,26 +114,23 @@ export function Post({
                   onClick={(e) => e.stopPropagation()}
                 />
               ) : imageCount === 1 ? (
-                <div className="relative bg-black">
-                    <Image
-                        src={media[0].url}
-                        alt={media[0].hint || `Post image 1`}
-                        width={500}
-                        height={500}
-                        className="w-full h-auto object-contain max-h-96"
-                        data-ai-hint={media[0].hint}
-                    />
-                </div>
+                <Image
+                    src={media[0].url}
+                    alt={media[0].hint || `Post image 1`}
+                    width={500}
+                    height={300}
+                    className="w-full h-auto"
+                    data-ai-hint={media[0].hint}
+                />
               ) : (
-                <div className={cn("grid max-h-96 gap-0.5", gridClasses)}>
+                <div className={cn("grid h-80 gap-0.5", gridClasses)}>
                   {media.map((item, index) => (
-                     <div key={index} className={cn("relative bg-black", imageCount === 3 && index === 0 && "row-span-2")}>
+                     <div key={index} className={cn("relative", imageCount === 3 && index === 0 && "row-span-2")}>
                       <Image
                         src={item.url}
                         alt={item.hint || `Post image ${index + 1}`}
-                        width={500}
-                        height={500}
-                        className="w-full h-full object-contain"
+                        fill
+                        className="object-cover"
                         data-ai-hint={item.hint}
                       />
                     </div>
