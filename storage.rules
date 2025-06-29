@@ -1,0 +1,22 @@
+
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Allow public read on all files, since posts can have images
+    // and anyone can view them.
+    match /{allPaths=**} {
+      allow read: if true;
+    }
+
+    // Allow users to write to their own avatar, banner, and post folders.
+    match /avatars/{userId} {
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    match /banners/{userId} {
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    match /posts/{userId}/{fileId} {
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
