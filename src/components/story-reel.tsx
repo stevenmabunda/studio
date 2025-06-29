@@ -230,7 +230,7 @@ export function StoryReel() {
             <Dialog key={story.id} open={openStory?.id === story.id} onOpenChange={(isOpen) => { if(!isOpen) setOpenStory(null)}}>
                 <DialogTrigger asChild onClick={() => setOpenStory(story)}>
                     <div className="flex flex-col items-center gap-2 flex-shrink-0 cursor-pointer">
-                        <div className="p-0.5 rounded-full bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-500">
+                        <div className="p-0.5 rounded-full bg-gradient-to-tr from-yellow-400 via-primary to-purple-500">
                         <div className="p-0.5 bg-background rounded-full">
                             <Avatar className="w-16 h-16">
                             <AvatarImage src={story.avatar} />
