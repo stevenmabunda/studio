@@ -3,6 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { SidebarNav } from '@/components/sidebar-nav';
+import { RightSidebar } from '@/components/right-sidebar';
 
 export const metadata: Metadata = {
   title: 'Goal Chatter',
@@ -24,7 +25,12 @@ export default function RootLayout({
       <body className="font-body antialiased">
         <SidebarProvider>
           <SidebarNav />
-          <SidebarInset>{children}</SidebarInset>
+          <SidebarInset>
+            <div className="flex">
+              <div className="flex-1">{children}</div>
+              <RightSidebar />
+            </div>
+          </SidebarInset>
         </SidebarProvider>
         <Toaster />
       </body>

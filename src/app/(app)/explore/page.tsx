@@ -1,6 +1,5 @@
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
-import { TrendingTopics } from "@/components/trending-topics";
 
 export default function ExplorePage() {
   return (
@@ -12,7 +11,10 @@ export default function ExplorePage() {
         </div>
       </header>
       <main className="flex-1 p-4">
-        <TrendingTopics />
+        <div className="p-8 text-center text-muted-foreground">
+            <h2 className="text-xl font-bold">Nothing to see here... yet</h2>
+            <p>Search for posts, users, and more.</p>
+        </div>
       </main>
     </div>
   );
