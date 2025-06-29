@@ -114,7 +114,7 @@ export function CreatePost({ onPost }: { onPost: (data: { text: string; media: M
             onChange={(e) => setText(e.target.value)}
           />
           {media.length > 0 && (
-            <div className="rounded-2xl overflow-hidden border">
+            <div className="mt-3 rounded-2xl overflow-hidden border max-h-[60vh] overflow-y-auto">
                 {hasVideo ? (
                     <div className="relative">
                         <video src={media[0].url} controls className="w-full h-auto max-h-96" />
@@ -124,7 +124,7 @@ export function CreatePost({ onPost }: { onPost: (data: { text: string; media: M
                     </div>
                 ) : hasImages && media.length === 1 ? (
                     <div className="relative">
-                        <Image src={media[0].url} alt="Preview 1" width={500} height={300} className="w-full h-auto" />
+                        <Image src={media[0].url} alt="Preview 1" width={500} height={500} className="w-full h-auto object-cover" />
                         <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-8 w-8 rounded-full bg-black/50 hover:bg-black/75 text-white hover:text-white" onClick={() => removeMedia(0)}>
                             <X className="h-4 w-4" />
                         </Button>
