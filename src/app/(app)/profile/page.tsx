@@ -53,16 +53,17 @@ export default function ProfilePage() {
 
   const fetchProfile = useCallback(async () => {
     if (!user || !db) return;
+    setProfileLoading(true);
     try {
-        setProfileLoading(true);
         const userDocRef = doc(db, 'users', user.uid);
         const userDocSnap = await getDoc(userDocRef);
+
         if (userDocSnap.exists()) {
             const data = userDocSnap.data();
             setProfile({
-                displayName: user.displayName || 'User',
-                photoURL: user.photoURL || 'https://placehold.co/128x128.png',
-                handle: user.email?.split('@')[0] || 'user',
+                displayName: data.displayName || user.displayName || 'User',
+                photoURL: data.photoURL || user.photoURL || 'https://placehold.co/128x128.png',
+                handle: data.handle || user.email?.split('@')[0] || 'user',
                 joined: user.metadata.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'recently',
                 bio: data.bio || '',
                 location: data.location || '',
@@ -70,16 +71,25 @@ export default function ProfilePage() {
                 bannerUrl: data.bannerUrl || 'https://placehold.co/1200x400.png',
             });
         } else {
-            // If no profile doc, create one from auth user
-            setProfile({
+            // If profile doesn't exist, create it and then set state.
+            // This can happen for users who signed up before the 'users' collection was implemented.
+            const newProfileData = {
+                uid: user.uid,
                 displayName: user.displayName || 'User',
-                photoURL: user.photoURL || 'https://placehold.co/128x128.png',
                 handle: user.email?.split('@')[0] || 'user',
-                joined: user.metadata.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'recently',
+                photoURL: user.photoURL || 'https://placehold.co/128x128.png',
+                email: user.email,
+                joined: user.metadata.creationTime || new Date().toISOString(),
                 bio: 'Passionate football fan.',
                 location: '',
                 website: '',
                 bannerUrl: 'https://placehold.co/1200x400.png',
+            };
+            await setDoc(userDocRef, newProfileData, { merge: true });
+            
+            setProfile({
+                ...newProfileData,
+                joined: user.metadata.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'recently',
             });
         }
     } catch (error) {
@@ -278,6 +288,8 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
 
             const userDocRef = doc(db, 'users', user.uid);
             await setDoc(userDocRef, {
+                displayName: data.displayName,
+                photoURL: newAvatarUrl,
                 bio: data.bio,
                 location: data.location,
                 website: data.website,
