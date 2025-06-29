@@ -1,17 +1,27 @@
 'use client';
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { stories, type StoryType } from "@/lib/data";
+import type { StoryType } from "@/lib/data";
 import {
   Dialog,
   DialogContent,
   DialogTrigger,
   DialogClose,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Progress } from "@/components/ui/progress";
 import Image from "next/image";
-import { X } from "lucide-react";
+import { X, PlusCircle, Image as ImageIcon, Loader2 } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { db } from "@/lib/firebase/config";
+import { collection, query, where, getDocs, Timestamp, orderBy } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
+import { Button } from "./ui/button";
+import { addStory } from "@/app/(app)/stories/actions";
+import { Input } from "./ui/input";
 
 // A component to render the story view inside the dialog
 function StoryViewer({ story, onComplete }: { story: StoryType; onComplete: () => void }) {
@@ -42,7 +52,7 @@ function StoryViewer({ story, onComplete }: { story: StoryType; onComplete: () =
   return (
     <div className="relative h-full w-full flex items-center justify-center bg-black rounded-lg overflow-hidden">
         <Image
-            src="https://placehold.co/540x960.png"
+            src={story.storyImageUrl}
             alt={`Story by ${story.username}`}
             layout="fill"
             objectFit="cover"
@@ -53,7 +63,7 @@ function StoryViewer({ story, onComplete }: { story: StoryType; onComplete: () =
              <Progress value={progress} className="h-1" />
              <div className="flex items-center gap-2 mt-2">
                 <Avatar className="w-8 h-8">
-                    <AvatarImage src={story.avatar} data-ai-hint={story.hint} />
+                    <AvatarImage src={story.avatar} />
                     <AvatarFallback>{story.username.substring(0, 2)}</AvatarFallback>
                 </Avatar>
                 <span className="font-bold text-white text-sm">{story.username}</span>
@@ -67,21 +77,170 @@ function StoryViewer({ story, onComplete }: { story: StoryType; onComplete: () =
   );
 }
 
+function AddStoryDialog({ onStoryAdded }: { onStoryAdded: (newStory: StoryType) => void }) {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [isPosting, setIsPosting] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+      setPreview(URL.createObjectURL(selectedFile));
+    }
+  };
+
+  const handlePostStory = async () => {
+    if (!file || !user) return;
+    setIsPosting(true);
+
+    try {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onloadend = async () => {
+        const base64Data = reader.result as string;
+        const newStory = await addStory(base64Data);
+        onStoryAdded(newStory);
+        toast({ description: "Your story has been posted!" });
+        setFile(null);
+        setPreview(null);
+        setIsOpen(false);
+      };
+    } catch (error) {
+      console.error("Error posting story:", error);
+      toast({ variant: "destructive", description: "Failed to post story." });
+    } finally {
+      setIsPosting(false);
+    }
+  };
+
+  if (!user) return null;
+
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => {
+        setIsOpen(open);
+        if (!open) {
+            setFile(null);
+            setPreview(null);
+        }
+    }}>
+      <DialogTrigger asChild>
+        <div className="flex flex-col items-center gap-2 flex-shrink-0 cursor-pointer">
+          <div className="relative">
+            <Avatar className="w-16 h-16">
+              <AvatarImage src={user.photoURL || undefined} />
+              <AvatarFallback>{user.displayName?.charAt(0) || 'U'}</AvatarFallback>
+            </Avatar>
+            <PlusCircle className="absolute bottom-0 right-0 h-6 w-6 bg-primary text-primary-foreground rounded-full border-2 border-background" />
+          </div>
+          <p className="text-xs font-medium w-16 truncate text-center">Add Story</p>
+        </div>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Add to your story</DialogTitle>
+        </DialogHeader>
+        <div className="py-4">
+          {preview ? (
+            <div className="relative aspect-[9/16] w-full rounded-lg overflow-hidden">
+              <Image src={preview} alt="Story preview" layout="fill" objectFit="cover" />
+              <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-8 w-8 rounded-full bg-black/50 hover:bg-black/75 text-white" onClick={() => { setFile(null); setPreview(null); }}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <div 
+              className="flex flex-col items-center justify-center aspect-[9/16] w-full rounded-lg border-2 border-dashed border-muted-foreground/50 cursor-pointer hover:bg-accent"
+              onClick={() => inputRef.current?.click()}
+            >
+              <ImageIcon className="h-12 w-12 text-muted-foreground" />
+              <p className="mt-2 text-sm text-muted-foreground">Upload a photo</p>
+              <Input type="file" accept="image/*" ref={inputRef} onChange={handleFileChange} className="hidden" />
+            </div>
+          )}
+        </div>
+        <DialogFooter>
+          <Button onClick={handlePostStory} disabled={!file || isPosting}>
+            {isPosting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Post Story
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 
 export function StoryReel() {
     const [openStory, setOpenStory] = useState<StoryType | null>(null);
+    const [stories, setStories] = useState<StoryType[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+      const fetchStories = async () => {
+        if (!db) {
+          setLoading(false);
+          return;
+        }
+        setLoading(true);
+        try {
+          const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+          const storiesRef = collection(db, "stories");
+          const q = query(
+            storiesRef, 
+            where("createdAt", ">=", Timestamp.fromDate(twentyFourHoursAgo)),
+            orderBy("createdAt", "desc")
+          );
+          const querySnapshot = await getDocs(q);
+          const fetchedStories = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as StoryType));
+          
+          setStories(fetchedStories);
+        } catch (error) {
+          console.error("Error fetching stories:", error);
+          // It's possible the composite index is missing. Inform the user.
+          if (error instanceof Error && error.message.includes('indexes')) {
+            // Firestore error for missing index
+            console.error("Firestore error: Please create the required composite index in your Firebase console.");
+          }
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchStories();
+    }, []);
+
+    const handleStoryAdded = (newStory: StoryType) => {
+      // Optimistically add the new story to the start of the list
+      setStories(prevStories => [newStory, ...prevStories]);
+    };
 
     return (
         <div className="p-4 border-b">
-        <div className="flex justify-center gap-4 overflow-x-auto no-scrollbar">
-            {stories.map((story) => (
+        <div className="flex items-center gap-4 overflow-x-auto no-scrollbar">
+            <AddStoryDialog onStoryAdded={handleStoryAdded} />
+            {loading && Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex flex-col items-center gap-2 flex-shrink-0">
+                <div className="p-0.5 rounded-full bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-500 animate-pulse">
+                  <div className="p-0.5 bg-background rounded-full">
+                    <div className="w-16 h-16 rounded-full bg-muted"></div>
+                  </div>
+                </div>
+                <div className="h-3 w-12 bg-muted rounded"></div>
+              </div>
+            ))}
+            {!loading && stories.map((story) => (
             <Dialog key={story.id} open={openStory?.id === story.id} onOpenChange={(isOpen) => { if(!isOpen) setOpenStory(null)}}>
                 <DialogTrigger asChild onClick={() => setOpenStory(story)}>
                     <div className="flex flex-col items-center gap-2 flex-shrink-0 cursor-pointer">
                         <div className="p-0.5 rounded-full bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-500">
                         <div className="p-0.5 bg-background rounded-full">
                             <Avatar className="w-16 h-16">
-                            <AvatarImage src={story.avatar} data-ai-hint={story.hint} />
+                            <AvatarImage src={story.avatar} />
                             <AvatarFallback>{story.username.substring(0, 2)}</AvatarFallback>
                             </Avatar>
                         </div>
