@@ -2,6 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { MessageCircle, Repeat, Heart, Share2 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 type PostProps = {
   authorName: string;
@@ -12,6 +13,8 @@ type PostProps = {
   comments: number;
   reposts: number;
   likes: number;
+  imageUrl?: string;
+  imageHint?: string;
 };
 
 export function Post({
@@ -23,6 +26,8 @@ export function Post({
   comments,
   reposts,
   likes,
+  imageUrl,
+  imageHint,
 }: PostProps) {
   return (
     <div className="p-4">
@@ -41,6 +46,18 @@ export function Post({
             <span className="text-sm text-muted-foreground">{timestamp}</span>
           </div>
           <p className="mt-2 whitespace-pre-wrap">{content}</p>
+          {imageUrl && (
+            <div className="mt-3 mr-4 rounded-2xl overflow-hidden border">
+              <Image
+                src={imageUrl}
+                alt="Post image"
+                width={500}
+                height={300}
+                className="w-full h-auto object-cover"
+                data-ai-hint={imageHint}
+              />
+            </div>
+          )}
           <div className="mt-4 flex justify-between text-muted-foreground">
             <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-primary">
               <MessageCircle className="h-5 w-5" />

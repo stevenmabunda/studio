@@ -26,9 +26,13 @@ export default function RootLayout({
         <SidebarProvider>
           <SidebarNav />
           <SidebarInset>
-            <div className="flex w-full">
-              <div className="flex-1 w-full max-w-2xl border-r">{children}</div>
-              <RightSidebar />
+            <div className="flex w-full justify-center">
+              <div className="flex w-full max-w-[974px]">
+                <div className="w-full max-w-[624px] border-x">{children}</div>
+                <div className="w-[350px] hidden lg:block">
+                  <RightSidebar />
+                </div>
+              </div>
             </div>
           </SidebarInset>
         </SidebarProvider>

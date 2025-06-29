@@ -1,6 +1,5 @@
 import { CreatePost } from "@/components/create-post";
 import { Post } from "@/components/post";
-import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 
@@ -14,6 +13,8 @@ const posts = [
     comments: 1200,
     reposts: 5400,
     likes: 22000,
+    imageUrl: "https://placehold.co/600x400.png",
+    imageHint: "football player signing",
   },
   {
     authorName: "Fabrizio Romano",
@@ -44,6 +45,8 @@ const posts = [
     comments: 1500,
     reposts: 200,
     likes: 1800,
+    imageUrl: "https://placehold.co/600x400.png",
+    imageHint: "premier league trophy"
   },
 ];
 
@@ -61,7 +64,6 @@ export default function HomePage() {
         <main className="flex-1">
           <TabsContent value="foryou">
             <CreatePost />
-            <Separator />
             <div className="divide-y divide-border">
               {posts.map((post, index) => (
                 <Post key={index} {...post} />

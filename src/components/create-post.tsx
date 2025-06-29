@@ -3,10 +3,38 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Image as ImageIcon, X } from "lucide-react";
+import React, { useState, useRef } from "react";
+import Image from "next/image";
 
 export function CreatePost() {
+  const [image, setImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleIconClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const removeImage = () => {
+    setImage(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  }
+
   return (
-    <div className="p-4">
+    <div className="p-4 border-b">
       <div className="flex space-x-4">
         <Avatar>
           <AvatarImage src="https://placehold.co/40x40.png" alt="User" data-ai-hint="user avatar" />
@@ -18,7 +46,38 @@ export function CreatePost() {
             className="w-full resize-none border-0 bg-transparent px-0 text-lg focus-visible:ring-0 focus-visible:ring-offset-0"
             rows={2}
           />
-          <div className="flex justify-end">
+          {image && (
+            <div className="relative">
+              <Image
+                src={image}
+                alt="Preview"
+                width={500}
+                height={300}
+                className="rounded-2xl max-h-[400px] w-auto object-cover"
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-2 right-2 h-8 w-8 rounded-full bg-black/50 hover:bg-black/75 text-white hover:text-white"
+                onClick={removeImage}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+          <div className="flex justify-between items-center">
+            <div>
+              <input
+                type="file"
+                accept="image/*"
+                ref={fileInputRef}
+                onChange={handleImageChange}
+                className="hidden"
+              />
+              <Button variant="ghost" size="icon" onClick={handleIconClick}>
+                <ImageIcon className="h-5 w-5 text-primary" />
+              </Button>
+            </div>
             <Button>Chatter</Button>
           </div>
         </div>
