@@ -7,12 +7,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useRouter } from 'next/navigation';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { auth } from '@/lib/firebase/config';
+import { auth, db } from '@/lib/firebase/config';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import Link from 'next/link';
 import { AuthFormError } from './auth-form-error';
+import { doc, setDoc } from 'firebase/firestore';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.'}),
@@ -37,18 +38,34 @@ export function SignupForm() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
     setError(null);
-    if (!auth) {
+    if (!auth || !db) {
       setError('Authentication service is not available. Please try again later.');
-      console.error('Firebase auth is not initialized.');
+      console.error('Firebase auth or db is not initialized.');
       setLoading(false);
       return;
     }
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
-      await updateProfile(userCredential.user, {
+      const user = userCredential.user;
+
+      await updateProfile(user, {
         displayName: values.name,
       });
-      // In a real app, you'd also create a user document in Firestore here.
+
+      // Create a user document in Firestore
+      await setDoc(doc(db, 'users', user.uid), {
+        uid: user.uid,
+        displayName: values.name,
+        email: user.email,
+        photoURL: user.photoURL,
+        handle: user.email?.split('@')[0] || 'user',
+        joined: new Date().toISOString(),
+        bio: 'Passionate football fan. Discussing all things football. ⚽',
+        location: '',
+        website: '',
+        bannerUrl: 'https://placehold.co/1200x400.png',
+      });
+      
       router.push('/');
       router.refresh();
     } catch (err: any) {

@@ -5,27 +5,109 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Post } from "@/components/post";
 import Image from "next/image";
-import { MapPin, Link as LinkIcon, CalendarDays } from "lucide-react";
+import { MapPin, Link as LinkIcon, CalendarDays, Camera, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { usePosts } from "@/contexts/post-context";
 import { PostSkeleton } from "@/components/post-skeleton";
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { db, storage } from "@/lib/firebase/config";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { updateProfile } from "firebase/auth";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+
+type UserProfile = {
+    bio: string;
+    location: string;
+    website: string;
+    bannerUrl: string;
+    photoURL: string;
+    displayName: string;
+    handle: string;
+    joined: string;
+};
+
+const profileFormSchema = z.object({
+    displayName: z.string().min(2, "Name must be at least 2 characters."),
+    bio: z.string().max(160, "Bio must not exceed 160 characters.").optional(),
+    location: z.string().max(30, "Location must not exceed 30 characters.").optional(),
+    website: z.string().url("Please enter a valid URL.").or(z.literal("")).optional(),
+});
+
 
 export default function ProfilePage() {
-  const { user } = useAuth();
-  const { posts, loading } = usePosts();
+  const { user, loading: authLoading } = useAuth();
+  const { posts, loading: postsLoading } = usePosts();
+  const { toast } = useToast();
 
-  // This page is protected by the layout, so user should always exist.
-  if (!user) return null;
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
   
-  const userHandle = user.email?.split('@')[0] || 'user';
-  // In a real app, you would fetch posts for this specific user from a database
-  const userPosts = posts.filter(post => post.authorHandle === userHandle);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
+  const fetchProfile = useCallback(async () => {
+    if (!user || !db) return;
+    try {
+        setProfileLoading(true);
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDocSnap = await getDoc(userDocRef);
+        if (userDocSnap.exists()) {
+            const data = userDocSnap.data();
+            setProfile({
+                displayName: user.displayName || 'User',
+                photoURL: user.photoURL || 'https://placehold.co/128x128.png',
+                handle: user.email?.split('@')[0] || 'user',
+                joined: user.metadata.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'recently',
+                bio: data.bio || '',
+                location: data.location || '',
+                website: data.website || '',
+                bannerUrl: data.bannerUrl || 'https://placehold.co/1200x400.png',
+            });
+        } else {
+            // If no profile doc, create one from auth user
+            setProfile({
+                displayName: user.displayName || 'User',
+                photoURL: user.photoURL || 'https://placehold.co/128x128.png',
+                handle: user.email?.split('@')[0] || 'user',
+                joined: user.metadata.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'recently',
+                bio: 'Passionate football fan.',
+                location: '',
+                website: '',
+                bannerUrl: 'https://placehold.co/1200x400.png',
+            });
+        }
+    } catch (error) {
+        console.error("Error fetching user profile:", error);
+        toast({ variant: 'destructive', title: "Error", description: "Could not fetch profile." });
+    } finally {
+        setProfileLoading(false);
+    }
+  }, [user, toast]);
+
+  useEffect(() => {
+    if (!authLoading) {
+        fetchProfile();
+    }
+  }, [authLoading, fetchProfile]);
+
+  if (authLoading || profileLoading || !profile) {
+      // You can return a more detailed skeleton here
+      return <PostSkeleton />;
+  }
+  
+  const userPosts = posts.filter(post => post.authorHandle === profile.handle);
 
   return (
     <div>
       <div className="relative h-36 w-full bg-muted sm:h-48">
         <Image
-          src="https://placehold.co/1200x400.png"
+          src={profile.bannerUrl}
           alt="Profile banner"
           layout="fill"
           objectFit="cover"
@@ -35,36 +117,36 @@ export default function ProfilePage() {
       <div className="p-4">
         <div className="relative -mt-16 flex justify-between sm:-mt-20">
           <Avatar className="h-24 w-24 border-4 border-background sm:h-32 sm:w-32">
-            <AvatarImage src={user.photoURL || "https://placehold.co/128x128.png"} data-ai-hint="football player" />
-            <AvatarFallback>{user.displayName?.charAt(0) || 'U'}</AvatarFallback>
+            <AvatarImage src={profile.photoURL} data-ai-hint="football player" />
+            <AvatarFallback>{profile.displayName?.charAt(0) || 'U'}</AvatarFallback>
           </Avatar>
-          <Button variant="outline" className="mt-20 sm:mt-24">
+          <Button variant="outline" className="mt-20 sm:mt-24" onClick={() => setIsEditDialogOpen(true)}>
             Edit profile
           </Button>
         </div>
         <div className="mt-4">
-          <h1 className="text-2xl font-bold">{user.displayName || 'Your Name'}</h1>
-          <p className="text-muted-foreground">@{userHandle}</p>
+          <h1 className="text-2xl font-bold">{profile.displayName}</h1>
+          <p className="text-muted-foreground">@{profile.handle}</p>
         </div>
-        <div className="mt-4">
-          <p data-ai-hint="user bio">
-            Passionate football fan. Favorite team: FC Barcelona. Discussing all things football. ⚽
-          </p>
-        </div>
+        {profile.bio && <div className="mt-4"><p>{profile.bio}</p></div>}
         <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <MapPin className="h-4 w-4" />
-            <span>London, UK</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <LinkIcon className="h-4 w-4" />
-            <a href="#" className="text-primary hover:underline">
-              yourwebsite.com
-            </a>
-          </div>
+          {profile.location && (
+            <div className="flex items-center gap-1">
+              <MapPin className="h-4 w-4" />
+              <span>{profile.location}</span>
+            </div>
+          )}
+          {profile.website && (
+            <div className="flex items-center gap-1">
+              <LinkIcon className="h-4 w-4" />
+              <a href={profile.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                {profile.website.replace(/https?:\/\//, '')}
+              </a>
+            </div>
+          )}
           <div className="flex items-center gap-1">
             <CalendarDays className="h-4 w-4" />
-            <span>Joined {user.metadata.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'recently'}</span>
+            <span>Joined {profile.joined}</span>
           </div>
         </div>
         <div className="mt-4 flex flex-wrap gap-x-6 gap-y-1">
@@ -78,6 +160,12 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+      <EditProfileDialog 
+        isOpen={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        profile={profile}
+        onProfileUpdate={fetchProfile}
+      />
       <Tabs defaultValue="posts" className="w-full border-t">
         <TabsList className="flex w-full justify-around rounded-none border-b bg-transparent p-0">
           <TabsTrigger value="posts" className="flex-1 rounded-none py-3 text-sm font-semibold text-muted-foreground data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none">Posts</TabsTrigger>
@@ -87,7 +175,7 @@ export default function ProfilePage() {
         </TabsList>
         <TabsContent value="posts">
           <div className="divide-y divide-border">
-            {loading ? (
+            {postsLoading ? (
                 <>
                     <PostSkeleton />
                     <PostSkeleton />
@@ -111,4 +199,156 @@ export default function ProfilePage() {
       </Tabs>
     </div>
   );
+}
+
+// Edit Profile Dialog Component
+function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: { isOpen: boolean, onOpenChange: (open: boolean) => void, profile: UserProfile, onProfileUpdate: () => void }) {
+    const { user } = useAuth();
+    const { toast } = useToast();
+    const [isSaving, setIsSaving] = useState(false);
+
+    const [avatarFile, setAvatarFile] = useState<File | null>(null);
+    const [bannerFile, setBannerFile] = useState<File | null>(null);
+    const [avatarPreview, setAvatarPreview] = useState<string>(profile.photoURL);
+    const [bannerPreview, setBannerPreview] = useState<string>(profile.bannerUrl);
+
+    const avatarInputRef = useRef<HTMLInputElement>(null);
+    const bannerInputRef = useRef<HTMLInputElement>(null);
+    
+    const form = useForm({
+        resolver: zodResolver(profileFormSchema),
+        defaultValues: {
+            displayName: profile.displayName || '',
+            bio: profile.bio || '',
+            location: profile.location || '',
+            website: profile.website || '',
+        },
+    });
+    
+    useEffect(() => {
+        form.reset({
+            displayName: profile.displayName || '',
+            bio: profile.bio || '',
+            location: profile.location || '',
+            website: profile.website || '',
+        });
+        setAvatarPreview(profile.photoURL);
+        setBannerPreview(profile.bannerUrl);
+    }, [profile, form]);
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'banner') => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const previewUrl = URL.createObjectURL(file);
+            if (type === 'avatar') {
+                setAvatarFile(file);
+                setAvatarPreview(previewUrl);
+            } else {
+                setBannerFile(file);
+                setBannerPreview(previewUrl);
+            }
+        }
+    };
+
+    const uploadImage = async (file: File, path: string): Promise<string> => {
+        if (!storage) throw new Error("Storage not initialized");
+        const storageRef = ref(storage, path);
+        await uploadBytes(storageRef, file);
+        return await getDownloadURL(storageRef);
+    };
+
+    const onSubmit = async (data: z.infer<typeof profileFormSchema>) => {
+        if (!user || !db) return;
+        setIsSaving(true);
+        try {
+            let newAvatarUrl = profile.photoURL;
+            if (avatarFile) {
+                newAvatarUrl = await uploadImage(avatarFile, `avatars/${user.uid}`);
+            }
+
+            let newBannerUrl = profile.bannerUrl;
+            if (bannerFile) {
+                newBannerUrl = await uploadImage(bannerFile, `banners/${user.uid}`);
+            }
+            
+            await updateProfile(user, {
+                displayName: data.displayName,
+                photoURL: newAvatarUrl,
+            });
+
+            const userDocRef = doc(db, 'users', user.uid);
+            await setDoc(userDocRef, {
+                bio: data.bio,
+                location: data.location,
+                website: data.website,
+                bannerUrl: newBannerUrl,
+            }, { merge: true });
+
+            toast({ title: "Success", description: "Profile updated successfully!" });
+            onProfileUpdate();
+            onOpenChange(false);
+        } catch (error) {
+            console.error("Error updating profile:", error);
+            toast({ variant: 'destructive', title: "Error", description: "Failed to update profile." });
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onOpenChange}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Edit profile</DialogTitle>
+                </DialogHeader>
+
+                <div className="relative h-32 w-full bg-muted sm:h-40">
+                    <Image src={bannerPreview} alt="Banner preview" layout="fill" objectFit="cover" className="rounded-md" />
+                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                         <Button size="icon" variant="ghost" className="text-white hover:bg-black/50" onClick={() => bannerInputRef.current?.click()}>
+                            <Camera className="h-6 w-6" />
+                         </Button>
+                         <input type="file" accept="image/*" ref={bannerInputRef} onChange={(e) => handleFileChange(e, 'banner')} className="hidden" />
+                    </div>
+                </div>
+
+                <div className="relative -mt-12 ml-4 h-24 w-24">
+                     <Avatar className="h-24 w-24 border-4 border-background">
+                        <AvatarImage src={avatarPreview} />
+                        <AvatarFallback>{profile.displayName?.charAt(0) || 'U'}</AvatarFallback>
+                    </Avatar>
+                    <div className="absolute inset-0 bg-black/30 rounded-full flex items-center justify-center">
+                         <Button size="icon" variant="ghost" className="text-white hover:bg-black/50" onClick={() => avatarInputRef.current?.click()}>
+                            <Camera className="h-6 w-6" />
+                         </Button>
+                         <input type="file" accept="image/*" ref={avatarInputRef} onChange={(e) => handleFileChange(e, 'avatar')} className="hidden" />
+                    </div>
+                </div>
+                
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
+                    <Controller name="displayName" control={form.control} render={({ field }) => <Input placeholder="Name" {...field} />} />
+                    {form.formState.errors.displayName && <p className="text-sm text-destructive">{form.formState.errors.displayName.message}</p>}
+
+                    <Controller name="bio" control={form.control} render={({ field }) => <Textarea placeholder="Bio" {...field} />} />
+                    {form.formState.errors.bio && <p className="text-sm text-destructive">{form.formState.errors.bio.message}</p>}
+
+                    <Controller name="location" control={form.control} render={({ field }) => <Input placeholder="Location" {...field} />} />
+                     {form.formState.errors.location && <p className="text-sm text-destructive">{form.formState.errors.location.message}</p>}
+
+                    <Controller name="website" control={form.control} render={({ field }) => <Input placeholder="Website" {...field} />} />
+                     {form.formState.errors.website && <p className="text-sm text-destructive">{form.formState.errors.website.message}</p>}
+
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button type="button" variant="outline">Cancel</Button>
+                        </DialogClose>
+                        <Button type="submit" disabled={isSaving}>
+                            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Save
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
 }
