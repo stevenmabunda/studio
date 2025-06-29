@@ -6,30 +6,35 @@ import { getTrendingTopics } from '@/app/(app)/explore/actions';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from './ui/button';
 
+type Headline = {
+  headline: string;
+  source: string;
+};
+
 export function TrendingTopics() {
-  const [topics, setTopics] = useState<string[]>([]);
+  const [headlines, setHeadlines] = useState<Headline[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchTopics = async () => {
+  const fetchHeadlines = async () => {
     setLoading(true);
     try {
       const result = await getTrendingTopics({ numberOfTopics: 5 });
-      setTopics(result.topics);
+      setHeadlines(result.headlines);
     } catch (error) {
-      console.error("Failed to fetch trending topics:", error);
+      console.error("Failed to fetch news headlines:", error);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchTopics();
+    fetchHeadlines();
   }, []);
 
   return (
     <Card className="bg-secondary">
       <CardHeader className="p-4">
-        <CardTitle className="text-lg font-bold">Trends for you</CardTitle>
+        <CardTitle className="text-lg font-bold">News Feed</CardTitle>
       </CardHeader>
       <CardContent className="p-4 pt-0">
         <div className="space-y-4">
@@ -38,20 +43,14 @@ export function TrendingTopics() {
               <div key={i} className="space-y-2">
                 <Skeleton className="h-4 w-2/5" />
                 <Skeleton className="h-5 w-3/5" />
-                <Skeleton className="h-4 w-1/5" />
               </div>
             ))
           ) : (
             <>
-              {topics.map((topic, index) => (
+              {headlines.map((item, index) => (
                 <div key={index} className="group cursor-pointer">
-                  <p className="text-sm text-muted-foreground">
-                    Trending in Football
-                  </p>
-                  <p className="font-bold group-hover:underline">{topic}</p>
-                  <p className="text-sm text-muted-foreground">
-                      {Math.floor(Math.random() * 20 + 5)}k posts
-                  </p>
+                  <p className="font-bold text-sm">{item.source}</p>
+                  <p className="text-sm text-muted-foreground group-hover:underline">{item.headline}</p>
                 </div>
               ))}
               <Button variant="link" className="p-0 text-primary text-sm">Show more</Button>

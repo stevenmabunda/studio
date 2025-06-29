@@ -21,10 +21,15 @@ export type GenerateTrendingTopicsInput = z.infer<
   typeof GenerateTrendingTopicsInputSchema
 >;
 
+const NewsItemSchema = z.object({
+  headline: z.string().describe('The news headline.'),
+  source: z.string().describe('The source of the news (e.g., ESPN, Sky Sports).'),
+});
+
 const GenerateTrendingTopicsOutputSchema = z.object({
-  topics: z
-    .array(z.string())
-    .describe('An array of trending topics in the football world.'),
+  headlines: z
+    .array(NewsItemSchema)
+    .describe('An array of breaking news headlines in the football world.'),
 });
 export type GenerateTrendingTopicsOutput = z.infer<
   typeof GenerateTrendingTopicsOutputSchema
@@ -40,13 +45,9 @@ const prompt = ai.definePrompt({
   name: 'generateTrendingTopicsPrompt',
   input: {schema: GenerateTrendingTopicsInputSchema},
   output: {schema: GenerateTrendingTopicsOutputSchema},
-  prompt: `You are a social media expert specializing in football.
+  prompt: `You are a sports news editor for a social media platform specializing in football.
 
-You will use this information to generate a list of trending topics in the football world.
-
-Return {{numberOfTopics}} topics.
-
-Topics:`,
+Generate {{numberOfTopics}} breaking news headlines. For each headline, provide a fictional but realistic-sounding news source (e.g., "BBC Sport", "Sky Sports", "The Athletic").`,
 });
 
 const generateTrendingTopicsFlow = ai.defineFlow(
