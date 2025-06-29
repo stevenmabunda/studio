@@ -2,13 +2,13 @@
 'use client';
 
 import { Post } from '@/components/post';
-import { initialPosts, users } from '@/lib/data';
-import { notFound, useRouter } from 'next/navigation';
+import { users } from '@/lib/data';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
 import { CreateComment } from '@/components/create-comment';
 import { useState } from 'react';
+import type { PostType } from '@/lib/data';
+import { ScrollArea } from './ui/scroll-area';
 
 type CommentType = {
   id: string;
@@ -38,12 +38,7 @@ const initialComments: CommentType[] = [
   }
 ];
 
-export default function PostPage({ params }: { params: { id: string } }) {
-  const router = useRouter();
-  // In a real app, you would fetch the post and its comments
-  // For now, we'll find the post in our static data.
-  // Note: This means newly created posts on the home page won't be found here.
-  const post = initialPosts.find((p) => p.id === params.id);
+export function CommentDialogContent({ post }: { post: PostType }) {
   const [comments, setComments] = useState<CommentType[]>(initialComments);
 
   const handleCreateComment = (text: string) => {
@@ -58,19 +53,8 @@ export default function PostPage({ params }: { params: { id: string } }) {
     setComments([newComment, ...comments]);
   }
 
-  if (!post) {
-    notFound();
-  }
-
   return (
-    <div className="flex h-full min-h-screen flex-col">
-      <header className="sticky top-0 z-10 flex items-center gap-4 border-b bg-background/80 p-4 backdrop-blur-sm">
-        <button onClick={() => router.back()} className="p-2 rounded-full hover:bg-accent">
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <h1 className="text-xl font-bold">Post</h1>
-      </header>
-      <main>
+    <ScrollArea className="h-full max-h-[80vh]">
         <Post {...post} isStandalone={true} />
         <CreateComment onComment={handleCreateComment} />
         <div className="divide-y divide-border">
@@ -96,7 +80,6 @@ export default function PostPage({ params }: { params: { id: string } }) {
                 </div>
             ))}
         </div>
-      </main>
-    </div>
+    </ScrollArea>
   );
 }
