@@ -60,15 +60,25 @@ export function SidebarNav() {
         </div>
       </SidebarContent>
       <SidebarFooter>
-        <Link href="/profile" className="w-full">
-            <div className="flex w-full items-center gap-2 rounded-full p-2 hover:bg-sidebar-accent">
+        <Link href="/profile" className="block w-full rounded-lg p-3 hover:bg-sidebar-accent">
+            <div className="flex items-center gap-3">
                 <Avatar className="h-10 w-10">
                     <AvatarImage src="https://placehold.co/40x40.png" alt="User Avatar" data-ai-hint="user avatar" />
                     <AvatarFallback>U</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 overflow-hidden">
-                    <p className="truncate font-semibold">Your Name</p>
+                    <p className="truncate font-bold">Your Name</p>
                     <p className="truncate text-sm text-muted-foreground">@yourhandle</p>
+                </div>
+            </div>
+            <div className="mt-4 flex gap-4 text-sm">
+                <div>
+                    <span className="font-bold">142</span>
+                    <span className="text-muted-foreground"> Following</span>
+                </div>
+                <div>
+                    <span className="font-bold">1,205</span>
+                    <span className="text-muted-foreground"> Followers</span>
                 </div>
             </div>
         </Link>
