@@ -4,18 +4,20 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { AuthLayout } from '@/components/auth/auth-layout';
 import { LoginForm } from '@/components/auth/login-form';
+import { useEffect } from 'react';
 
 export default function LoginPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
 
-  if (loading) {
-    return null; // Or a loading spinner, handled by AuthProvider
-  }
+  useEffect(() => {
+    if (!loading && user) {
+      router.replace('/');
+    }
+  }, [user, loading, router]);
 
-  if (user) {
-    router.replace('/');
-    return null;
+  if (loading || user) {
+    return null; // Or a loading spinner, handled by AuthProvider
   }
 
   return (
