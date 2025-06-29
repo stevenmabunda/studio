@@ -1,15 +1,5 @@
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
-import { SidebarNav } from '@/components/sidebar-nav';
+import type { ReactNode } from 'react';
 
-export default function AppLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <SidebarProvider>
-      <SidebarNav />
-      <SidebarInset>{children}</SidebarInset>
-    </SidebarProvider>
-  );
+export default function AppLayout({ children }: { children: ReactNode }) {
+  return <>{children}</>;
 }

@@ -9,7 +9,7 @@ import {
   SidebarMenuButton,
   SidebarFooter,
 } from '@/components/ui/sidebar';
-import { Home, Hash, CalendarClock, Bell, User, LogOut, Goal } from 'lucide-react';
+import { Home, Hash, CalendarClock, Bell, User, Goal } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -68,12 +68,6 @@ export function SidebarNav() {
                     <p className="truncate text-sm text-muted-foreground">@yourhandle</p>
                 </div>
             </div>
-        </Link>
-        <Link href="/login" className="w-full">
-            <Button variant="outline" className="w-full justify-start">
-                <LogOut className="mr-2 h-4 w-4" />
-                Logout
-            </Button>
         </Link>
       </SidebarFooter>
     </Sidebar>
