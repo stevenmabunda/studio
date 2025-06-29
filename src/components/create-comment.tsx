@@ -1,11 +1,14 @@
+
 'use client';
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import React, { useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
 
 export function CreateComment({ onComment }: { onComment: (text: string) => void }) {
+  const { user } = useAuth();
   const [text, setText] = useState("");
 
   const handleComment = () => {
@@ -18,8 +21,8 @@ export function CreateComment({ onComment }: { onComment: (text: string) => void
     <div className="p-4 border-t">
       <div className="flex space-x-4">
         <Avatar>
-          <AvatarImage src="https://placehold.co/40x40.png" alt="User" data-ai-hint="user avatar" />
-          <AvatarFallback>U</AvatarFallback>
+          <AvatarImage src={user?.photoURL || "https://placehold.co/40x40.png"} alt={user?.displayName || "User"} data-ai-hint="user avatar" />
+          <AvatarFallback>{user?.displayName?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
         </Avatar>
         <div className="flex-1 space-y-4">
           <Textarea

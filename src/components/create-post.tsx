@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -8,6 +9,7 @@ import React, { useState, useRef } from "react";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/use-auth";
 
 export type Media = {
   url: string;
@@ -15,6 +17,7 @@ export type Media = {
 };
 
 export function CreatePost({ onPost }: { onPost: (data: { text: string; media: Media[] }) => void }) {
+  const { user } = useAuth();
   const [text, setText] = useState("");
   const [media, setMedia] = useState<Media[]>([]);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -90,9 +93,9 @@ export function CreatePost({ onPost }: { onPost: (data: { text: string; media: M
   const hasImages = media.length > 0 && media[0].type === 'image';
   const maxImagesReached = media.length >= 4;
 
+  const singleImage = hasImages && media.length === 1;
 
   const gridClasses = {
-    1: 'grid-cols-1 grid-rows-1',
     2: 'grid-cols-2 grid-rows-1',
     3: 'grid-cols-2 grid-rows-2',
     4: 'grid-cols-2 grid-rows-2',
@@ -102,8 +105,8 @@ export function CreatePost({ onPost }: { onPost: (data: { text: string; media: M
     <div className="p-4 border-b">
       <div className="flex space-x-4">
         <Avatar>
-          <AvatarImage src="https://placehold.co/40x40.png" alt="User" data-ai-hint="user avatar" />
-          <AvatarFallback>U</AvatarFallback>
+          <AvatarImage src={user?.photoURL || "https://placehold.co/40x40.png"} alt={user?.displayName || "User"} data-ai-hint="user avatar" />
+          <AvatarFallback>{user?.displayName?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
         </Avatar>
         <div className="flex-1 space-y-4">
           <Textarea
@@ -122,15 +125,15 @@ export function CreatePost({ onPost }: { onPost: (data: { text: string; media: M
                             <X className="h-4 w-4" />
                         </Button>
                     </div>
-                ) : hasImages && media.length === 1 ? (
+                ) : singleImage ? (
                     <div className="relative">
-                        <Image src={media[0].url} alt="Preview 1" width={500} height={500} className="w-full h-auto object-cover" />
+                        <Image src={media[0].url} alt="Preview 1" width={500} height={500} className="w-full h-auto object-contain bg-black" />
                         <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-8 w-8 rounded-full bg-black/50 hover:bg-black/75 text-white hover:text-white" onClick={() => removeMedia(0)}>
                             <X className="h-4 w-4" />
                         </Button>
                     </div>
                 ) : (
-                    <div className={cn("grid h-80 gap-0.5", gridClasses)}>
+                    <div className={cn("grid aspect-video gap-0.5", gridClasses)}>
                         {media.map((item, index) => (
                             <div key={index} className={cn("relative", media.length === 3 && index === 0 && 'row-span-2')}>
                                 <Image src={item.url} alt={`Preview ${index + 1}`} fill className="object-cover" />

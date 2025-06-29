@@ -2,13 +2,13 @@
 'use client';
 
 import { Post } from '@/components/post';
-import { users } from '@/lib/data';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
 import { CreateComment } from '@/components/create-comment';
 import { useState } from 'react';
 import type { PostType } from '@/lib/data';
 import { ScrollArea } from './ui/scroll-area';
+import { useAuth } from '@/hooks/use-auth';
 
 type CommentType = {
   id: string;
@@ -39,14 +39,17 @@ const initialComments: CommentType[] = [
 ];
 
 export function CommentDialogContent({ post }: { post: PostType }) {
+  const { user } = useAuth();
   const [comments, setComments] = useState<CommentType[]>(initialComments);
 
   const handleCreateComment = (text: string) => {
+    if (!user) return;
+
     const newComment: CommentType = {
         id: `comment-${Date.now()}`,
-        authorName: users.yourhandle.name,
-        authorHandle: users.yourhandle.handle,
-        authorAvatar: users.yourhandle.avatar,
+        authorName: user.displayName || 'User',
+        authorHandle: user.email?.split('@')[0] || 'user',
+        authorAvatar: user.photoURL || 'https://placehold.co/40x40.png',
         content: text,
         timestamp: 'Just now',
     };

@@ -145,11 +145,3 @@ export const initialPosts: PostType[] = [
     ],
   },
 ];
-
-export const users = {
-    'yourhandle': {
-      name: 'Your Name',
-      handle: 'yourhandle',
-      avatar: 'https://placehold.co/40x40.png'
-    }
-  }

@@ -1,12 +1,25 @@
+
+'use client';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Post } from "@/components/post";
 import Image from "next/image";
 import { MapPin, Link as LinkIcon, CalendarDays } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { usePosts } from "@/contexts/post-context";
 
 export default function ProfilePage() {
+  const { user } = useAuth();
+  const { posts } = usePosts();
+
+  // This page is protected by the layout, so user should always exist.
+  if (!user) return null;
+  
+  const userHandle = user.email?.split('@')[0] || 'user';
+  // In a real app, you would fetch posts for this specific user from a database
+  const userPosts = posts.filter(post => post.authorHandle === userHandle);
+
   return (
     <div>
       <div className="relative h-48 w-full bg-muted sm:h-64">
@@ -21,16 +34,16 @@ export default function ProfilePage() {
       <div className="p-4">
         <div className="relative -mt-20 flex justify-between">
           <Avatar className="h-24 w-24 border-4 border-background sm:h-32 sm:w-32">
-            <AvatarImage src="https://placehold.co/128x128.png" data-ai-hint="football player" />
-            <AvatarFallback>U</AvatarFallback>
+            <AvatarImage src={user.photoURL || "https://placehold.co/128x128.png"} data-ai-hint="football player" />
+            <AvatarFallback>{user.displayName?.charAt(0) || 'U'}</AvatarFallback>
           </Avatar>
           <Button variant="outline" className="mt-24">
             Edit profile
           </Button>
         </div>
         <div className="mt-4">
-          <h1 className="text-2xl font-bold">Your Name</h1>
-          <p className="text-muted-foreground">@yourhandle</p>
+          <h1 className="text-2xl font-bold">{user.displayName || 'Your Name'}</h1>
+          <p className="text-muted-foreground">@{userHandle}</p>
         </div>
         <div className="mt-4">
           <p data-ai-hint="user bio">
@@ -50,7 +63,7 @@ export default function ProfilePage() {
           </div>
           <div className="flex items-center gap-1">
             <CalendarDays className="h-4 w-4" />
-            <span>Joined June 2023</span>
+            <span>Joined {user.metadata.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'recently'}</span>
           </div>
         </div>
         <div className="mt-4 flex gap-4">
@@ -73,17 +86,11 @@ export default function ProfilePage() {
         </TabsList>
         <TabsContent value="posts">
           <div className="divide-y divide-border">
-            <Post
-              id="post-profile-1"
-              authorName="Your Name"
-              authorHandle="yourhandle"
-              authorAvatar="https://placehold.co/40x40.png"
-              content="This is a sample post on my profile! #GoalChatter"
-              timestamp="1d"
-              comments={10}
-              reposts={2}
-              likes={45}
-            />
+            {userPosts.length > 0 ? (
+                userPosts.map(post => <Post key={post.id} {...post} />)
+            ) : (
+                <div className="p-8 text-center text-muted-foreground">No posts yet.</div>
+            )}
           </div>
         </TabsContent>
         <TabsContent value="replies">

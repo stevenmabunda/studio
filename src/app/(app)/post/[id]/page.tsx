@@ -2,13 +2,14 @@
 'use client';
 
 import { Post } from '@/components/post';
-import { initialPosts, users } from '@/lib/data';
+import { initialPosts } from '@/lib/data';
 import { notFound, useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { CreateComment } from '@/components/create-comment';
 import { useState } from 'react';
+import { useAuth } from '@/hooks/use-auth';
 
 type CommentType = {
   id: string;
@@ -40,6 +41,7 @@ const initialComments: CommentType[] = [
 
 export default function PostPage({ params }: { params: { id: string } }) {
   const router = useRouter();
+  const { user } = useAuth();
   // In a real app, you would fetch the post and its comments
   // For now, we'll find the post in our static data.
   // Note: This means newly created posts on the home page won't be found here.
@@ -47,11 +49,13 @@ export default function PostPage({ params }: { params: { id: string } }) {
   const [comments, setComments] = useState<CommentType[]>(initialComments);
 
   const handleCreateComment = (text: string) => {
+    if (!user) return;
+
     const newComment: CommentType = {
         id: `comment-${Date.now()}`,
-        authorName: users.yourhandle.name,
-        authorHandle: users.yourhandle.handle,
-        authorAvatar: users.yourhandle.avatar,
+        authorName: user.displayName || 'User',
+        authorHandle: user.email?.split('@')[0] || 'user',
+        authorAvatar: user.photoURL || 'https://placehold.co/40x40.png',
         content: text,
         timestamp: 'Just now',
     };

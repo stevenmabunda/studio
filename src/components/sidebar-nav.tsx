@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -7,20 +8,32 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarFooter,
 } from '@/components/ui/sidebar';
-import { Home, Hash, CalendarClock, Bell, User, Goal, MessageSquare } from 'lucide-react';
+import { Home, Hash, CalendarClock, Bell, User, Goal, MessageSquare, LogOut } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { CreatePost, type Media } from './create-post';
 import { usePosts } from '@/contexts/post-context';
 import React, { useState } from 'react';
+import { useAuth } from '@/hooks/use-auth';
+import { signOut } from 'firebase/auth';
+import { auth } from '@/lib/firebase/config';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 
 const navItems = [
-  { href: '/', label: 'Home', icon: Home },
+  { href: '/home', label: 'Home', icon: Home },
   { href: '/explore', label: 'Explore', icon: Hash },
   { href: '/threads', label: 'Match Threads', icon: CalendarClock },
   { href: '/notifications', label: 'Notifications', icon: Bell },
@@ -30,7 +43,9 @@ const navItems = [
 
 export function SidebarNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const { addPost } = usePosts();
+  const { user } = useAuth();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handlePost = (data: { text: string; media: Media[] }) => {
@@ -38,41 +53,30 @@ export function SidebarNav() {
     setIsDialogOpen(false);
   };
 
+  const handleLogout = async () => {
+    if (!auth) {
+      console.error('Firebase not configured, cannot log out.');
+      // Optionally, show a toast to the user.
+      return;
+    }
+    await signOut(auth);
+    router.push('/login');
+    router.refresh();
+  };
+
+  const userHandle = user?.email?.split('@')[0] || 'user';
+
   return (
     <Sidebar>
       <SidebarHeader>
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon" className="h-12 w-12 shrink-0" asChild>
-            <Link href="/">
+            <Link href="/home">
               <Goal className="h-8 w-8 text-primary" />
               <span className="sr-only">Goal Chatter</span>
             </Link>
           </Button>
         </div>
-        <Link href="/profile" className="block w-full rounded-xl p-3 bg-sidebar-accent/50 hover:bg-sidebar-accent/75 transition-colors">
-            <div className="flex items-start gap-3">
-                <Avatar className="h-10 w-10">
-                    <AvatarImage src="https://placehold.co/40x40.png" alt="User Avatar" data-ai-hint="user avatar" />
-                    <AvatarFallback>U</AvatarFallback>
-                </Avatar>
-                <div className="flex-1 overflow-hidden">
-                    <div>
-                        <p className="truncate font-bold">Your Name</p>
-                        <p className="truncate text-sm text-muted-foreground">@yourhandle</p>
-                    </div>
-                    <div className="mt-4 flex gap-4 text-sm">
-                        <div>
-                            <span className="font-bold">142</span>
-                            <span className="text-muted-foreground"> Following</span>
-                        </div>
-                        <div>
-                            <span className="font-bold">1,205</span>
-                            <span className="text-muted-foreground"> Followers</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </Link>
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
@@ -80,7 +84,7 @@ export function SidebarNav() {
             <SidebarMenuItem key={item.href}>
               <Link href={item.href} legacyBehavior passHref>
                 <SidebarMenuButton
-                  isActive={pathname === item.href}
+                  isActive={pathname === item.href || (item.href === '/home' && pathname === '/')}
                   className="text-lg h-14"
                 >
                   <item.icon className="h-7 w-7" />
@@ -106,6 +110,36 @@ export function SidebarNav() {
             </Dialog>
         </div>
       </SidebarContent>
+       <SidebarFooter>
+         {user && (
+            <div className="w-full p-2">
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="w-full justify-start p-3 h-auto rounded-xl bg-sidebar-accent/50 hover:bg-sidebar-accent/75 transition-colors">
+                            <div className="flex items-center gap-3 w-full">
+                                <Avatar className="h-10 w-10">
+                                    <AvatarImage src={user.photoURL || 'https://placehold.co/40x40.png'} alt="User Avatar" data-ai-hint="user avatar" />
+                                    <AvatarFallback>{user.displayName?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1 overflow-hidden text-left">
+                                    <p className="truncate font-bold">{user.displayName || 'User'}</p>
+                                    <p className="truncate text-sm text-muted-foreground">@{userHandle}</p>
+                                </div>
+                                <LogOut className="h-5 w-5 ml-auto" />
+                            </div>
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-64 mb-2" side="top" align="start">
+                        <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={handleLogout}>
+                            Log out @{userHandle}
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
+         )}
+      </SidebarFooter>
     </Sidebar>
   );
 }
