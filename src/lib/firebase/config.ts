@@ -28,7 +28,7 @@ if (firebaseConfig.apiKey) {
   try {
     app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
     auth = getAuth(app);
-    db = getFirestore(app);
+    db = getFirestore(app, 'bholo');
     storage = getStorage(app);
   } catch (error) {
     console.error("Failed to initialize Firebase. Please check your credentials.", error);
