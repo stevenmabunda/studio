@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -174,45 +175,47 @@ function AddStoryDialog({ onStoryAdded }: { onStoryAdded: (newStory: StoryType) 
   );
 }
 
+const dummyStories: StoryType[] = [
+    {
+      id: 'story-1',
+      userId: 'user1',
+      username: 'Leo Messi',
+      avatar: 'https://placehold.co/64x64.png',
+      storyImageUrl: 'https://placehold.co/720x1280.png',
+    },
+    {
+      id: 'story-2',
+      userId: 'user2',
+      username: 'Cristiano Ronaldo',
+      avatar: 'https://placehold.co/64x64.png',
+      storyImageUrl: 'https://placehold.co/720x1280.png',
+    },
+    {
+      id: 'story-3',
+      userId: 'user3',
+      username: 'Neymar Jr',
+      avatar: 'https://placehold.co/64x64.png',
+      storyImageUrl: 'https://placehold.co/720x1280.png',
+    },
+    {
+      id: 'story-4',
+      userId: 'user4',
+      username: 'Kylian Mbappé',
+      avatar: 'https://placehold.co/64x64.png',
+      storyImageUrl: 'https://placehold.co/720x1280.png',
+    },
+    {
+      id: 'story-5',
+      userId: 'user5',
+      username: 'Kevin De Bruyne',
+      avatar: 'https://placehold.co/64x64.png',
+      storyImageUrl: 'https://placehold.co/720x1280.png',
+    },
+  ];
 
 export function StoryReel() {
     const [openStory, setOpenStory] = useState<StoryType | null>(null);
-    const [stories, setStories] = useState<StoryType[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-      const fetchStories = async () => {
-        if (!db) {
-          setLoading(false);
-          return;
-        }
-        setLoading(true);
-        try {
-          const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-          const storiesRef = collection(db, "stories");
-          const q = query(
-            storiesRef, 
-            where("createdAt", ">=", Timestamp.fromDate(twentyFourHoursAgo)),
-            orderBy("createdAt", "desc")
-          );
-          const querySnapshot = await getDocs(q);
-          const fetchedStories = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as StoryType));
-          
-          setStories(fetchedStories);
-        } catch (error) {
-          console.error("Error fetching stories:", error);
-          // It's possible the composite index is missing. Inform the user.
-          if (error instanceof Error && error.message.includes('indexes')) {
-            // Firestore error for missing index
-            console.error("Firestore error: Please create the required composite index in your Firebase console.");
-          }
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      fetchStories();
-    }, []);
+    const [stories, setStories] = useState<StoryType[]>(dummyStories);
 
     const handleStoryAdded = (newStory: StoryType) => {
       // Optimistically add the new story to the start of the list
@@ -223,17 +226,7 @@ export function StoryReel() {
         <div className="p-4 border-b">
         <div className="flex items-center gap-4 overflow-x-auto no-scrollbar">
             <AddStoryDialog onStoryAdded={handleStoryAdded} />
-            {loading && Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="flex flex-col items-center gap-2 flex-shrink-0">
-                <div className="p-0.5 rounded-full bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-500 animate-pulse">
-                  <div className="p-0.5 bg-background rounded-full">
-                    <div className="w-16 h-16 rounded-full bg-muted"></div>
-                  </div>
-                </div>
-                <div className="h-3 w-12 bg-muted rounded"></div>
-              </div>
-            ))}
-            {!loading && stories.map((story) => (
+            {stories.map((story) => (
             <Dialog key={story.id} open={openStory?.id === story.id} onOpenChange={(isOpen) => { if(!isOpen) setOpenStory(null)}}>
                 <DialogTrigger asChild onClick={() => setOpenStory(story)}>
                     <div className="flex flex-col items-center gap-2 flex-shrink-0 cursor-pointer">
