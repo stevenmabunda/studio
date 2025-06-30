@@ -10,6 +10,7 @@ import { usePosts } from '@/contexts/post-context';
 import { StoryReel } from '@/components/story-reel';
 import { PostSkeleton } from '@/components/post-skeleton';
 import { DiscoverFeed } from '@/components/discover-feed';
+import { TrendingHashtags } from '@/components/trending-hashtags';
 
 const liveMatches = [
     {
@@ -84,6 +85,7 @@ export default function HomePage() {
         <main className="flex-1">
           <TabsContent value="foryou">
             <StoryReel />
+            <TrendingHashtags />
             <CreatePost onPost={addPost} />
             <div className="divide-y divide-border">
               {loading ? (
