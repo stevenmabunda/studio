@@ -9,7 +9,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { db, storage } from '@/lib/firebase/config';
 import { collection, addDoc, serverTimestamp, getDocs, query, type Timestamp, doc, updateDoc, runTransaction } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { formatDistanceToNow } from 'date-fns';
+import { formatTimestamp } from '@/lib/utils';
 
 type PostContextType = {
   posts: PostType[];
@@ -58,7 +58,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
                     likes: data.likes,
                     media: data.media,
                     poll: data.poll,
-                    timestamp: createdAt ? formatDistanceToNow(createdAt, { addSuffix: true }) : 'Just now',
+                    timestamp: createdAt ? formatTimestamp(createdAt) : 'now',
                 } as PostType;
             });
     

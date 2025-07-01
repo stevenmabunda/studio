@@ -142,15 +142,15 @@ export function Post(props: PostProps) {
         </Avatar>
         <div className="flex-1">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm">
-              <Link href="/profile" className="font-bold hover:underline" onClick={(e) => e.stopPropagation()}>
+            <div className="flex min-w-0 items-center gap-2 text-sm">
+              <Link href="/profile" className="truncate font-bold hover:underline" onClick={(e) => e.stopPropagation()}>
                 {authorName}
               </Link>
-              <span className="text-muted-foreground">@{authorHandle}</span>
+              <span className="truncate text-muted-foreground">@{authorHandle}</span>
               <span className="text-muted-foreground">·</span>
-              <span className="text-muted-foreground">{timestamp}</span>
+              <span className="flex-shrink-0 text-muted-foreground">{timestamp}</span>
             </div>
-            {!isOwnPost && (
+            {!isOwnPost && isStandalone && (
               <Button 
                 variant={isFollowing ? 'outline' : 'default'}
                 size="sm" 
