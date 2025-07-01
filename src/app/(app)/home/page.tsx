@@ -1,7 +1,6 @@
 
 'use client';
 
-import { CreatePost } from '@/components/create-post';
 import { Post } from '@/components/post';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -86,7 +85,6 @@ export default function HomePage() {
           <TabsContent value="foryou">
             <StoryReel />
             <TrendingHashtags />
-            <CreatePost onPost={addPost} />
             <div className="divide-y divide-border">
               {loading ? (
                 <>

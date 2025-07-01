@@ -1,16 +1,19 @@
 
 'use client';
 import type { ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { SidebarNav } from '@/components/sidebar-nav';
 import { RightSidebar } from '@/components/right-sidebar';
 import { MobileTopBar } from '@/components/mobile-top-bar';
 import { useEffect } from 'react';
+import { MobileBottomNav } from '@/components/mobile-bottom-nav';
+import { FloatingCreatePostButton } from '@/components/floating-create-post-button';
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (!loading && !user) {
@@ -29,7 +32,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           <SidebarNav />
         </div>
       </header>
-      <main className="w-full max-w-[624px] md:border-x">
+      <main className="w-full max-w-[624px] md:border-x pb-16 md:pb-0">
         <MobileTopBar />
         {children}
       </main>
@@ -38,6 +41,12 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           <RightSidebar />
         </div>
       </aside>
+
+      {/* Mobile-only elements */}
+      <div className="md:hidden">
+        {pathname === '/home' && <FloatingCreatePostButton />}
+        <MobileBottomNav />
+      </div>
     </div>
   );
 }
