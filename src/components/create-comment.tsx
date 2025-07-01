@@ -18,8 +18,8 @@ export function CreateComment({ onComment }: { onComment: (text: string) => void
   };
 
   return (
-    <div className="p-4 border-t">
-      <div className="flex space-x-4">
+    <div className="p-3 md:p-4 border-t">
+      <div className="flex space-x-3 md:space-x-4">
         <Avatar>
           <AvatarImage src={user?.photoURL || "https://placehold.co/40x40.png"} alt={user?.displayName || "User"} data-ai-hint="user avatar" />
           <AvatarFallback>{user?.displayName?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>

@@ -62,8 +62,8 @@ export function CommentDialogContent({ post }: { post: PostType }) {
         <CreateComment onComment={handleCreateComment} />
         <div className="divide-y divide-border">
             {comments.map((comment) => (
-                <div key={comment.id} className="p-4">
-                    <div className="flex space-x-4">
+                <div key={comment.id} className="p-3 md:p-4">
+                    <div className="flex space-x-3 md:space-x-4">
                         <Avatar>
                         <AvatarImage src={comment.authorAvatar} alt={comment.authorName} data-ai-hint="user avatar" />
                         <AvatarFallback>{comment.authorName.charAt(0)}</AvatarFallback>

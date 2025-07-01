@@ -3,8 +3,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function PostSkeleton() {
   return (
-    <div className="flex space-x-4 p-4">
-      <Skeleton className="h-12 w-12 rounded-full" />
+    <div className="flex space-x-3 md:space-x-4 p-3 md:p-4">
+      <Skeleton className="h-10 w-10 rounded-full" />
       <div className="flex-1 space-y-2">
         <div className="flex items-center gap-2">
           <Skeleton className="h-4 w-[100px]" />

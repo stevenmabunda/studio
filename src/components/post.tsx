@@ -7,13 +7,12 @@ import { MessageCircle, Repeat, Heart, Share2, CheckCircle2, MoreHorizontal, Edi
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useMemo } from "react";
-import { cn, linkify } from "@/lib/utils";
+import { cn, linkify, formatTimestamp } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
 } from '@/components/ui/dialog';
 import {
@@ -189,7 +188,7 @@ export function Post(props: PostProps) {
 
 
   const postUiContent = (
-      <div className="flex space-x-4">
+      <div className="flex space-x-3 md:space-x-4">
         <Avatar>
           <AvatarImage src={authorAvatar} alt={authorName} data-ai-hint="user avatar"/>
           <AvatarFallback>{authorName.charAt(0)}</AvatarFallback>
@@ -297,7 +296,7 @@ export function Post(props: PostProps) {
 
   if (isStandalone) {
     return (
-      <div className="p-4">
+      <div className="p-3 md:p-4">
         {postUiContent}
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
             <AlertDialogContent>
@@ -342,7 +341,7 @@ export function Post(props: PostProps) {
     <>
       <Dialog>
           <DialogTrigger asChild>
-              <div className="block p-4 cursor-pointer hover:bg-accent/20">
+              <div className="block p-3 md:p-4 cursor-pointer hover:bg-accent/20">
                   {postUiContent}
               </div>
           </DialogTrigger>
