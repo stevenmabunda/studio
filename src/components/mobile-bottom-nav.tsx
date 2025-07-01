@@ -1,8 +1,9 @@
+
 'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Search, Users, Mail, Plus } from 'lucide-react';
+import { Home, Users, Plus, Hash } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import React, { useState, useEffect, useRef } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -13,10 +14,9 @@ import type { PostType } from '@/lib/data';
 
 const navItems = [
   { href: '/home', icon: Home, label: 'Home' },
-  { href: '/explore', icon: Search, label: 'Search' },
+  { href: '/explore', icon: Hash, label: 'Explore' },
   { href: 'POST_ACTION', icon: Plus, label: 'Post' },
   { href: '/communities', icon: Users, label: 'Communities' },
-  { href: '/messages', icon: Mail, label: 'Messages' },
 ];
 
 export function MobileBottomNav() {
@@ -80,11 +80,9 @@ export function MobileBottomNav() {
                     // Prevent focus trap from interfering with file input on mobile
                     onOpenAutoFocus={(e) => e.preventDefault()}
                 >
-                    <div className="p-3 md:p-4 pb-0">
-                        <SheetHeader>
-                            <SheetTitle>Create a new post</SheetTitle>
-                        </SheetHeader>
-                    </div>
+                    <SheetHeader className="p-3 md:p-4 pb-0">
+                      <SheetTitle>Create a new post</SheetTitle>
+                    </SheetHeader>
                     <div className="-mx-6">
                         <CreatePost onPost={handlePost} />
                     </div>
