@@ -6,7 +6,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { MessageCircle, Repeat, Heart, Share2, CheckCircle2, MoreHorizontal, Edit, Trash2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { cn, linkify, formatTimestamp } from "@/lib/utils";
 import {
   Dialog,
@@ -132,7 +132,37 @@ export function Post(props: PostProps) {
   const [editedContent, setEditedContent] = useState(content);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
+  const mediaExists = media && media.length > 0;
+  const isVideo = mediaExists && media[0].type === 'video';
+  const videoRef = useRef<HTMLVideoElement>(null);
+
   const isAuthor = user && user.uid === authorId;
+
+  useEffect(() => {
+    const videoElement = videoRef.current;
+    if (!videoElement) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) {
+          videoElement.pause();
+        }
+      },
+      {
+        threshold: 0.1, // Pause when less than 10% is visible
+      }
+    );
+
+    observer.observe(videoElement);
+
+    return () => {
+      if (videoElement) {
+        observer.unobserve(videoElement);
+      }
+    };
+  }, [isVideo]);
 
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -175,8 +205,6 @@ export function Post(props: PostProps) {
     }
   };
 
-  const mediaExists = media && media.length > 0;
-  const isVideo = mediaExists && media[0].type === 'video';
   const imageCount = mediaExists && !isVideo ? media.length : 0;
   
   const singleImage = imageCount === 1;
@@ -189,7 +217,7 @@ export function Post(props: PostProps) {
 
 
   const postUiContent = (
-      <div className="flex space-x-3">
+      <div className="flex space-x-3 p-3 md:p-4">
         <Avatar>
           <AvatarImage src={authorAvatar} alt={authorName} data-ai-hint="user avatar"/>
           <AvatarFallback>{authorName.charAt(0)}</AvatarFallback>
@@ -243,6 +271,7 @@ export function Post(props: PostProps) {
             <div className={cn("mt-3 rounded-2xl overflow-hidden border", imageCount > 1 && "aspect-video")}>
               {isVideo ? (
                 <video
+                  ref={videoRef}
                   src={media[0].url}
                   controls
                   className="w-full h-auto"
@@ -342,7 +371,7 @@ export function Post(props: PostProps) {
     <>
       <Dialog>
           <DialogTrigger asChild>
-              <div className="block p-3 cursor-pointer hover:bg-accent/20">
+              <div className="block cursor-pointer hover:bg-accent/20">
                   {postUiContent}
               </div>
           </DialogTrigger>
