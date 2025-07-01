@@ -1,8 +1,9 @@
+
 'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Users, Plus, Search } from 'lucide-react';
+import { Home, Users, Plus, Search, Hash } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import React, { useState, useEffect, useRef } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -13,8 +14,9 @@ import type { PostType } from '@/lib/data';
 
 const navItems = [
   { href: '/home', icon: Home, label: 'Home' },
-  { href: '/explore', icon: Search, label: 'Explore' },
+  { href: '/explore', icon: Hash, label: 'Explore' },
   { href: 'POST_ACTION', icon: Plus, label: 'Post' },
+  { href: '/explore', icon: Search, label: 'Search' },
   { href: '/communities', icon: Users, label: 'Communities' },
 ];
 
@@ -90,9 +92,9 @@ export function MobileBottomNav() {
             );
           }
           
-          const isActive = pathname.startsWith(item.href) && (item.href !== '/home' || pathname === '/home');
+          const isActive = pathname.startsWith(item.href) && (item.href !== '/home' || pathname === '/home') && (item.label !== 'Search');
           return (
-            <Link key={item.href} href={item.href} className="flex-1 flex justify-center items-center h-full">
+            <Link key={item.href + item.label} href={item.href} className="flex-1 flex justify-center items-center h-full">
               <item.icon
                 className={cn(
                   'h-6 w-6 text-muted-foreground transition-colors',
