@@ -96,9 +96,6 @@ export default function HomePage() {
         </header>
         <main className="flex-1">
           <TabsContent value="foryou">
-            <div className="md:hidden border-b">
-              <CreatePost onPost={handlePost} />
-            </div>
             <StoryReel />
             <div className="divide-y divide-border">
               {loading ? (

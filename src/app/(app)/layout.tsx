@@ -8,7 +8,6 @@ import { RightSidebar } from '@/components/right-sidebar';
 import { MobileTopBar } from '@/components/mobile-top-bar';
 import { useEffect } from 'react';
 import { MobileBottomNav } from '@/components/mobile-bottom-nav';
-import { FloatingCreatePostButton } from '@/components/floating-create-post-button';
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();

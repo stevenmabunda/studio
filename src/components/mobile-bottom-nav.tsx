@@ -3,24 +3,64 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Hash, Users, Bell, Mail } from 'lucide-react';
+import { Home, Hash, Users, Mail, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { CreatePost, type Media } from '@/components/create-post';
+import { usePosts } from '@/contexts/post-context';
+import { useToast } from '@/hooks/use-toast';
+import type { PostType } from '@/lib/data';
 
 const navItems = [
   { href: '/home', icon: Home, label: 'Home' },
   { href: '/explore', icon: Hash, label: 'Explore' },
+  { href: 'POST_ACTION', icon: Plus, label: 'Post' },
   { href: '/communities', icon: Users, label: 'Communities' },
-  { href: '/notifications', icon: Bell, label: 'Notifications' },
   { href: '/messages', icon: Mail, label: 'Messages' },
 ];
 
 export function MobileBottomNav() {
   const pathname = usePathname();
+  const { addPost } = usePosts();
+  const { toast } = useToast();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const handlePost = async (data: { text: string; media: Media[], poll?: PostType['poll'] }) => {
+    try {
+        await addPost(data);
+        setIsDialogOpen(false);
+        toast({ description: "Your post has been published!" });
+    } catch (error) {
+        console.error("Failed to create post from dialog:", error);
+        toast({ variant: 'destructive', description: "Something went wrong. Please try again." });
+    }
+  };
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-background/80 backdrop-blur-sm border-t border-border z-40">
       <div className="flex justify-around items-center h-full">
         {navItems.map((item) => {
+          if (item.href === 'POST_ACTION') {
+            return (
+              <Dialog key={item.label} open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                  <button className="flex-1 flex justify-center items-center h-full">
+                    <item.icon className='h-8 w-8 text-muted-foreground' strokeWidth={2.5} />
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[625px]">
+                  <DialogHeader>
+                    <DialogTitle>Create a new post</DialogTitle>
+                  </DialogHeader>
+                  <div className='-mx-6'>
+                      <CreatePost onPost={handlePost} />
+                  </div>
+                </DialogContent>
+              </Dialog>
+            );
+          }
+          
           const isActive = pathname.startsWith(item.href) && (item.href !== '/home' || pathname === '/home');
           return (
             <Link key={item.href} href={item.href} className="flex-1 flex justify-center items-center h-full">
