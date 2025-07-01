@@ -31,12 +31,13 @@ export function MobileBottomNav() {
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      // Show nav if scrolling up or at the top of the page
-      if (currentScrollY < lastScrollY.current || currentScrollY < 10) {
-        setIsVisible(true);
-      } else {
-        // Hide nav if scrolling down
+      
+      // Hide nav if scrolling up and away from the top of the page
+      if (currentScrollY < lastScrollY.current && currentScrollY > 10) {
         setIsVisible(false);
+      } else {
+        // Show nav if scrolling down or at the top of the page
+        setIsVisible(true);
       }
       lastScrollY.current = currentScrollY;
     };
