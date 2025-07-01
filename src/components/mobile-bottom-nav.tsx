@@ -1,9 +1,8 @@
-
 'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Users, Plus, Hash } from 'lucide-react';
+import { Home, Users, Plus, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import React, { useState, useEffect, useRef } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -14,7 +13,7 @@ import type { PostType } from '@/lib/data';
 
 const navItems = [
   { href: '/home', icon: Home, label: 'Home' },
-  { href: '/explore', icon: Hash, label: 'Explore' },
+  { href: '/explore', icon: Search, label: 'Explore' },
   { href: 'POST_ACTION', icon: Plus, label: 'Post' },
   { href: '/communities', icon: Users, label: 'Communities' },
 ];
@@ -31,11 +30,11 @@ export function MobileBottomNav() {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       
-      // Hide nav if scrolling up and away from the top of the page
+      // Hide nav if scrolling down
       if (currentScrollY > lastScrollY.current && currentScrollY > 10) {
         setIsVisible(false);
       } else {
-        // Show nav if scrolling down or at the top of the page
+        // Show nav if scrolling up or at the top of the page
         setIsVisible(true);
       }
       lastScrollY.current = currentScrollY;
