@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -10,7 +9,7 @@ import {
   SidebarMenuButton,
   SidebarFooter,
 } from '@/components/ui/sidebar';
-import { Home, Hash, Users, Bell, User, MessageSquare, LogOut } from 'lucide-react';
+import { Home, Search, Users, Bell, User, MessageSquare, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -31,11 +30,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useToast } from '@/hooks/use-toast';
+import type { PostType } from '@/lib/data';
 
 
 const navItems = [
   { href: '/home', label: 'Home', icon: Home },
-  { href: '/explore', label: 'Explore', icon: Hash },
+  { href: '/explore', label: 'Explore', icon: Search },
   { href: '/communities', label: 'Communities', icon: Users },
   { href: '/notifications', label: 'Notifications', icon: Bell },
   { href: '/messages', label: 'Messages', icon: MessageSquare },
@@ -50,7 +50,7 @@ export function SidebarNav() {
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const handlePost = async (data: { text: string; media: Media[] }) => {
+  const handlePost = async (data: { text: string; media: Media[], poll?: PostType['poll'] }) => {
     try {
         await addPost(data);
         setIsDialogOpen(false);

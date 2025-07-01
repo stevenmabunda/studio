@@ -1,9 +1,8 @@
-
 'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Hash, Users, Mail, Plus } from 'lucide-react';
+import { Home, Search, Users, Mail, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import React, { useState, useEffect, useRef } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -14,7 +13,7 @@ import type { PostType } from '@/lib/data';
 
 const navItems = [
   { href: '/home', icon: Home, label: 'Home' },
-  { href: '/explore', icon: Hash, label: 'Explore' },
+  { href: '/explore', icon: Search, label: 'Search' },
   { href: 'POST_ACTION', icon: Plus, label: 'Post' },
   { href: '/communities', icon: Users, label: 'Communities' },
   { href: '/messages', icon: Mail, label: 'Messages' },
@@ -33,7 +32,7 @@ export function MobileBottomNav() {
       const currentScrollY = window.scrollY;
       
       // Hide nav if scrolling up and away from the top of the page
-      if (currentScrollY < lastScrollY.current && currentScrollY > 10) {
+      if (currentScrollY > lastScrollY.current && currentScrollY > 10) {
         setIsVisible(false);
       } else {
         // Show nav if scrolling down or at the top of the page
@@ -72,7 +71,7 @@ export function MobileBottomNav() {
               <Sheet key={item.label} open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <SheetTrigger asChild>
                   <button className="flex-1 flex justify-center items-center h-full">
-                    <item.icon className='h-8 w-8 text-muted-foreground' strokeWidth={2.5} />
+                    <item.icon className='h-7 w-7 text-muted-foreground' strokeWidth={2.5} />
                   </button>
                 </SheetTrigger>
                 <SheetContent 
@@ -99,7 +98,7 @@ export function MobileBottomNav() {
             <Link key={item.href} href={item.href} className="flex-1 flex justify-center items-center h-full">
               <item.icon
                 className={cn(
-                  'h-7 w-7 text-muted-foreground transition-colors',
+                  'h-6 w-6 text-muted-foreground transition-colors',
                   isActive && 'text-primary'
                 )}
                 strokeWidth={isActive ? 2.5 : 2}
