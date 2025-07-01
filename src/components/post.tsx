@@ -2,8 +2,8 @@
 'use client';
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { MessageCircle, Repeat, Heart, Share2, CheckCircle2 } from "lucide-react";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { MessageCircle, Repeat, Heart, Share2, CheckCircle2, MoreHorizontal, Edit, Trash2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useMemo } from "react";
@@ -14,12 +14,33 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { CommentDialogContent } from './comment-dialog';
 import { useRouter } from "next/navigation";
 import type { PostType } from "@/lib/data";
 import { Progress } from "./ui/progress";
 import { usePosts } from "@/contexts/post-context";
+import { useAuth } from "@/hooks/use-auth";
+import { Textarea } from "./ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+
 
 type PostProps = PostType & {
   isStandalone?: boolean;
@@ -82,6 +103,7 @@ function Poll({ poll, postId }: { poll: NonNullable<PostType['poll']>, postId: s
 export function Post(props: PostProps) {
   const {
     id,
+    authorId,
     authorName,
     authorHandle,
     authorAvatar,
@@ -96,12 +118,21 @@ export function Post(props: PostProps) {
   } = props;
   
   const router = useRouter();
+  const { user } = useAuth();
+  const { editPost, deletePost } = usePosts();
+  const { toast } = useToast();
 
   const [likeCount, setLikeCount] = useState(initialLikes);
   const [isLiked, setIsLiked] = useState(false);
   const [repostCount, setRepostCount] = useState(initialReposts);
   const [isReposted, setIsReposted] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedContent, setEditedContent] = useState(content);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  const isAuthor = user && user.uid === authorId;
 
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -121,7 +152,28 @@ export function Post(props: PostProps) {
     setIsFollowing(!isFollowing);
   }
   
-  const isOwnPost = authorHandle === 'yourhandle';
+  const handleEditSave = async () => {
+    if (editedContent.trim() === content.trim()) {
+      setIsEditing(false);
+      return;
+    }
+    try {
+      await editPost(id, { text: editedContent });
+      toast({ description: "Post updated." });
+      setIsEditing(false);
+    } catch (error) {
+      toast({ variant: 'destructive', description: "Failed to update post." });
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await deletePost(id);
+      toast({ description: "Post deleted." });
+    } catch (error) {
+      toast({ variant: 'destructive', description: "Failed to delete post." });
+    }
+  };
 
   const mediaExists = media && media.length > 0;
   const isVideo = mediaExists && media[0].type === 'video';
@@ -152,16 +204,38 @@ export function Post(props: PostProps) {
               <span className="text-muted-foreground">·</span>
               <span className="flex-shrink-0 text-muted-foreground">{timestamp}</span>
             </div>
-            {!isOwnPost && isStandalone && (
-              <Button 
-                variant={isFollowing ? 'outline' : 'default'}
-                size="sm" 
-                className={cn("rounded-full h-8 px-4 font-bold", !isFollowing && "bg-foreground text-background hover:bg-foreground/90")}
-                onClick={handleFollow}
-              >
-                {isFollowing ? 'Following' : 'Follow'}
-              </Button>
-            )}
+            <div className="flex items-center">
+                {!isAuthor && isStandalone && (
+                  <Button 
+                    variant={isFollowing ? 'outline' : 'default'}
+                    size="sm" 
+                    className={cn("rounded-full h-8 px-4 font-bold", !isFollowing && "bg-foreground text-background hover:bg-foreground/90")}
+                    onClick={handleFollow}
+                  >
+                    {isFollowing ? 'Following' : 'Follow'}
+                  </Button>
+                )}
+                {isAuthor && (
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 -mr-2 text-muted-foreground" onClick={(e) => e.stopPropagation()}>
+                                <MoreHorizontal className="h-5 w-5" />
+                                <span className="sr-only">More options</span>
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                            <DropdownMenuItem onSelect={() => setIsEditing(true)}>
+                                <Edit className="mr-2 h-4 w-4" />
+                                <span>Edit</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => setIsDeleteDialogOpen(true)} className="text-destructive focus:text-destructive focus:bg-destructive/10">
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                <span>Delete</span>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                )}
+            </div>
           </div>
           <p className="mt-2 whitespace-pre-wrap text-sm">{linkify(content)}</p>
           {poll && <Poll poll={poll} postId={id} />}
@@ -222,22 +296,98 @@ export function Post(props: PostProps) {
   );
 
   if (isStandalone) {
-    return <div className="p-4">{postUiContent}</div>;
+    return (
+      <div className="p-4">
+        {postUiContent}
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete your post.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                        className={buttonVariants({ variant: "destructive" })}
+                        onClick={handleDelete}
+                    >
+                        Delete
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+        <Dialog open={isEditing} onOpenChange={setIsEditing}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Edit Post</DialogTitle>
+                </DialogHeader>
+                <Textarea
+                    value={editedContent}
+                    onChange={(e) => setEditedContent(e.target.value)}
+                    className="min-h-[120px] text-base"
+                />
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
+                    <Button onClick={handleEditSave}>Save</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+      </div>
+    );
   }
 
   return (
-    <Dialog>
-        <DialogTrigger asChild>
-            <div className="block p-4 cursor-pointer hover:bg-accent/20">
-                {postUiContent}
-            </div>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-[625px] p-0" onClick={(e) => e.stopPropagation()}>
-            <DialogHeader className="sr-only">
-              <DialogTitle>Post details</DialogTitle>
-            </DialogHeader>
-            <CommentDialogContent post={props} />
-        </DialogContent>
-    </Dialog>
+    <>
+      <Dialog>
+          <DialogTrigger asChild>
+              <div className="block p-4 cursor-pointer hover:bg-accent/20">
+                  {postUiContent}
+              </div>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[625px] p-0" onClick={(e) => e.stopPropagation()}>
+              <DialogHeader className="sr-only">
+                <DialogTitle>Post details</DialogTitle>
+              </DialogHeader>
+              <CommentDialogContent post={props} />
+          </DialogContent>
+      </Dialog>
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogContent>
+              <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete your post.
+                  </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                      className={buttonVariants({ variant: "destructive" })}
+                      onClick={handleDelete}
+                  >
+                      Delete
+                  </AlertDialogAction>
+              </AlertDialogFooter>
+          </AlertDialogContent>
+      </AlertDialog>
+      <Dialog open={isEditing} onOpenChange={setIsEditing}>
+          <DialogContent>
+              <DialogHeader>
+                  <DialogTitle>Edit Post</DialogTitle>
+              </DialogHeader>
+              <Textarea
+                  value={editedContent}
+                  onChange={(e) => setEditedContent(e.target.value)}
+                  className="min-h-[120px] text-base"
+              />
+              <DialogFooter>
+                  <Button variant="outline" onClick={() => { setIsEditing(false); setEditedContent(content); }}>Cancel</Button>
+                  <Button onClick={handleEditSave}>Save</Button>
+              </DialogFooter>
+          </DialogContent>
+      </Dialog>
+    </>
   );
 }

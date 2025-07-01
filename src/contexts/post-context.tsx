@@ -7,13 +7,15 @@ import type { PostType } from '@/lib/data';
 import type { Media } from '@/components/create-post';
 import { useAuth } from '@/hooks/use-auth';
 import { db, storage } from '@/lib/firebase/config';
-import { collection, addDoc, serverTimestamp, getDocs, query, type Timestamp, doc, updateDoc, runTransaction } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDocs, query, type Timestamp, doc, updateDoc, runTransaction, deleteDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { formatTimestamp } from '@/lib/utils';
 
 type PostContextType = {
   posts: PostType[];
   addPost: (data: { text: string; media: Media[], poll?: PostType['poll'] }) => Promise<void>;
+  editPost: (postId: string, data: { text: string }) => Promise<void>;
+  deletePost: (postId: string) => Promise<void>;
   addVote: (postId: string, choiceIndex: number) => Promise<void>;
   loading: boolean;
 };
@@ -49,6 +51,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
                 const createdAt = (data.createdAt as Timestamp)?.toDate();
                 return {
                     id: data.id,
+                    authorId: data.authorId,
                     authorName: data.authorName,
                     authorHandle: data.authorHandle,
                     authorAvatar: data.authorAvatar,
@@ -92,6 +95,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
     );
 
     const postData: Omit<PostType, 'id' | 'timestamp'> & { createdAt: any } = {
+      authorId: user.uid,
       authorName: user.displayName || 'Anonymous User',
       authorHandle: user.email?.split('@')[0] || 'user',
       authorAvatar: user.photoURL || 'https://placehold.co/40x40.png',
@@ -111,6 +115,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
 
     const newPost: PostType = {
         id: docRef.id,
+        authorId: postData.authorId,
         authorName: postData.authorName,
         authorHandle: postData.authorHandle,
         authorAvatar: postData.authorAvatar,
@@ -124,6 +129,20 @@ export function PostProvider({ children }: { children: ReactNode }) {
     };
 
     setPosts((prevPosts) => [newPost, ...prevPosts]);
+  };
+
+  const editPost = async (postId: string, data: { text: string }) => {
+    if (!db || !user) throw new Error("Not authorized or db not available");
+    const postRef = doc(db, 'posts', postId);
+    await updateDoc(postRef, { content: data.text });
+    setPosts(posts => posts.map(p => p.id === postId ? { ...p, content: data.text } : p));
+  };
+
+  const deletePost = async (postId: string) => {
+    if (!db || !user) throw new Error("Not authorized or db not available");
+    const postRef = doc(db, 'posts', postId);
+    await deleteDoc(postRef);
+    setPosts(posts => posts.filter(p => p.id !== postId));
   };
 
   const addVote = async (postId: string, choiceIndex: number) => {
@@ -173,7 +192,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <PostContext.Provider value={{ posts, addPost, addVote, loading }}>
+    <PostContext.Provider value={{ posts, addPost, editPost, deletePost, addVote, loading }}>
       {children}
     </PostContext.Provider>
   );

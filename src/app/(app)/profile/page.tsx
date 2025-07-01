@@ -106,12 +106,12 @@ export default function ProfilePage() {
     }
   }, [authLoading, fetchProfile]);
 
-  if (authLoading || profileLoading || !profile) {
+  if (authLoading || profileLoading || !profile || !user) {
       // You can return a more detailed skeleton here
       return <PostSkeleton />;
   }
   
-  const userPosts = posts.filter(post => post.authorHandle === profile.handle);
+  const userPosts = posts.filter(post => post.authorId === user.uid);
 
   return (
     <div>
