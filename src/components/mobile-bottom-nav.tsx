@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, Hash, Users, Mail, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { CreatePost, type Media } from '@/components/create-post';
 import { usePosts } from '@/contexts/post-context';
@@ -25,6 +25,28 @@ export function MobileBottomNav() {
   const { addPost } = usePosts();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      // Show nav if scrolling up or at the top of the page
+      if (currentScrollY < lastScrollY.current || currentScrollY < 10) {
+        setIsVisible(true);
+      } else {
+        // Hide nav if scrolling down
+        setIsVisible(false);
+      }
+      lastScrollY.current = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   const handlePost = async (data: { text: string; media: Media[], poll?: PostType['poll'] }) => {
     try {
@@ -38,7 +60,10 @@ export function MobileBottomNav() {
   };
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-background/80 backdrop-blur-sm border-t border-border z-40">
+    <nav className={cn(
+        "md:hidden fixed bottom-0 left-0 right-0 h-16 bg-background/80 backdrop-blur-sm border-t border-border z-40 transition-transform duration-300 ease-in-out",
+        !isVisible && "translate-y-full"
+    )}>
       <div className="flex justify-around items-center h-full">
         {navItems.map((item) => {
           if (item.href === 'POST_ACTION') {
@@ -55,7 +80,7 @@ export function MobileBottomNav() {
                     // Prevent focus trap from interfering with file input on mobile
                     onOpenAutoFocus={(e) => e.preventDefault()}
                 >
-                    <div className="p-6 pb-0">
+                    <div className="p-3 md:p-4 pb-0">
                         <SheetHeader>
                             <SheetTitle>Create a new post</SheetTitle>
                         </SheetHeader>
