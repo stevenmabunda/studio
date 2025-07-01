@@ -1,4 +1,5 @@
 
+import { PinnedContent } from "@/components/pinned-content";
 import { TrendingTopics } from "@/components/trending-topics";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
@@ -12,8 +13,11 @@ export default function ExplorePage() {
           <Input placeholder="Search BHOLO" className="pl-11 rounded-full bg-secondary" />
         </div>
       </header>
-      <main className="flex-1 space-y-4 p-4">
-        <TrendingTopics />
+      <main className="flex-1 space-y-6 pt-4">
+        <PinnedContent />
+        <div className="px-4">
+          <TrendingTopics />
+        </div>
       </main>
     </div>
   );
