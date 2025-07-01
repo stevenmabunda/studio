@@ -11,6 +11,8 @@ import { cn, linkify } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
+  DialogHeader,
+  DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { CommentDialogContent } from './comment-dialog';
@@ -231,6 +233,9 @@ export function Post(props: PostProps) {
             </div>
         </DialogTrigger>
         <DialogContent className="sm:max-w-[625px] p-0" onClick={(e) => e.stopPropagation()}>
+            <DialogHeader className="sr-only">
+              <DialogTitle>Post details</DialogTitle>
+            </DialogHeader>
             <CommentDialogContent post={props} />
         </DialogContent>
     </Dialog>
