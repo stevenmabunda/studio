@@ -155,13 +155,13 @@ export function CreatePost({ onPost }: { onPost: (data: { text: string; media: M
   }[media.length] || '';
 
   return (
-    <div className="p-4 border-b">
-      <div className="flex space-x-4">
+    <div className="p-3 md:p-4 border-b">
+      <div className="flex space-x-3 md:space-x-4">
         <Avatar>
           <AvatarImage src={user?.photoURL || "https://placehold.co/40x40.png"} alt={user?.displayName || "User"} data-ai-hint="user avatar" />
           <AvatarFallback>{user?.displayName?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
         </Avatar>
-        <div className="flex-1 space-y-4">
+        <div className="flex-1 space-y-3">
           <Textarea
             placeholder="What is happening?!"
             className="w-full resize-none border-0 bg-transparent px-0 text-lg focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -199,7 +199,7 @@ export function CreatePost({ onPost }: { onPost: (data: { text: string; media: M
           )}
 
           {media.length > 0 && (
-            <div className="mt-3 rounded-2xl overflow-hidden border max-h-[60vh] overflow-y-auto">
+            <div className="mt-3 rounded-2xl overflow-hidden border max-h-[50vh] overflow-y-auto">
                 {hasVideo ? (
                     <div className="relative">
                         <video src={media[0].url} controls className="w-full h-auto max-h-96" />
