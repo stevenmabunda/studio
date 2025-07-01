@@ -44,7 +44,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
       {/* Mobile-only elements */}
       <div className="md:hidden">
-        {pathname === '/home' && <FloatingCreatePostButton />}
         <MobileBottomNav />
       </div>
     </div>

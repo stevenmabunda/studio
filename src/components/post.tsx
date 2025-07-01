@@ -161,7 +161,7 @@ export function Post(props: PostProps) {
               </Button>
             )}
           </div>
-          <p className="mt-2 whitespace-pre-wrap">{linkify(content)}</p>
+          <p className="mt-2 whitespace-pre-wrap text-sm">{linkify(content)}</p>
           {poll && <Poll poll={poll} postId={id} />}
           {mediaExists && (
             <div className={cn("mt-3 rounded-2xl overflow-hidden border", imageCount > 1 && "aspect-video")}>
@@ -169,7 +169,7 @@ export function Post(props: PostProps) {
                 <video
                   src={media[0].url}
                   controls
-                  className="w-full h-auto max-h-96"
+                  className="w-full h-auto"
                   onClick={(e) => e.stopPropagation()}
                 />
               ) : singleImage ? (

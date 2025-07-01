@@ -9,7 +9,9 @@ import { usePosts } from '@/contexts/post-context';
 import { StoryReel } from '@/components/story-reel';
 import { PostSkeleton } from '@/components/post-skeleton';
 import { DiscoverFeed } from '@/components/discover-feed';
-import { TrendingHashtags } from '@/components/trending-hashtags';
+import { CreatePost, type Media } from '@/components/create-post';
+import { useToast } from '@/hooks/use-toast';
+import type { PostType } from '@/lib/data';
 
 const liveMatches = [
     {
@@ -47,8 +49,19 @@ const upcomingMatches = [
 
 export default function HomePage() {
   const { posts, addPost, loading } = usePosts();
+  const { toast } = useToast();
 
   const videoPosts = posts.filter(post => post.media?.some(m => m.type === 'video'));
+
+  const handlePost = async (data: { text: string; media: Media[], poll?: PostType['poll'] }) => {
+    try {
+        await addPost(data);
+        toast({ description: "Your post has been published!" });
+    } catch (error) {
+        console.error("Failed to create post:", error);
+        toast({ variant: 'destructive', description: "Something went wrong. Please try again." });
+    }
+  };
 
   return (
     <div className="flex h-full min-h-screen flex-col">
@@ -83,8 +96,10 @@ export default function HomePage() {
         </header>
         <main className="flex-1">
           <TabsContent value="foryou">
+            <div className="md:hidden border-b">
+              <CreatePost onPost={handlePost} />
+            </div>
             <StoryReel />
-            <TrendingHashtags />
             <div className="divide-y divide-border">
               {loading ? (
                 <>
