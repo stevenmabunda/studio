@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Users, Plus, Search, Bell } from 'lucide-react';
+import { Home, Users, Plus, Hash } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import React, { useState, useEffect, useRef } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -14,9 +14,8 @@ import type { PostType } from '@/lib/data';
 
 const navItems = [
   { href: '/home', icon: Home, label: 'Home' },
-  { href: '/explore', icon: Search, label: 'Search' },
+  { href: '/explore', icon: Hash, label: 'Explore' },
   { href: 'POST_ACTION', icon: Plus, label: 'Post' },
-  { href: '/notifications', icon: Bell, label: 'Notifications' },
   { href: '/communities', icon: Users, label: 'Communities' },
 ];
 
