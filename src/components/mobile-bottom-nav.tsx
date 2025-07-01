@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Home, Hash, Users, Mail, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { CreatePost, type Media } from '@/components/create-post';
 import { usePosts } from '@/contexts/post-context';
 import { useToast } from '@/hooks/use-toast';
@@ -43,21 +43,28 @@ export function MobileBottomNav() {
         {navItems.map((item) => {
           if (item.href === 'POST_ACTION') {
             return (
-              <Dialog key={item.label} open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogTrigger asChild>
+              <Sheet key={item.label} open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <SheetTrigger asChild>
                   <button className="flex-1 flex justify-center items-center h-full">
                     <item.icon className='h-8 w-8 text-muted-foreground' strokeWidth={2.5} />
                   </button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[625px]">
-                  <DialogHeader>
-                    <DialogTitle>Create a new post</DialogTitle>
-                  </DialogHeader>
-                  <div className='-mx-6'>
-                      <CreatePost onPost={handlePost} />
-                  </div>
-                </DialogContent>
-              </Dialog>
+                </SheetTrigger>
+                <SheetContent 
+                    side="bottom" 
+                    className="rounded-t-lg p-0"
+                    // Prevent focus trap from interfering with file input on mobile
+                    onOpenAutoFocus={(e) => e.preventDefault()}
+                >
+                    <div className="p-6 pb-0">
+                        <SheetHeader>
+                            <SheetTitle>Create a new post</SheetTitle>
+                        </SheetHeader>
+                    </div>
+                    <div className="-mx-6">
+                        <CreatePost onPost={handlePost} />
+                    </div>
+                </SheetContent>
+              </Sheet>
             );
           }
           
