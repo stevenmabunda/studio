@@ -132,13 +132,13 @@ function AddStoryDialog({ onStoryAdded }: { onStoryAdded: (newStory: StoryType) 
       <DialogTrigger asChild>
         <div className="flex flex-col items-center gap-2 flex-shrink-0 cursor-pointer">
           <div className="relative">
-            <Avatar className="w-16 h-16">
+            <Avatar className="w-14 h-14">
               <AvatarImage src={user.photoURL || undefined} />
               <AvatarFallback>{user.displayName?.charAt(0) || 'U'}</AvatarFallback>
             </Avatar>
-            <PlusCircle className="absolute bottom-0 right-0 h-6 w-6 bg-primary text-primary-foreground rounded-full border-2 border-background" />
+            <PlusCircle className="absolute bottom-0 right-0 h-5 w-5 bg-primary text-primary-foreground rounded-full border-2 border-background" />
           </div>
-          <p className="text-xs font-medium w-16 truncate text-center">Add Story</p>
+          <p className="text-xs font-medium w-14 truncate text-center">Add Story</p>
         </div>
       </DialogTrigger>
       <DialogContent>
@@ -226,19 +226,19 @@ export function StoryReel() {
         <div className="p-4 border-b">
         <div className="flex items-center justify-center gap-4 overflow-x-auto no-scrollbar">
             <AddStoryDialog onStoryAdded={handleStoryAdded} />
-            {stories.map((story) => (
+            {stories.slice(0, 3).map((story) => (
             <Dialog key={story.id} open={openStory?.id === story.id} onOpenChange={(isOpen) => { if(!isOpen) setOpenStory(null)}}>
                 <DialogTrigger asChild onClick={() => setOpenStory(story)}>
                     <div className="flex flex-col items-center gap-2 flex-shrink-0 cursor-pointer">
                         <div className="p-0.5 rounded-full bg-gradient-to-tr from-yellow-400 via-primary to-purple-500">
                         <div className="p-0.5 bg-background rounded-full">
-                            <Avatar className="w-16 h-16">
+                            <Avatar className="w-14 h-14">
                             <AvatarImage src={story.avatar} />
                             <AvatarFallback>{story.username.substring(0, 2)}</AvatarFallback>
                             </Avatar>
                         </div>
                         </div>
-                        <p className="text-xs font-medium w-16 truncate text-center">{story.username}</p>
+                        <p className="text-xs font-medium w-14 truncate text-center">{story.username}</p>
                     </div>
                 </DialogTrigger>
                 <DialogContent className="p-0 border-0 bg-transparent max-w-full h-full sm:max-w-md sm:h-[90vh] sm:rounded-lg focus-visible:ring-0 focus-visible:ring-offset-0 !ring-0 !ring-offset-0">
