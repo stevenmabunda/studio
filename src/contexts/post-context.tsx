@@ -208,7 +208,30 @@ export function PostProvider({ children }: { children: ReactNode }) {
         createdAt: serverTimestamp(),
     };
 
-    await addDoc(commentsCollectionRef, commentData);
+    try {
+        await runTransaction(db, async (transaction) => {
+            const postDoc = await transaction.get(postRef);
+            if (!postDoc.exists()) {
+                throw "Post does not exist!";
+            }
+            
+            const newCommentCount = (postDoc.data().comments || 0) + 1;
+            
+            // 1. Update the post's comment count
+            transaction.update(postRef, { comments: newCommentCount });
+
+            // 2. Add the new comment document
+            const newCommentRef = doc(commentsCollectionRef);
+            transaction.set(newCommentRef, commentData);
+        });
+        
+        // Optimistically update the UI
+        setPosts(posts => posts.map(p => p.id === postId ? { ...p, comments: (p.comments || 0) + 1 } : p));
+        
+    } catch (e) {
+        console.error("Error adding comment: ", e);
+        throw new Error("Could not post comment.");
+    }
   };
 
   return (
