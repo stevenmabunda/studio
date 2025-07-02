@@ -3,32 +3,35 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Users can read any profile, but only write to their own.
-    match /users/{userId} {
+    
+    // By default, authenticated users can read anything, but not write anything.
+    // Specific write rules are defined for each collection below.
+    match /{document=**} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == userId;
-    }
-
-    // Authenticated users can read all posts.
-    // Users can only create posts for themselves.
-    // Users can only update/delete their own posts.
-    match /posts/{postId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null && request.resource.data.authorId == request.auth.uid;
-      allow update, delete: if request.auth != null && resource.data.authorId == request.auth.uid;
-
-      // Rules for comments subcollection
-      match /comments/{commentId} {
-        allow read: if request.auth != null;
-        allow create: if request.auth != null && request.resource.data.authorId == request.auth.uid;
-        allow update, delete: if request.auth != null && resource.data.authorId == request.auth.uid;
-      }
+      allow write: if false;
     }
     
-    // Rules for stories
+    // Users can write to their own user document.
+    match /users/{userId} {
+      allow write: if request.auth.uid == userId;
+    }
+
+    // Users can create, update, and delete their own posts.
+    // Note: The update rule will need to be enhanced later to allow
+    // other users to like posts or increment comment counters.
+    match /posts/{postId} {
+      allow create: if request.auth.uid == request.resource.data.authorId;
+      allow update, delete: if request.auth.uid == resource.data.authorId;
+    }
+
+    // Users can create comments, which are associated with their user ID.
+    match /posts/{postId}/comments/{commentId} {
+      allow create: if request.auth.uid == request.resource.data.authorId;
+    }
+    
+    // Users can create their own stories.
     match /stories/{storyId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow create: if request.auth.uid == request.resource.data.userId;
     }
   }
 }
