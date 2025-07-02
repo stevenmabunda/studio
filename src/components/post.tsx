@@ -304,7 +304,7 @@ export function Post(props: PostProps) {
             </div>
           )}
           <div className="mt-4 flex justify-between text-muted-foreground max-w-xs">
-            <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-primary" onClick={(e) => { e.stopPropagation(); if(isStandalone) e.preventDefault(); }} disabled={isStandalone}>
+            <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-primary" disabled={isStandalone}>
                 <MessageCircle className="h-5 w-5" />
                 <span>{comments}</span>
             </Button>
