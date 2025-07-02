@@ -4,50 +4,46 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // USERS
+    // Default-deny all access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Logged-in users can read all profiles, but only write their own
     match /users/{userId} {
       allow read: if request.auth != null;
-      // Allow users to create and update their own profile document.
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow create, update: if request.auth.uid == userId;
     }
 
-    // POSTS
+    // Rules for posts
     match /posts/{postId} {
-      // Allow any authenticated user to read any post.
+      // Logged-in users can read all posts
       allow read: if request.auth != null;
-
-      // Allow a user to create a post if they are the author.
-      allow create: if request.auth != null 
-                    && request.resource.data.authorId == request.auth.uid;
-                    
-      // Allow any authenticated user to update a post. This is necessary so that 
-      // anyone can update comment/like counts. For a production app, you might
-      // use more granular rules or a Cloud Function for counters.
-      allow update: if request.auth != null;
       
-      // Allow a user to delete a post only if they are the author.
-      allow delete: if request.auth != null 
-                    && resource.data.authorId == request.auth.uid;
+      // Logged-in users can create posts, as long as they are the author
+      allow create: if request.auth != null && request.resource.data.authorId == request.auth.uid;
+      
+      // Allow updates for actions like voting or incrementing comment counts.
+      // NOTE: This rule is permissive for updates to allow app functionality.
+      // A production app would have more granular checks.
+      allow update: if request.auth != null;
 
-      // COMMENTS subcollection
-      match /comments/{commentId} {
-        // Allow any authenticated user to read comments.
-        allow read: if request.auth != null;
-        
-        // Allow a user to create a comment if they are the author.
-        allow create: if request.auth != null 
-                      && request.resource.data.authorId == request.auth.uid;
-      }
+      // Only the author can delete their post
+      allow delete: if request.auth != null && resource.data.authorId == request.auth.uid;
+    }
+
+    // Rules for the comments subcollection
+    match /posts/{postId}/comments/{commentId} {
+      // Anyone logged in can read or create comments
+      allow read, create: if request.auth != null;
     }
     
-    // STORIES
+    // Rules for stories
     match /stories/{storyId} {
-      // Allow any authenticated user to read stories.
-      allow read: if request.auth != null;
-      
-      // Allow a user to create a story for themselves.
-      allow create: if request.auth != null 
-                    && request.resource.data.userId == request.auth.uid;
+        // Anyone logged in can read stories
+        allow read: if request.auth != null;
+        // A user can only create their own story
+        allow create: if request.auth.uid == request.resource.data.userId;
     }
   }
 }
