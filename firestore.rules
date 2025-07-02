@@ -1,37 +1,36 @@
 
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // By default, authenticated users can read anything, but not write anything.
-    // Specific write rules are defined for each collection below.
-    match /{document=**} {
-      allow read: if request.auth != null;
-      allow write: if false;
-    }
-    
-    // Users can write to their own user document.
+    // Users can read any user profile, but only write to their own.
     match /users/{userId} {
+      allow read: if request.auth != null;
       allow write: if request.auth.uid == userId;
     }
 
-    // Users can create, update, and delete their own posts.
-    // Note: The update rule will need to be enhanced later to allow
-    // other users to like posts or increment comment counters.
+    // Posts can be read by any authenticated user.
+    // Users can only create posts for themselves.
+    // Users can only update/delete their own posts.
     match /posts/{postId} {
+      allow read: if request.auth != null;
       allow create: if request.auth.uid == request.resource.data.authorId;
       allow update, delete: if request.auth.uid == resource.data.authorId;
+
+      // Comments subcollection rules
+      match /comments/{commentId} {
+        allow read: if request.auth != null;
+        allow create: if request.auth.uid == request.resource.data.authorId;
+        allow update, delete: if request.auth.uid == resource.data.authorId;
+      }
     }
 
-    // Users can create comments, which are associated with their user ID.
-    match /posts/{postId}/comments/{commentId} {
-      allow create: if request.auth.uid == request.resource.data.authorId;
-    }
-    
-    // Users can create their own stories.
+    // Stories can be read by any authenticated user.
+    // Users can only create stories for themselves.
+    // Users cannot update/delete stories for now to keep it simple.
     match /stories/{storyId} {
+      allow read: if request.auth != null;
       allow create: if request.auth.uid == request.resource.data.userId;
+      allow update, delete: if false;
     }
   }
 }
