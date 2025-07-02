@@ -17,6 +17,7 @@ type PostContextType = {
   editPost: (postId: string, data: { text: string }) => Promise<void>;
   deletePost: (postId: string) => Promise<void>;
   addVote: (postId: string, choiceIndex: number) => Promise<void>;
+  addComment: (postId: string, commentText: string) => Promise<void>;
   loading: boolean;
 };
 
@@ -191,8 +192,42 @@ export function PostProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const addComment = async (postId: string, commentText: string) => {
+    if (!user || !db) {
+        throw new Error("User not authenticated or Firebase not initialized.");
+    }
+    const postRef = doc(db, 'posts', postId);
+    const commentsCollectionRef = collection(postRef, 'comments');
+
+    const commentData = {
+        authorId: user.uid,
+        authorName: user.displayName || 'Anonymous User',
+        authorHandle: user.email?.split('@')[0] || 'user',
+        authorAvatar: user.photoURL || 'https://placehold.co/40x40.png',
+        content: commentText,
+        createdAt: serverTimestamp(),
+    };
+
+    await addDoc(commentsCollectionRef, commentData);
+
+    await runTransaction(db, async (transaction) => {
+        const postDoc = await transaction.get(postRef);
+        if (!postDoc.exists()) {
+            throw "Post document does not exist!";
+        }
+        const newCommentCount = (postDoc.data().comments || 0) + 1;
+        transaction.update(postRef, { comments: newCommentCount });
+    });
+
+    setPosts(prevPosts =>
+        prevPosts.map(p =>
+            p.id === postId ? { ...p, comments: p.comments + 1 } : p
+        )
+    );
+  };
+
   return (
-    <PostContext.Provider value={{ posts, addPost, editPost, deletePost, addVote, loading }}>
+    <PostContext.Provider value={{ posts, addPost, editPost, deletePost, addVote, addComment, loading }}>
       {children}
     </PostContext.Provider>
   );

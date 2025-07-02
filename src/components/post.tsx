@@ -326,7 +326,7 @@ export function Post(props: PostProps) {
 
   if (isStandalone) {
     return (
-      <div className="p-3">
+      <div>
         {postUiContent}
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
             <AlertDialogContent>
