@@ -7,11 +7,40 @@ import { useAuth } from "@/hooks/use-auth";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Mail, Bell } from "lucide-react";
 import { Button } from "./ui/button";
+import { useState, useEffect, useRef } from "react";
+import { cn } from "@/lib/utils";
 
 export function MobileTopBar() {
     const { user } = useAuth();
+    const [isVisible, setIsVisible] = useState(true);
+    const lastScrollY = useRef(0);
+
+    useEffect(() => {
+        const handleScroll = () => {
+        const currentScrollY = window.scrollY;
+        
+        // Hide nav if scrolling down
+        if (currentScrollY > lastScrollY.current && currentScrollY > 10) {
+            setIsVisible(false);
+        } else {
+            // Show nav if scrolling up or at the top of the page
+            setIsVisible(true);
+        }
+        lastScrollY.current = currentScrollY;
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+
+        return () => {
+        window.removeEventListener('scroll', handleScroll);
+        };
+    }, []);
+
     return (
-        <header className="md:hidden sticky top-0 z-40 flex h-14 items-center justify-between border-b bg-background/95 px-4 backdrop-blur-sm">
+        <header className={cn(
+            "md:hidden sticky top-0 z-40 flex h-14 items-center justify-between border-b bg-background/95 px-4 backdrop-blur-sm transition-transform duration-300 ease-in-out",
+            !isVisible && "-translate-y-full"
+        )}>
             <SidebarTrigger asChild>
                 <button className="h-8 w-8 rounded-full overflow-hidden">
                     <Avatar className="h-full w-full">
