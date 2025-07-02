@@ -3,7 +3,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { MessageCircle, Repeat, Heart, Share2, CheckCircle2, MoreHorizontal, Edit, Trash2 } from "lucide-react";
+import { MessageCircle, Repeat, Heart, Share2, CheckCircle2, MoreHorizontal, Edit, Trash2, Bookmark } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useMemo, useRef, useEffect } from "react";
@@ -126,6 +126,7 @@ export function Post(props: PostProps) {
   const [isLiked, setIsLiked] = useState(false);
   const [repostCount, setRepostCount] = useState(initialReposts);
   const [isReposted, setIsReposted] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
 
   const [isEditing, setIsEditing] = useState(false);
@@ -174,6 +175,11 @@ export function Post(props: PostProps) {
     e.stopPropagation();
     setIsReposted(!isReposted);
     setRepostCount(isReposted ? repostCount - 1 : repostCount + 1);
+  };
+
+  const handleBookmark = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsBookmarked(!isBookmarked);
   };
 
   const handleFollow = (e: React.MouseEvent) => {
@@ -303,22 +309,29 @@ export function Post(props: PostProps) {
               )}
             </div>
           )}
-          <div className="mt-4 flex justify-between text-muted-foreground max-w-xs">
-            <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-primary">
-                <MessageCircle className="h-5 w-5" />
-                <span>{comments > 0 ? comments : ''}</span>
-            </Button>
-            <Button variant="ghost" size="sm" className={cn("flex items-center gap-2", isReposted ? 'text-green-500' : 'hover:text-green-500')} onClick={handleRepost}>
-              <Repeat className="h-5 w-5" />
-              <span>{repostCount}</span>
-            </Button>
-            <Button variant="ghost" size="sm" className={cn("flex items-center gap-2", isLiked ? 'text-red-500' : 'hover:text-red-500')} onClick={handleLike}>
-              <Heart className={cn("h-5 w-5", isLiked && 'fill-current')} />
-              <span>{likeCount}</span>
-            </Button>
-            <Button variant="ghost" size="sm" className="hover:text-primary" onClick={(e) => e.stopPropagation()}>
-              <Share2 className="h-5 w-5" />
-            </Button>
+          <div className="mt-4 flex items-center justify-between text-muted-foreground">
+            <div className="flex items-center -ml-3">
+                <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-primary">
+                    <MessageCircle className="h-5 w-5" />
+                    <span>{comments > 0 ? comments : ''}</span>
+                </Button>
+                <Button variant="ghost" size="sm" className={cn("flex items-center gap-2", isReposted ? 'text-green-500' : 'hover:text-green-500')} onClick={handleRepost}>
+                  <Repeat className="h-5 w-5" />
+                  <span>{repostCount > 0 ? repostCount : ''}</span>
+                </Button>
+                <Button variant="ghost" size="sm" className={cn("flex items-center gap-2", isLiked ? 'text-red-500' : 'hover:text-red-500')} onClick={handleLike}>
+                  <Heart className={cn("h-5 w-5", isLiked && 'fill-current')} />
+                  <span>{likeCount > 0 ? likeCount : ''}</span>
+                </Button>
+            </div>
+            <div className="flex items-center -mr-3">
+                <Button variant="ghost" size="icon" className={cn("hover:text-primary", isBookmarked && "text-primary")} onClick={handleBookmark}>
+                    <Bookmark className={cn("h-5 w-5", isBookmarked && 'fill-current')} />
+                </Button>
+                <Button variant="ghost" size="icon" className="hover:text-primary" onClick={(e) => e.stopPropagation()}>
+                  <Share2 className="h-5 w-5" />
+                </Button>
+            </div>
           </div>
         </div>
       </div>
