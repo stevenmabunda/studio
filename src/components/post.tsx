@@ -304,9 +304,8 @@ export function Post(props: PostProps) {
             </div>
           )}
           <div className="mt-4 flex justify-between text-muted-foreground max-w-xs">
-            <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-primary" disabled={isStandalone}>
+            <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-primary">
                 <MessageCircle className="h-5 w-5" />
-                <span>{comments}</span>
             </Button>
             <Button variant="ghost" size="sm" className={cn("flex items-center gap-2", isReposted ? 'text-green-500' : 'hover:text-green-500')} onClick={handleRepost}>
               <Repeat className="h-5 w-5" />

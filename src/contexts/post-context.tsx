@@ -209,21 +209,6 @@ export function PostProvider({ children }: { children: ReactNode }) {
     };
 
     await addDoc(commentsCollectionRef, commentData);
-
-    await runTransaction(db, async (transaction) => {
-        const postDoc = await transaction.get(postRef);
-        if (!postDoc.exists()) {
-            throw "Post document does not exist!";
-        }
-        const newCommentCount = (postDoc.data().comments || 0) + 1;
-        transaction.update(postRef, { comments: newCommentCount });
-    });
-
-    setPosts(prevPosts =>
-        prevPosts.map(p =>
-            p.id === postId ? { ...p, comments: p.comments + 1 } : p
-        )
-    );
   };
 
   return (
