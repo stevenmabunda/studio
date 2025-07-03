@@ -1,3 +1,4 @@
+
 'use server';
 
 import {
@@ -43,11 +44,18 @@ export async function getTrendingTopics(
     topicsToGenerate = sortedTopics.slice(0, numberOfTopicsToGenerate);
   }
   
-  // The fallback is removed as the database will be seeded.
-
-  // 4. Generate headlines from these topics
+  // 4. If no topics are found from user posts, use a fallback list.
+  // This ensures the component is populated on first load before user data exists.
   if (topicsToGenerate.length === 0) {
-      return { topics: [] };
+    topicsToGenerate = [
+      'messi retirement',
+      'premier league winners',
+      'champions league final',
+      'mbappe transfer',
+      'el clasico highlights',
+    ];
   }
+
+  // 5. Generate headlines from these topics
   return await generateTrendingTopics({ topics: topicsToGenerate });
 }

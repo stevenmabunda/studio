@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { ReactNode } from 'react';
@@ -141,7 +142,9 @@ export function PostProvider({ children }: { children: ReactNode }) {
                     poll: data.poll,
                     timestamp: createdAt ? formatTimestamp(createdAt) : 'now',
                 } as PostType;
-            });
+            })
+            // Filter out bot posts from the main feed
+            .filter(post => post.authorId !== 'bholo-bot');
     
             setPosts(postsData);
         } catch (error) {
