@@ -5,10 +5,9 @@ import {
   type GenerateTrendingTopicsOutput,
 } from '@/ai/flows/generate-trending-topics';
 import { db } from '@/lib/firebase/config';
-import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, Timestamp, orderBy } from 'firebase/firestore';
 
 export async function getTrendingTopics(
-  // The input is now just for consistency, we determine the number of topics internally.
   input: { numberOfTopics?: number } 
 ): Promise<GenerateTrendingTopicsOutput> {
   if (!db) {
@@ -21,6 +20,7 @@ export async function getTrendingTopics(
   // 1. Fetch topics from the last 24 hours
   const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const topicsRef = collection(db, 'topics');
+  // Order by is not strictly needed here but can be useful for debugging
   const q = query(topicsRef, where('createdAt', '>=', Timestamp.fromDate(twentyFourHoursAgo)));
 
   const querySnapshot = await getDocs(q);
@@ -41,16 +41,9 @@ export async function getTrendingTopics(
       .map(([topic]) => topic);
     
     topicsToGenerate = sortedTopics.slice(0, numberOfTopicsToGenerate);
-  } else {
-    // FALLBACK: If no topics, generate some default ones to bootstrap the feature.
-    topicsToGenerate = [
-      "premier league winners",
-      "champions league final",
-      "messi vs ronaldo",
-      "summer transfer window",
-      "world cup 2026",
-    ];
   }
+  
+  // The fallback is removed as the database will be seeded.
 
   // 4. Generate headlines from these topics
   if (topicsToGenerate.length === 0) {

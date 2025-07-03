@@ -6,7 +6,7 @@ import type { PostType } from '@/lib/data';
 import type { Media } from '@/components/create-post';
 import { useAuth } from '@/hooks/use-auth';
 import { db, storage } from '@/lib/firebase/config';
-import { collection, addDoc, serverTimestamp, getDocs, query, type Timestamp, doc, updateDoc, runTransaction, deleteDoc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDocs, query, type Timestamp, doc, updateDoc, runTransaction, deleteDoc, orderBy, getDoc, setDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { formatTimestamp } from '@/lib/utils';
 import { extractPostTopics } from '@/ai/flows/extract-post-topics';
@@ -25,6 +25,86 @@ type PostContextType = {
 
 const PostContext = createContext<PostContextType | undefined>(undefined);
 
+const seedPostsData = [
+    {
+      id: '--seed-post-1--',
+      content: "What a season for Real Madrid! Winning La Liga and the Champions League is an incredible achievement. #HalaMadrid",
+      likes: 1200,
+      reposts: 345,
+      comments: 123,
+    },
+    {
+      id: '--seed-post-2--',
+      content: "The transfer rumors are flying! Looks like Mbappé is finally heading to Real Madrid. This changes everything.",
+      likes: 890,
+      reposts: 210,
+      comments: 95,
+    },
+    {
+      id: '--seed-post-3--',
+      content: "Is Messi the greatest of all time? After that World Cup win, it's hard to argue against it. #GOAT",
+      likes: 2500,
+      reposts: 800,
+      comments: 450,
+    },
+    {
+      id: '--seed-post-4--',
+      content: "Can anyone stop Manchester City next season? Haaland is a goal machine.",
+      likes: 950,
+      reposts: 150,
+      comments: 78,
+    },
+];
+
+async function seedDatabaseIfEmpty() {
+    if (!db) return;
+    const seedFlagRef = doc(db, 'posts', '--seed-post-1--');
+    const seedFlagDoc = await getDoc(seedFlagRef);
+
+    // If the first seed post doesn't exist, we seed the database.
+    if (!seedFlagDoc.exists()) {
+        console.log("No seed data found, populating database...");
+        const seedAuthor = {
+            uid: 'bholo-bot',
+            displayName: 'BHOLO Bot',
+            handle: 'bholobot',
+            photoURL: 'https://placehold.co/128x128.png',
+        };
+
+        for (const seed of seedPostsData) {
+            const postRef = doc(db, 'posts', seed.id);
+            const postData = {
+                authorId: seedAuthor.uid,
+                authorName: seedAuthor.displayName,
+                authorHandle: seedAuthor.handle,
+                authorAvatar: seedAuthor.photoURL,
+                content: seed.content,
+                createdAt: serverTimestamp(),
+                comments: seed.comments,
+                reposts: seed.reposts,
+                likes: seed.likes,
+                media: [],
+            };
+
+            await setDoc(postRef, postData);
+
+            try {
+                const { topics } = await extractPostTopics({ content: seed.content });
+                const topicsCollectionRef = collection(db, 'topics');
+                for (const topic of topics) {
+                    await addDoc(topicsCollectionRef, {
+                        topic: topic.toLowerCase(),
+                        createdAt: serverTimestamp(),
+                    });
+                }
+            } catch (error) {
+                console.error("Failed to extract topics for seed post:", error);
+            }
+        }
+        console.log("Database seeding complete.");
+    }
+}
+
 export function PostProvider({ children }: { children: ReactNode }) {
   const [posts, setPosts] = useState<PostType[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,21 +119,16 @@ export function PostProvider({ children }: { children: ReactNode }) {
     const fetchPosts = async () => {
         setLoading(true);
         try {
-            const q = query(collection(db, 'posts'));
-            const querySnapshot = await getDocs(q);
-
-            const docsWithData = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+            await seedDatabaseIfEmpty();
             
-            docsWithData.sort((a, b) => {
-                const aDate = (a.createdAt as Timestamp)?.toDate() || new Date(0);
-                const bDate = (b.createdAt as Timestamp)?.toDate() || new Date(0);
-                return bDate.getTime() - aDate.getTime();
-            });
+            const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
+            const querySnapshot = await getDocs(q);
     
-            const postsData = docsWithData.map(data => {
+            const postsData = querySnapshot.docs.map(doc => {
+                const data = doc.data();
                 const createdAt = (data.createdAt as Timestamp)?.toDate();
                 return {
-                    id: data.id,
+                    id: doc.id,
                     authorId: data.authorId,
                     authorName: data.authorName,
                     authorHandle: data.authorHandle,
