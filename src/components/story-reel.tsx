@@ -147,7 +147,7 @@ function AddStoryDialog({ onStoryAdded }: { onStoryAdded: (newStory: StoryType) 
         <DialogHeader>
           <DialogTitle>Add to your story</DialogTitle>
         </DialogHeader>
-        <div className="py-4">
+        <div className="py-4 overflow-y-auto max-h-[60vh]">
           {preview ? (
             <div className="relative aspect-[9/16] w-full rounded-lg overflow-hidden">
               <Image src={preview} alt="Story preview" layout="fill" objectFit="cover" />
@@ -167,7 +167,7 @@ function AddStoryDialog({ onStoryAdded }: { onStoryAdded: (newStory: StoryType) 
           )}
         </div>
         <DialogFooter>
-          <Button onClick={handlePostStory} disabled={!file || isPosting}>
+          <Button onClick={handlePostStory} disabled={!file || isPosting} className="w-full">
             {isPosting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Post Story
           </Button>
