@@ -47,6 +47,9 @@ export function CommentDialogContent({ post }: { post: PostType }) {
       })) as Comment[];
       setComments(fetchedComments);
       setLoadingComments(false);
+    }, (error) => {
+        console.error("Error fetching comments snapshot:", error);
+        setLoadingComments(false); // Stop loading on error
     });
 
     return () => unsubscribe();

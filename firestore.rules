@@ -1,44 +1,39 @@
-
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    match /users/{userId} {
-      allow read: if request.auth != null;
-      // A user can only write (create, update, delete) to their own profile document.
-      allow write: if request.auth.uid == userId;
+    
+    function isSignedIn() {
+      return request.auth != null;
     }
 
-    match /posts/{postId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth.uid == request.resource.data.authorId;
-      allow delete: if request.auth.uid == resource.data.authorId;
-
-      // Updates are allowed if the user is the author, OR if they are only
-      // updating interaction fields (like `comments` or `poll`). This is
-      // verified by ensuring core content fields are not being changed by non-authors.
-      allow update: if request.auth.uid == resource.data.authorId ||
-                    (request.auth.uid != null &&
-                      request.resource.data.content == resource.data.content &&
-                      request.resource.data.authorId == resource.data.authorId);
-
-      // Comments are a subcollection of posts.
-      match /comments/{commentId} {
-        // `list` is required to query the collection (e.g., with onSnapshot).
-        // `read` is for getting a single comment document.
-        allow list, read: if request.auth != null;
-
-        // A user can only write (create, update, delete) their own comments.
-        allow write: if request.auth.uid == request.resource.data.authorId;
-      }
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    match /users/{userId} {
+      allow read, create: if isSignedIn();
+      allow update, delete: if isOwner(userId);
     }
 
     match /stories/{storyId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth.uid == request.resource.data.userId;
-      allow delete: if request.auth.uid == resource.data.userId;
-      // Stories cannot be edited after being created.
-      allow update: if false;
+      allow read, list: if isSignedIn();
+      allow create: if isSignedIn() && isOwner(request.resource.data.userId);
+      allow delete, update: if isSignedIn() && isOwner(resource.data.userId);
+    }
+
+    match /posts/{postId} {
+      allow read, list, create: if isSignedIn();
+      // Owner can update their own post.
+      // Non-owners can perform updates (like incrementing comments/likes) as long as they don't change the post content.
+      allow update: if isSignedIn() && (isOwner(resource.data.authorId) || request.resource.data.content == resource.data.content);
+      allow delete: if isSignedIn() && isOwner(resource.data.authorId);
+
+      // Rule for the comments subcollection
+      match /comments/{commentId} {
+        allow read, list, create: if isSignedIn();
+        allow update, delete: if isSignedIn() && isOwner(resource.data.authorId);
+      }
     }
   }
 }
