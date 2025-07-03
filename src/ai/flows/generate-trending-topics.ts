@@ -1,9 +1,9 @@
 'use server';
 
 /**
- * @fileOverview A trending topics AI agent.
+ * @fileOverview An AI agent for generating trending topics.
  *
- * - generateTrendingTopics - A function that handles the trending topics process.
+ * - generateTrendingTopics - A function that handles generating trending topics.
  * - GenerateTrendingTopicsInput - The input type for the generateTrendingTopics function.
  * - GenerateTrendingTopicsOutput - The return type for the generateTrendingTopics function.
  */
@@ -21,15 +21,24 @@ export type GenerateTrendingTopicsInput = z.infer<
   typeof GenerateTrendingTopicsInputSchema
 >;
 
-const NewsItemSchema = z.object({
-  headline: z.string().describe('The news headline.'),
-  source: z.string().describe('The source of the news (e.g., ESPN, Sky Sports).'),
+const TrendingTopicSchema = z.object({
+  category: z
+    .string()
+    .describe('The category for the topic, e.g., "Football • Trending".'),
+  topic: z
+    .string()
+    .describe('The main topic headline, e.g., "Messi calls it quits".'),
+  postCount: z
+    .string()
+    .describe(
+      'The number of posts for the topic, as a formatted string e.g., "15.7K posts".'
+    ),
 });
 
 const GenerateTrendingTopicsOutputSchema = z.object({
-  headlines: z
-    .array(NewsItemSchema)
-    .describe('An array of breaking news headlines in the football world.'),
+  topics: z
+    .array(TrendingTopicSchema)
+    .describe('An array of trending football-related topics.'),
 });
 export type GenerateTrendingTopicsOutput = z.infer<
   typeof GenerateTrendingTopicsOutputSchema
@@ -45,9 +54,13 @@ const prompt = ai.definePrompt({
   name: 'generateTrendingTopicsPrompt',
   input: {schema: GenerateTrendingTopicsInputSchema},
   output: {schema: GenerateTrendingTopicsOutputSchema},
-  prompt: `You are a sports news editor for a social media platform specializing in football.
+  prompt: `You are a social media expert for a football-focused platform.
 
-Generate {{numberOfTopics}} breaking news headlines. For each headline, provide a fictional but realistic-sounding news source (e.g., "BBC Sport", "Sky Sports", "The Athletic").`,
+Generate {{numberOfTopics}} trending topics or conversations in the football world.
+Each topic should include:
+- A category, which should always be "Football • Trending".
+- A short, engaging topic headline (e.g., "Messi's shock retirement", "Haaland to Manchester United?").
+- A fictional post count, formatted as a string like "15.7K posts" or "2,123 posts". Make it look realistic.`,
 });
 
 const generateTrendingTopicsFlow = ai.defineFlow(
