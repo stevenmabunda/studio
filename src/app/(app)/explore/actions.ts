@@ -26,23 +26,35 @@ export async function getTrendingTopics(
   const querySnapshot = await getDocs(q);
   const recentTopics = querySnapshot.docs.map(doc => doc.data().topic as string);
   
-  if (recentTopics.length === 0) {
-    return { topics: [] };
+  let topicsToGenerate: string[] = [];
+
+  if (recentTopics.length > 0) {
+    // 2. Count occurrences of each topic
+    const topicCounts = recentTopics.reduce((acc, topic) => {
+      acc[topic] = (acc[topic] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    // 3. Get the top N topics
+    const sortedTopics = Object.entries(topicCounts)
+      .sort(([, a], [, b]) => b - a)
+      .map(([topic]) => topic);
+    
+    topicsToGenerate = sortedTopics.slice(0, numberOfTopicsToGenerate);
+  } else {
+    // FALLBACK: If no topics, generate some default ones to bootstrap the feature.
+    topicsToGenerate = [
+      "premier league winners",
+      "champions league final",
+      "messi vs ronaldo",
+      "summer transfer window",
+      "world cup 2026",
+    ];
   }
 
-  // 2. Count occurrences of each topic
-  const topicCounts = recentTopics.reduce((acc, topic) => {
-    acc[topic] = (acc[topic] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
-  // 3. Get the top N topics
-  const sortedTopics = Object.entries(topicCounts)
-    .sort(([, a], [, b]) => b - a)
-    .map(([topic]) => topic);
-  
-  const topTopics = sortedTopics.slice(0, numberOfTopicsToGenerate);
-
   // 4. Generate headlines from these topics
-  return await generateTrendingTopics({ topics: topTopics });
+  if (topicsToGenerate.length === 0) {
+      return { topics: [] };
+  }
+  return await generateTrendingTopics({ topics: topicsToGenerate });
 }
