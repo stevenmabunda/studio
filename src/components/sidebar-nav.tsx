@@ -10,7 +10,7 @@ import {
   SidebarMenuButton,
   SidebarFooter,
 } from '@/components/ui/sidebar';
-import { Home, Hash, Users, Bell, User, MessageSquare, LogOut, Bookmark } from 'lucide-react';
+import { Home, Hash, Users, Bell, User, MessageSquare, LogOut, Bookmark, MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
