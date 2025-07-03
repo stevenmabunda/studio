@@ -1,71 +1,61 @@
+
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
+
     // --- Helper Functions ---
-    // Checks if the requesting user is the author of a document.
-    function isAuthor(docData) {
-      return request.auth != null && request.auth.uid == docData.authorId;
+    function isUserAuthenticated() {
+      return request.auth != null;
     }
 
-    // Checks if the set of changed keys contains only the allowed keys for an interaction.
-    function isInteractionUpdate() {
-      let changedKeys = request.resource.data.diff(resource.data).affectedKeys();
-      // Only allow changes to the following interaction-related fields.
-      return changedKeys.hasOnly(['likes', 'reposts', 'comments', 'poll']);
-    }
-
-    // Checks if the set of changed keys contains only the allowed keys for an author's content edit.
-    function isContentUpdate() {
-      let changedKeys = request.resource.data.diff(resource.data).affectedKeys();
-      // Only allow the author to change content or media.
-      return changedKeys.hasOnly(['content', 'media']);
-    }
-
-    // --- Collection Rules ---
-
-    // Users can read any profile, but only write to their own.
-    match /users/{userId} {
-      allow read: if request.auth != null;
-      allow create, update: if request.auth != null && request.auth.uid == userId;
-    }
-
-    // Users can read stories, but only create their own. Stories are immutable.
-    match /stories/{storyId} {
-      allow read: if request.auth != null;
-      allow create: if isAuthor(request.resource.data);
-      allow update, delete: if false;
+    function isOwner(userId) {
+      return request.auth.uid == userId;
     }
     
-    // Topics can be read by anyone, but are only written by the server (AI).
-    // Genkit runs with admin privileges which bypasses these rules.
-    match /topics/{topicId} {
-        allow read: if request.auth != null;
-        allow write: if true; // Simplification for dev environment.
+    // --- Collections ---
+
+    // USERS: Users can read any profile, but only write to their own.
+    match /users/{userId} {
+      allow read: if isUserAuthenticated();
+      allow write: if isOwner(userId);
     }
 
-    // Posts and their subcollections
+    // POSTS:
     match /posts/{postId} {
-      allow read: if request.auth != null;
-      allow create: if isAuthor(request.resource.data);
-      allow delete: if isAuthor(resource.data);
-      
-      // An update is allowed if:
-      // 1. The user is the author and only changing content/media.
+      allow read: if isUserAuthenticated();
+      allow create: if isUserAuthenticated() && isOwner(request.resource.data.authorId);
+      allow delete: if isUserAuthenticated() && isOwner(resource.data.authorId);
+
+      // UPDATE: Allow an update if...
+      // 1. The user is the author (allowing them to edit their post).
       // OR
-      // 2. Any authenticated user is only changing interaction fields.
-      allow update: if request.auth != null && (
-        (isAuthor(resource.data) && isContentUpdate()) ||
-        isInteractionUpdate()
-      );
-      
-      // Comments Subcollection
-      match /comments/{commentId} {
-        allow read: if request.auth != null;
-        allow create: if isAuthor(request.resource.data);
-        allow update, delete: if isAuthor(resource.data);
-      }
+      // 2. The user is authenticated and is NOT changing the core content (allowing interactions like likes/comments).
+      allow update: if (isUserAuthenticated() && isOwner(resource.data.authorId)) ||
+                      (isUserAuthenticated() &&
+                         request.resource.data.content == resource.data.content &&
+                         request.resource.data.authorId == resource.data.authorId);
+    }
+    
+    // COMMENTS:
+    match /posts/{postId}/comments/{commentId} {
+      allow read: if isUserAuthenticated();
+      // A user can create a comment. The associated post update (incrementing the counter)
+      // is validated by the `update` rule for the post document itself.
+      allow create: if isUserAuthenticated();
+      allow update, delete: if isUserAuthenticated() && isOwner(resource.data.authorId);
+    }
+
+    // STORIES:
+    match /stories/{storyId} {
+        allow read: if isUserAuthenticated();
+        allow create: if isUserAuthenticated() && isOwner(request.resource.data.userId);
+        allow delete: if isUserAuthenticated() && isOwner(resource.data.userId);
+    }
+
+    // TOPICS:
+    match /topics/{topicId} {
+      allow read, create: if isUserAuthenticated();
     }
   }
 }
