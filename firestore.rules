@@ -1,45 +1,49 @@
 
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // Users can be read by any authenticated user.
+    // Users can only create or update their own profile document.
     match /users/{userId} {
-      allow read: if true;
-      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
-      allow update: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null;
+      allow create: if request.auth.uid == userId;
+      allow update: if request.auth.uid == userId;
+      allow delete: if false; // Disallow deleting user profiles
     }
 
+    // Posts can be read by any authenticated user.
+    // Users can only create, update, or delete their own posts.
     match /posts/{postId} {
-      allow read: if true;
-      allow create: if request.auth != null && request.resource.data.authorId == request.auth.uid;
-      allow delete: if request.auth != null && resource.data.authorId == request.auth.uid;
-      
-      // Only the owner can change the content.
-      // Anyone authenticated can change other fields (likes, comments, etc).
-      // We rely on Firestore transactions in the code to increment values safely.
-      allow update: if request.auth != null && (
-        (resource.data.authorId == request.auth.uid) ||
-        (request.resource.data.content == resource.data.content)
-      );
+      allow read: if request.auth != null;
+      allow create: if request.auth.uid == request.resource.data.authorId;
+      allow update: if request.auth.uid == resource.data.authorId;
+      allow delete: if request.auth.uid == resource.data.authorId;
 
+      // Comments can be read by anyone, but only created by the commenter.
+      // Comments cannot be updated or deleted from the client.
       match /comments/{commentId} {
-        allow list, get: if true;
-        allow create: if request.auth != null && request.resource.data.authorId == request.auth.uid;
-        allow update, delete: if false;
+        allow read: if request.auth != null;
+        allow create: if request.auth.uid == request.resource.data.authorId;
+        allow update: if false;
+        allow delete: if false;
       }
     }
-    
+
+    // Topics can be read by authenticated users, but not written by them.
+    // They are created by the backend AI flow.
     match /topics/{topicId} {
-       allow create: if true;
-       allow read: if true;
-       allow update, delete: if false;
+      allow read: if request.auth != null;
+      allow write: if false;
     }
 
-    // Add rules for stories
+    // Stories can be read by any authenticated user.
+    // Users can only create stories for themselves. They cannot be updated or deleted.
     match /stories/{storyId} {
       allow read: if request.auth != null;
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if false;
+      allow create: if request.auth.uid == request.resource.data.userId;
+      allow update: if false;
+      allow delete: if false;
     }
   }
 }
