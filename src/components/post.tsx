@@ -14,7 +14,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import {
   AlertDialog,
@@ -32,7 +31,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { CommentDialogContent } from './comment-dialog';
 import { useRouter } from "next/navigation";
 import type { PostType } from "@/lib/data";
 import { Progress } from "./ui/progress";
@@ -208,6 +206,10 @@ export function Post(props: PostProps) {
     try {
       await deletePost(id);
       toast({ description: "Post deleted." });
+      // If we are on the standalone page, redirect after delete
+      if (isStandalone) {
+        router.push('/home');
+      }
     } catch (error) {
       toast({ variant: 'destructive', description: "Failed to delete post." });
     }
@@ -339,99 +341,50 @@ export function Post(props: PostProps) {
       </div>
   );
 
-  if (isStandalone) {
-    return (
-      <div>
-        {postUiContent}
-        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete your post.
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                        className={buttonVariants({ variant: "destructive" })}
-                        onClick={handleDelete}
-                    >
-                        Delete
-                    </AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
-        <Dialog open={isEditing} onOpenChange={setIsEditing}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Edit Post</DialogTitle>
-                </DialogHeader>
-                <Textarea
-                    value={editedContent}
-                    onChange={(e) => setEditedContent(e.target.value)}
-                    className="min-h-[120px] text-base"
-                />
-                <DialogFooter>
-                    <Button variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
-                    <Button onClick={handleEditSave}>Save</Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-      </div>
-    );
+  const handlePostClick = () => {
+      if (!isStandalone) {
+          router.push(`/post/${id}`);
+      }
   }
 
   return (
-    <>
-      <Dialog>
-          <DialogTrigger asChild>
-              <div className="block cursor-pointer hover:bg-accent/20">
-                  {postUiContent}
-              </div>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[625px] p-0" onClick={(e) => e.stopPropagation()}>
-              <DialogHeader className="sr-only">
-                <DialogTitle>Post details</DialogTitle>
-              </DialogHeader>
-              <CommentDialogContent post={props} />
-          </DialogContent>
-      </Dialog>
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-          <AlertDialogContent>
-              <AlertDialogHeader>
-                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                      This action cannot be undone. This will permanently delete your post.
-                  </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                      className={buttonVariants({ variant: "destructive" })}
-                      onClick={handleDelete}
-                  >
-                      Delete
-                  </AlertDialogAction>
-              </AlertDialogFooter>
-          </AlertDialogContent>
-      </AlertDialog>
-      <Dialog open={isEditing} onOpenChange={setIsEditing}>
-          <DialogContent>
-              <DialogHeader>
-                  <DialogTitle>Edit Post</DialogTitle>
-              </DialogHeader>
-              <Textarea
-                  value={editedContent}
-                  onChange={(e) => setEditedContent(e.target.value)}
-                  className="min-h-[120px] text-base"
-              />
-              <DialogFooter>
-                  <Button variant="outline" onClick={() => { setIsEditing(false); setEditedContent(content); }}>Cancel</Button>
-                  <Button onClick={handleEditSave}>Save</Button>
-              </DialogFooter>
-          </DialogContent>
-      </Dialog>
-    </>
+      <div className={!isStandalone ? 'cursor-pointer hover:bg-accent/20' : ''} onClick={handlePostClick}>
+          {postUiContent}
+          <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+              <AlertDialogContent onClick={e => e.stopPropagation()}>
+                  <AlertDialogHeader>
+                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                          This action cannot be undone. This will permanently delete your post.
+                      </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                          className={buttonVariants({ variant: "destructive" })}
+                          onClick={handleDelete}
+                      >
+                          Delete
+                      </AlertDialogAction>
+                  </AlertDialogFooter>
+              </AlertDialogContent>
+          </AlertDialog>
+          <Dialog open={isEditing} onOpenChange={setIsEditing}>
+              <DialogContent onClick={e => e.stopPropagation()}>
+                  <DialogHeader>
+                      <DialogTitle>Edit Post</DialogTitle>
+                  </DialogHeader>
+                  <Textarea
+                      value={editedContent}
+                      onChange={(e) => setEditedContent(e.target.value)}
+                      className="min-h-[120px] text-base"
+                  />
+                  <DialogFooter>
+                      <Button variant="outline" onClick={() => { setIsEditing(false); setEditedContent(content); }}>Cancel</Button>
+                      <Button onClick={handleEditSave}>Save</Button>
+                  </DialogFooter>
+              </DialogContent>
+          </Dialog>
+      </div>
   );
 }
