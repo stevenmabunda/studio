@@ -6,33 +6,32 @@ service cloud.firestore {
     function isSignedIn() {
       return request.auth != null;
     }
-
-    function isOwner(userId) {
-      return request.auth.uid == userId;
-    }
     
     match /users/{userId} {
-      allow read, create: if isSignedIn();
-      allow update, delete: if isOwner(userId);
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
     }
-
+    
     match /stories/{storyId} {
-      allow read, list: if isSignedIn();
-      allow create: if isSignedIn() && isOwner(request.resource.data.userId);
-      allow delete, update: if isSignedIn() && isOwner(resource.data.userId);
+        allow read, create: if isSignedIn();
+        allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
     }
 
     match /posts/{postId} {
-      allow read, list, create: if isSignedIn();
-      // Owner can update their own post.
-      // Non-owners can perform updates (like incrementing comments/likes) as long as they don't change the post content.
-      allow update: if isSignedIn() && (isOwner(resource.data.authorId) || request.resource.data.content == resource.data.content);
-      allow delete: if isSignedIn() && isOwner(resource.data.authorId);
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+      allow delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
 
-      // Rule for the comments subcollection
+      // Allow author to update content.
+      // Allow any signed-in user to update interaction fields (likes, reposts, comments, poll).
+      allow update: if isSignedIn() && (
+          (resource.data.authorId == request.auth.uid && request.resource.data.content != resource.data.content) ||
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'reposts', 'comments', 'poll'])
+      );
+
       match /comments/{commentId} {
-        allow read, list, create: if isSignedIn();
-        allow update, delete: if isSignedIn() && isOwner(resource.data.authorId);
+        allow get, list: if isSignedIn();
+        // A user can only create a comment as themselves.
+        allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
       }
     }
   }

@@ -119,7 +119,7 @@ export function Post(props: PostProps) {
   
   const router = useRouter();
   const { user } = useAuth();
-  const { editPost, deletePost } = usePosts();
+  const { editPost, deletePost, likePost, repostPost } = usePosts();
   const { toast } = useToast();
 
   const [likeCount, setLikeCount] = useState(initialLikes);
@@ -169,12 +169,14 @@ export function Post(props: PostProps) {
     e.stopPropagation();
     setIsLiked(!isLiked);
     setLikeCount(isLiked ? likeCount - 1 : likeCount + 1);
+    likePost(id, isLiked);
   };
 
   const handleRepost = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsReposted(!isReposted);
     setRepostCount(isReposted ? repostCount - 1 : repostCount + 1);
+    repostPost(id, isReposted);
   };
 
   const handleBookmark = (e: React.MouseEvent) => {

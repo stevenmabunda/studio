@@ -18,6 +18,8 @@ type PostContextType = {
   deletePost: (postId: string) => Promise<void>;
   addVote: (postId: string, choiceIndex: number) => Promise<void>;
   addComment: (postId: string, commentText: string) => Promise<void>;
+  likePost: (postId: string, isLiked: boolean) => Promise<void>;
+  repostPost: (postId: string, isReposted: boolean) => Promise<void>;
   loading: boolean;
 };
 
@@ -234,8 +236,42 @@ export function PostProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const likePost = async (postId: string, isLiked: boolean) => {
+    if (!db) return;
+    const postRef = doc(db, "posts", postId);
+    try {
+      await runTransaction(db, async (transaction) => {
+        const postDoc = await transaction.get(postRef);
+        if (!postDoc.exists()) {
+          throw "Document does not exist!";
+        }
+        const newLikes = postDoc.data().likes + (isLiked ? -1 : 1);
+        transaction.update(postRef, { likes: newLikes < 0 ? 0 : newLikes });
+      });
+    } catch (error) {
+      console.error("Error updating likes:", error);
+    }
+  };
+  
+  const repostPost = async (postId: string, isReposted: boolean) => {
+    if (!db) return;
+    const postRef = doc(db, "posts", postId);
+    try {
+      await runTransaction(db, async (transaction) => {
+        const postDoc = await transaction.get(postRef);
+        if (!postDoc.exists()) {
+          throw "Document does not exist!";
+        }
+        const newReposts = postDoc.data().reposts + (isReposted ? -1 : 1);
+        transaction.update(postRef, { reposts: newReposts < 0 ? 0 : newReposts });
+      });
+    } catch (error) {
+      console.error("Error updating reposts:", error);
+    }
+  };
+
   return (
-    <PostContext.Provider value={{ posts, addPost, editPost, deletePost, addVote, addComment, loading }}>
+    <PostContext.Provider value={{ posts, addPost, editPost, deletePost, addVote, addComment, likePost, repostPost, loading }}>
       {children}
     </PostContext.Provider>
   );
