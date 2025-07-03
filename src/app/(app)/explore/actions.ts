@@ -2,12 +2,47 @@
 
 import {
   generateTrendingTopics,
-  type GenerateTrendingTopicsInput,
   type GenerateTrendingTopicsOutput,
 } from '@/ai/flows/generate-trending-topics';
+import { db } from '@/lib/firebase/config';
+import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
 
 export async function getTrendingTopics(
-  input: GenerateTrendingTopicsInput
+  // The input is now just for consistency, we determine the number of topics internally.
+  input: { numberOfTopics?: number } 
 ): Promise<GenerateTrendingTopicsOutput> {
-  return await generateTrendingTopics(input);
+  if (!db) {
+    console.error("Firestore not initialized, returning empty topics.");
+    return { topics: [] };
+  }
+  
+  const numberOfTopicsToGenerate = input.numberOfTopics || 5;
+
+  // 1. Fetch topics from the last 24 hours
+  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const topicsRef = collection(db, 'topics');
+  const q = query(topicsRef, where('createdAt', '>=', Timestamp.fromDate(twentyFourHoursAgo)));
+
+  const querySnapshot = await getDocs(q);
+  const recentTopics = querySnapshot.docs.map(doc => doc.data().topic as string);
+  
+  if (recentTopics.length === 0) {
+    return { topics: [] };
+  }
+
+  // 2. Count occurrences of each topic
+  const topicCounts = recentTopics.reduce((acc, topic) => {
+    acc[topic] = (acc[topic] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  // 3. Get the top N topics
+  const sortedTopics = Object.entries(topicCounts)
+    .sort(([, a], [, b]) => b - a)
+    .map(([topic]) => topic);
+  
+  const topTopics = sortedTopics.slice(0, numberOfTopicsToGenerate);
+
+  // 4. Generate headlines from these topics
+  return await generateTrendingTopics({ topics: topTopics });
 }

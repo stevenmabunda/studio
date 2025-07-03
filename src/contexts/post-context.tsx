@@ -1,4 +1,3 @@
-
 'use client';
 
 import type { ReactNode } from 'react';
@@ -10,6 +9,7 @@ import { db, storage } from '@/lib/firebase/config';
 import { collection, addDoc, serverTimestamp, getDocs, query, type Timestamp, doc, updateDoc, runTransaction, deleteDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { formatTimestamp } from '@/lib/utils';
+import { extractPostTopics } from '@/ai/flows/extract-post-topics';
 
 type PostContextType = {
   posts: PostType[];
@@ -115,6 +115,21 @@ export function PostProvider({ children }: { children: ReactNode }) {
     }
 
     const docRef = await addDoc(collection(db, "posts"), postData);
+    
+    if (text) {
+        try {
+            const { topics } = await extractPostTopics({ content: text });
+            const topicsCollectionRef = collection(db, 'topics');
+            for (const topic of topics) {
+                await addDoc(topicsCollectionRef, {
+                    topic: topic.toLowerCase(),
+                    createdAt: serverTimestamp(),
+                });
+            }
+        } catch (error) {
+            console.error("Failed to extract or save topics:", error);
+        }
+    }
 
     const newPost: PostType = {
         id: docRef.id,
@@ -153,7 +168,6 @@ export function PostProvider({ children }: { children: ReactNode }) {
 
     const postRef = doc(db, "posts", postId);
 
-    // Optimistically update the UI
     setPosts(prevPosts =>
       prevPosts.map(p => {
         if (p.id === postId && p.poll) {
@@ -166,7 +180,6 @@ export function PostProvider({ children }: { children: ReactNode }) {
       })
     );
 
-    // Update in Firestore using a transaction for safety
     try {
       await runTransaction(db, async (transaction) => {
         const postDoc = await transaction.get(postRef);
@@ -188,7 +201,6 @@ export function PostProvider({ children }: { children: ReactNode }) {
       });
     } catch (error) {
       console.error("Failed to update vote in Firestore:", error);
-      // Revert the optimistic update on failure
       const fetchPosts = async () => { /* re-fetch logic from above */ };
       fetchPosts();
     }
@@ -219,15 +231,12 @@ export function PostProvider({ children }: { children: ReactNode }) {
             
             const newCommentCount = (postDoc.data().comments || 0) + 1;
             
-            // 1. Update the post's comment count
             transaction.update(postRef, { comments: newCommentCount });
 
-            // 2. Add the new comment document
             const newCommentRef = doc(commentsCollectionRef);
             transaction.set(newCommentRef, commentData);
         });
         
-        // Optimistically update the UI
         setPosts(posts => posts.map(p => p.id === postId ? { ...p, comments: (p.comments || 0) + 1 } : p));
         
     } catch (e) {

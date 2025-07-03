@@ -1,7 +1,7 @@
 'use server';
 
 /**
- * @fileOverview An AI agent for generating trending topics.
+ * @fileOverview An AI agent for generating trending topics from keywords.
  *
  * - generateTrendingTopics - A function that handles generating trending topics.
  * - GenerateTrendingTopicsInput - The input type for the generateTrendingTopics function.
@@ -11,11 +11,11 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
+// Input is now a list of raw topic strings
 const GenerateTrendingTopicsInputSchema = z.object({
-  numberOfTopics: z
-    .number()
-    .default(5)
-    .describe('The number of trending topics to return.'),
+  topics: z
+    .array(z.string())
+    .describe('A list of trending keywords or topics.'),
 });
 export type GenerateTrendingTopicsInput = z.infer<
   typeof GenerateTrendingTopicsInputSchema
@@ -54,13 +54,20 @@ const prompt = ai.definePrompt({
   name: 'generateTrendingTopicsPrompt',
   input: {schema: GenerateTrendingTopicsInputSchema},
   output: {schema: GenerateTrendingTopicsOutputSchema},
-  prompt: `You are a social media expert for a football-focused platform.
+  prompt: `You are a social media expert for a football-focused platform. You are given a list of raw trending topics.
 
-Generate {{numberOfTopics}} trending topics or conversations in the football world.
-Each topic should include:
+Your task is to convert these raw topics into engaging, headline-style conversations. You must generate a headline for each raw topic provided.
+
+For each topic, generate:
 - A category, which should always be "Football • Trending".
-- A short, engaging topic headline (e.g., "Messi's shock retirement", "Haaland to Manchester United?").
-- A fictional post count, formatted as a string like "15.7K posts" or "2,123 posts". Make it look realistic.`,
+- A short, engaging topic headline. For example, for the raw topic "messi retirement", a good headline would be "Messi's shock retirement". For "haaland man utd", a good headline would be "Haaland to Manchester United?".
+- A fictional post count, formatted as a string like "15.7K posts" or "2,123 posts". Make it look realistic.
+
+Raw Topics:
+{{#each topics}}
+- {{{this}}}
+{{/each}}
+`,
 });
 
 const generateTrendingTopicsFlow = ai.defineFlow(
@@ -70,6 +77,10 @@ const generateTrendingTopicsFlow = ai.defineFlow(
     outputSchema: GenerateTrendingTopicsOutputSchema,
   },
   async input => {
+    // If there are no topics, return an empty array to avoid calling the model with no input.
+    if (input.topics.length === 0) {
+      return { topics: [] };
+    }
     const {output} = await prompt(input);
     return output!;
   }
