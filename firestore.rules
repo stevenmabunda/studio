@@ -1,55 +1,60 @@
 
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Users can read any profile, but can only write to their own.
+    // Users: Can read any profile, but only write to their own.
     match /users/{userId} {
       allow read: if request.auth != null;
       allow write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // Rules for the 'posts' collection
-    match /posts/{postId} {
-      // Any authenticated user can read any post.
-      allow read: if request.auth != null;
-
-      // An authenticated user can create a post if their UID matches the authorId in the new post.
-      allow create: if request.auth != null && request.resource.data.authorId == request.auth.uid;
-
-      // Rules for updating a post document.
-      allow update: if request.auth != null && (
-        // Case 1: The author is editing the post's content.
-        // This is only allowed if the user is the author and ONLY the 'content' field is being changed.
-        (resource.data.authorId == request.auth.uid &&
-         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['content'])) ||
-
-        // Case 2: Any authenticated user is updating interaction counts (likes, reposts, comments, poll votes).
-        // This is allowed if ONLY the interaction-related fields are being changed.
-        (request.resource.data.diff(resource.data).affectedKeys()
-           .hasOnly(['likes', 'reposts', 'comments', 'poll']))
-      );
-
-      // Only the author of a post can delete it.
-      allow delete: if request.auth != null && resource.data.authorId == request.auth.uid;
-
-      // Rules for the 'comments' subcollection within a post
-      match /comments/{commentId} {
-        allow read: if request.auth != null;
-        allow create: if request.auth != null && request.resource.data.authorId == request.auth.uid;
-        allow delete: if request.auth != null && resource.data.authorId == request.auth.uid;
-      }
-    }
-
-    // Rules for stories
+    // Stories: Can read recent stories, can only create/delete their own.
     match /stories/{storyId} {
-      allow read, create: if request.auth != null;
+      allow read: if request.auth != null && resource.data.createdAt > request.time - duration.value(24, 'h');
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
       allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
 
-    // Rules for topics
+    // Topics: Authenticated users can create topics (by posting). Reading is open.
     match /topics/{topicId} {
-        allow read, create: if request.auth != null;
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+    }
+
+    // Posts: Complex rules for posts and their subcollections
+    match /posts/{postId} {
+      // Anyone logged in can read a post.
+      allow read: if request.auth != null;
+      
+      // Anyone logged in can create a post, as long as they are the author.
+      allow create: if request.auth != null && request.resource.data.authorId == request.auth.uid;
+
+      // Update rules:
+      // The author can edit the post content.
+      // Any user can update likes, reposts, comments count, or poll votes.
+      allow update: if request.auth != null && (
+          ( // Rule for author editing their own content
+            resource.data.authorId == request.auth.uid &&
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['content'])
+          ) || ( // Rule for any user updating interaction counts
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasAny(['likes', 'reposts', 'comments', 'poll.choices']) &&
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['likes', 'reposts', 'comments', 'poll'])
+          )
+      );
+      
+      // The author can delete their own post.
+      allow delete: if request.auth != null && resource.data.authorId == request.auth.uid;
+
+      // Comments subcollection
+      match /comments/{commentId} {
+        allow read: if request.auth != null;
+        // A user can create a comment if they are logged in and the authorId matches their UID.
+        allow create: if request.auth != null && request.resource.data.authorId == request.auth.uid;
+      }
     }
   }
 }
