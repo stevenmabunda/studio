@@ -1,79 +1,60 @@
 
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // =================================
-    // Helper Functions
-    // =================================
-
-    function isAuthor(doc) {
-      return request.auth.uid == doc.data.authorId;
-    }
-    
-    function isStoryAuthor(doc) {
-      return request.auth.uid == doc.data.userId;
-    }
-
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-
-    // When a non-author updates a post, this function ensures they are ONLY
-    // changing interaction fields (e.g., likes, comments) and not protected fields.
-    function isInteractionUpdate() {
-      let protectedFieldsUnchanged = 
-          request.resource.data.content == resource.data.content &&
-          request.resource.data.authorId == resource.data.authorId &&
-          request.resource.data.authorName == resource.data.authorName &&
-          request.resource.data.authorHandle == resource.data.authorHandle &&
-          request.resource.data.authorAvatar == resource.data.authorAvatar &&
-          request.resource.data.createdAt == resource.data.createdAt &&
-          request.resource.data.media == resource.data.media;
-
-      return protectedFieldsUnchanged;
-    }
-
-    // =================================
-    // Collection Rules
-    // =================================
-
+    // USERS
+    // Users can read any profile, but only write to their own.
     match /users/{userId} {
-      allow read: if isAuthenticated();
-      allow create: if request.auth.uid == userId;
-      allow update: if request.auth.uid == userId;
+      allow read: if request.auth != null;
+      allow write: if request.auth.uid == userId;
     }
-    
+
+    // POSTS
     match /posts/{postId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && isAuthor(request.resource);
-      
-      // An update is allowed if:
-      // 1. You are the author (and can change anything).
-      // 2. You are not the author, but you are only changing interaction fields.
-      allow update: if isAuthenticated() && (isAuthor(resource) || isInteractionUpdate());
+      allow read: if request.auth != null;
+      allow create: if request.auth.uid == request.resource.data.authorId;
+      allow delete: if resource.data.authorId == request.auth.uid;
 
-      allow delete: if isAuthenticated() && isAuthor(resource);
+      // Rule 1: The author can edit their own post's content and media.
+      allow update: if request.auth.uid == resource.data.authorId &&
+                       request.resource.data.diff(resource.data)
+                                        .affectedKeys().hasOnly(['content', 'media']);
 
+      // Rule 2: Any authenticated user can interact with a post (like, comment, vote, etc.).
+      // This is the key fix: It ensures that the transaction to update the comment
+      // count is allowed for non-authors.
+      allow update: if request.auth != null &&
+                       request.resource.data.diff(resource.data)
+                                        .affectedKeys().hasOnly(['likes', 'reposts', 'comments', 'poll']);
+
+      // COMMENTS SUBCOLLECTION
+      // Any authenticated user can create a comment.
+      // Users can only edit/delete their own comments.
       match /comments/{commentId} {
-        allow read: if isAuthenticated();
-        allow create: if isAuthenticated() && isAuthor(request.resource);
-        allow update, delete: if isAuthenticated() && isAuthor(resource);
+        allow read: if request.auth != null;
+        allow create: if request.auth.uid == request.resource.data.authorId;
+        allow update, delete: if resource.data.authorId == request.auth.uid;
       }
     }
     
+    // STORIES
+    // Any authenticated user can read stories.
+    // Users can only create their own stories.
+    // No one can update a story, and only authors can delete them.
     match /stories/{storyId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && isStoryAuthor(request.resource);
-      allow update: if false; // Stories are immutable
-      allow delete: if isAuthenticated() && isStoryAuthor(resource);
+        allow read: if request.auth != null;
+        allow create: if request.auth.uid == request.resource.data.userId;
+        allow update: if false;
+        allow delete: if resource.data.userId == request.auth.uid;
     }
 
+    // TOPICS
+    // Any authenticated user can create (add) a new topic entry.
+    // No one should read, update or delete raw topic entries.
     match /topics/{topicId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update, delete: if false;
+      allow read, update, delete: if false;
+      allow create: if request.auth != null;
     }
   }
 }
