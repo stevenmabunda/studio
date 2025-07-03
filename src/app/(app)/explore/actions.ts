@@ -21,7 +21,6 @@ export async function getTrendingTopics(
   // 1. Fetch topics from the last 24 hours
   const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const topicsRef = collection(db, 'topics');
-  // Order by is not strictly needed here but can be useful for debugging
   const q = query(topicsRef, where('createdAt', '>=', Timestamp.fromDate(twentyFourHoursAgo)));
 
   const querySnapshot = await getDocs(q);
@@ -36,16 +35,16 @@ export async function getTrendingTopics(
       return acc;
     }, {} as Record<string, number>);
 
-    // 3. Get the top N topics
-    const sortedTopics = Object.entries(topicCounts)
-      .sort(([, a], [, b]) => b - a)
+    // 3. Get topics mentioned at least 3 times, then take the top N
+    const popularTopics = Object.entries(topicCounts)
+      .filter(([, count]) => count >= 3)
+      .sort(([, a], [, b]) => b - a) // Sort by most popular
       .map(([topic]) => topic);
     
-    topicsToGenerate = sortedTopics.slice(0, numberOfTopicsToGenerate);
+    topicsToGenerate = popularTopics.slice(0, numberOfTopicsToGenerate);
   }
   
-  // 4. If no topics are found from user posts, use a fallback list.
-  // This ensures the component is populated on first load before user data exists.
+  // 4. If no topics meet the threshold, use a fallback list.
   if (topicsToGenerate.length === 0) {
     topicsToGenerate = [
       'messi retirement',
