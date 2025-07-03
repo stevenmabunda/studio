@@ -102,22 +102,24 @@ function AddStoryDialog({ onStoryAdded }: { onStoryAdded: (newStory: StoryType) 
     setIsPosting(true);
 
     try {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onloadend = async () => {
-        const base64Data = reader.result as string;
+        const base64Data = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = (error) => reject(error);
+        });
+
         const newStory = await addStory(base64Data);
         onStoryAdded(newStory);
         toast({ description: "Your story has been posted!" });
         setFile(null);
         setPreview(null);
         setIsOpen(false);
-      };
     } catch (error) {
-      console.error("Error posting story:", error);
-      toast({ variant: "destructive", description: "Failed to post story." });
+        console.error("Error posting story:", error);
+        toast({ variant: "destructive", description: "Failed to post story." });
     } finally {
-      setIsPosting(false);
+        setIsPosting(false);
     }
   };
 
