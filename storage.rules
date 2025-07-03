@@ -3,26 +3,30 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
-    // Profile images
-    match /avatars/{userId} {
-      allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == userId;
-    }
-    match /banners/{userId} {
-      allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == userId;
-    }
     
-    // Post media
-    match /posts/{userId}/{allPaths=**} {
-      allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == userId;
+    // Allow authenticated users to read all files. This is suitable for a social media app
+    // where profile pictures, post images, etc., are generally public to other users.
+    match /{allPaths=**} {
+      allow read: if request.auth != null;
     }
 
-    // Story media
+    // USERS: Can only write to their own avatar/banner path.
+    // The path in the code is `avatars/${user.uid}`, so this rule matches.
+    match /avatars/{userId} {
+      allow write: if request.auth.uid == userId;
+    }
+    match /banners/{userId} {
+      allow write: if request.auth.uid == userId;
+    }
+
+    // POSTS: Can only write media to their own user-specific folder.
+    match /posts/{userId}/{mediaId} {
+      allow write: if request.auth.uid == userId;
+    }
+    
+    // STORIES: Can only write stories to their own user-specific folder.
     match /stories/{userId}/{storyId} {
-      allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth.uid == userId;
     }
   }
 }

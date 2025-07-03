@@ -26,7 +26,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
@@ -136,15 +135,19 @@ export function SidebarNav() {
                                     <p className="truncate font-bold">{user.displayName || 'User'}</p>
                                     <p className="truncate text-sm text-muted-foreground">@{userHandle}</p>
                                 </div>
-                                <LogOut className="h-5 w-5 ml-auto" />
+                                <MoreHorizontal className="h-5 w-5 ml-auto" />
                             </div>
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="w-64 mb-2" side="top" align="start">
-                        <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                        <DropdownMenuItem onSelect={() => router.push('/profile')}>
+                            <User className="mr-2 h-4 w-4" />
+                            <span>My Account</span>
+                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={handleLogout}>
-                            Log out @{userHandle}
+                            <LogOut className="mr-2 h-4 w-4" />
+                            <span>Log out</span>
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
