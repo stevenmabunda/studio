@@ -24,6 +24,7 @@ import { Button } from "./ui/button";
 import { addStory } from "@/app/(app)/stories/actions";
 import { Input } from "./ui/input";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "./ui/skeleton";
 
 // A component to render the story view inside the dialog
 function StoryViewer({ story, onComplete }: { story: StoryType; onComplete: () => void }) {
@@ -176,83 +177,108 @@ function AddStoryDialog({ onStoryAdded }: { onStoryAdded: (newStory: StoryType) 
   );
 }
 
-const dummyStories: StoryType[] = [
-    {
-      id: 'story-1',
-      userId: 'user1',
-      username: 'Leo Messi',
-      avatar: 'https://placehold.co/64x64.png',
-      storyImageUrl: 'https://placehold.co/720x1280.png',
-    },
-    {
-      id: 'story-2',
-      userId: 'user2',
-      username: 'Cristiano Ronaldo',
-      avatar: 'https://placehold.co/64x64.png',
-      storyImageUrl: 'https://placehold.co/720x1280.png',
-    },
-    {
-      id: 'story-3',
-      userId: 'user3',
-      username: 'Neymar Jr',
-      avatar: 'https://placehold.co/64x64.png',
-      storyImageUrl: 'https://placehold.co/720x1280.png',
-    },
-    {
-      id: 'story-4',
-      userId: 'user4',
-      username: 'Kylian Mbappé',
-      avatar: 'https://placehold.co/64x64.png',
-      storyImageUrl: 'https://placehold.co/720x1280.png',
-    },
-    {
-      id: 'story-5',
-      userId: 'user5',
-      username: 'Kevin De Bruyne',
-      avatar: 'https://placehold.co/64x64.png',
-      storyImageUrl: 'https://placehold.co/720x1280.png',
-    },
-  ];
-
 export function StoryReel() {
     const [openStory, setOpenStory] = useState<StoryType | null>(null);
-    const [stories, setStories] = useState<StoryType[]>(dummyStories);
+    const [stories, setStories] = useState<StoryType[]>([]);
+    const [loading, setLoading] = useState(true);
+    const { toast } = useToast();
+
+    useEffect(() => {
+        const fetchStories = async () => {
+            if (!db) {
+                setLoading(false);
+                return;
+            }
+            setLoading(true);
+            try {
+                const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+                const storiesRef = collection(db, 'stories');
+                const q = query(
+                    storiesRef, 
+                    where("createdAt", ">=", Timestamp.fromDate(twentyFourHoursAgo)), 
+                    orderBy("createdAt", "desc")
+                );
+
+                const querySnapshot = await getDocs(q);
+                const fetchedStories = querySnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data(),
+                })) as StoryType[];
+
+                // Group stories by user, showing only the latest one per user in the reel
+                const latestStoriesByUser = new Map<string, StoryType>();
+                fetchedStories.forEach(story => {
+                    if (!latestStoriesByUser.has(story.userId)) {
+                        latestStoriesByUser.set(story.userId, story);
+                    }
+                });
+
+                setStories(Array.from(latestStoriesByUser.values()));
+
+            } catch (error) {
+                console.error("Error fetching stories:", error);
+                toast({
+                    variant: 'destructive',
+                    title: 'Could not load stories',
+                    description: 'There was a problem fetching recent stories. Please try again later.',
+                });
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchStories();
+    }, [toast]);
 
     const handleStoryAdded = (newStory: StoryType) => {
       // Optimistically add the new story to the start of the list
-      setStories(prevStories => [newStory, ...prevStories]);
+      setStories(prevStories => {
+          // Remove any existing story from the same user to avoid duplicates in the reel
+          const filtered = prevStories.filter(s => s.userId !== newStory.userId);
+          return [newStory, ...filtered];
+      });
     };
 
     return (
         <div className="p-4 border-b">
         <div className="flex items-center justify-center gap-4 overflow-x-auto no-scrollbar">
             <AddStoryDialog onStoryAdded={handleStoryAdded} />
-            {stories.slice(0, 5).map((story, index) => (
-            <Dialog key={story.id} open={openStory?.id === story.id} onOpenChange={(isOpen) => { if(!isOpen) setOpenStory(null)}}>
-                <DialogTrigger asChild onClick={() => setOpenStory(story)}>
-                    <div className={cn(
-                        "flex flex-col items-center gap-2 flex-shrink-0 cursor-pointer",
-                        index >= 3 && "hidden md:flex"
-                    )}>
-                        <div className="p-0.5 rounded-full bg-gradient-to-tr from-yellow-400 via-primary to-purple-500">
-                        <div className="p-0.5 bg-background rounded-full">
-                            <Avatar className="w-14 h-14 md:w-16 md:h-16">
-                            <AvatarImage src={story.avatar} />
-                            <AvatarFallback>{story.username.substring(0, 2)}</AvatarFallback>
-                            </Avatar>
-                        </div>
-                        </div>
-                        <p className="text-xs font-medium w-14 md:w-16 truncate text-center">{story.username}</p>
+
+            {loading ? (
+                 Array.from({ length: 4 }).map((_, index) => (
+                    <div key={index} className={cn("flex flex-col items-center gap-2 flex-shrink-0", index >= 3 && "hidden md:flex")}>
+                         <Skeleton className="w-14 h-14 md:w-16 md:h-16 rounded-full" />
+                         <Skeleton className="h-3 w-12" />
                     </div>
-                </DialogTrigger>
-                <DialogContent className="p-0 border-0 bg-transparent max-w-full h-full sm:max-w-md sm:h-[90vh] sm:rounded-lg focus-visible:ring-0 focus-visible:ring-offset-0 !ring-0 !ring-offset-0">
-                    {/* Render the viewer only if this story is the one that's open */}
-                    {openStory?.id === story.id && (
-                        <StoryViewer story={openStory} onComplete={() => setOpenStory(null)} />
-                    )}
-                </DialogContent>
-            </Dialog>
-            ))}
+                ))
+            ) : (
+                stories.slice(0, 5).map((story, index) => (
+                <Dialog key={story.id} open={openStory?.id === story.id} onOpenChange={(isOpen) => { if(!isOpen) setOpenStory(null)}}>
+                    <DialogTrigger asChild onClick={() => setOpenStory(story)}>
+                        <div className={cn(
+                            "flex flex-col items-center gap-2 flex-shrink-0 cursor-pointer",
+                            index >= 3 && "hidden md:flex"
+                        )}>
+                            <div className="p-0.5 rounded-full bg-gradient-to-tr from-yellow-400 via-primary to-purple-500">
+                            <div className="p-0.5 bg-background rounded-full">
+                                <Avatar className="w-14 h-14 md:w-16 md:h-16">
+                                <AvatarImage src={story.avatar} />
+                                <AvatarFallback>{story.username.substring(0, 2)}</AvatarFallback>
+                                </Avatar>
+                            </div>
+                            </div>
+                            <p className="text-xs font-medium w-14 md:w-16 truncate text-center">{story.username}</p>
+                        </div>
+                    </DialogTrigger>
+                    <DialogContent className="p-0 border-0 bg-transparent max-w-full h-full sm:max-w-md sm:h-[90vh] sm:rounded-lg focus-visible:ring-0 focus-visible:ring-offset-0 !ring-0 !ring-offset-0">
+                        {/* Render the viewer only if this story is the one that's open */}
+                        {openStory?.id === story.id && (
+                            <StoryViewer story={openStory} onComplete={() => setOpenStory(null)} />
+                        )}
+                    </DialogContent>
+                </Dialog>
+                ))
+            )}
         </div>
         </div>
     );
