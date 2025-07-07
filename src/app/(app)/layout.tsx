@@ -24,6 +24,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     return null; // The global loader in AuthProvider handles loading, and we wait for redirect if no user.
   }
 
+  // Hide the generic mobile top bar on pages that have their own custom header, like the post detail page.
+  const isPostPage = pathname.startsWith('/post/');
+
   return (
     <div className="flex w-full justify-center">
       <header className="w-[275px] shrink-0 hidden md:block">
@@ -32,7 +35,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         </div>
       </header>
       <main className="w-full max-w-[624px] md:border-x pb-16 md:pb-0">
-        <MobileTopBar />
+        {!isPostPage && <MobileTopBar />}
         {children}
       </main>
       <aside className="w-[350px] shrink-0 hidden lg:block">
