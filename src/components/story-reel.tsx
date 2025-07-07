@@ -109,7 +109,13 @@ function AddStoryDialog({ onStoryAdded }: { onStoryAdded: (newStory: StoryType) 
             reader.onerror = (error) => reject(error);
         });
 
-        const newStory = await addStory(base64Data);
+        const userInfo = {
+            uid: user.uid,
+            displayName: user.displayName,
+            photoURL: user.photoURL,
+        };
+
+        const newStory = await addStory(base64Data, userInfo);
         onStoryAdded(newStory);
         toast({ description: "Your story has been posted!" });
         setFile(null);
