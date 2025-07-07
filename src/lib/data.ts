@@ -1,4 +1,3 @@
-
 export type PostType = {
   id: string;
   authorId: string;
@@ -18,4 +17,14 @@ export type PostType = {
   poll?: {
     choices: { text: string; votes: number }[];
   };
+};
+
+export type MatchType = {
+  id: number;
+  team1: { name: string; logo?: string };
+  team2: { name: string; logo?: string };
+  score?: string;
+  time: string;
+  league: string;
+  isLive: boolean;
 };

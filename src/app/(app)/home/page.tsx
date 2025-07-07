@@ -1,64 +1,85 @@
-
 'use client';
 
 import { Post } from '@/components/post';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { usePosts } from '@/contexts/post-context';
 import { PostSkeleton } from '@/components/post-skeleton';
 import { DiscoverFeed } from '@/components/discover-feed';
 import { CreatePost, type Media } from '@/components/create-post';
 import { useToast } from '@/hooks/use-toast';
-import type { PostType } from '@/lib/data';
+import type { PostType, MatchType } from '@/lib/data';
+import { useEffect, useState } from 'react';
+import { getLiveMatches, getUpcomingMatches } from './actions';
+import { Skeleton } from '@/components/ui/skeleton';
 
-const liveMatches = [
-    {
-        team1: 'Manchester City',
-        team2: 'Arsenal',
-        score: '1 - 1',
-        time: "78'",
-        league: 'Premier League',
-        isLive: true,
-    },
-    {
-        team1: 'Real Madrid',
-        team2: 'FC Barcelona',
-        score: '0 - 0',
-        time: "25'",
-        league: 'La Liga',
-        isLive: true,
-    },
-];
-
-const upcomingMatches = [
-    {
-        team1: 'Liverpool',
-        team2: 'Chelsea',
-        time: 'Tomorrow, 8:00 PM',
-        league: 'Premier League',
-    },
-    {
-        team1: 'Bayern Munich',
-        team2: 'Borussia Dortmund',
-        time: 'Saturday, 3:30 PM',
-        league: 'Bundesliga',
-    }
-];
+function MatchCardSkeleton() {
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex justify-between items-center">
+          <Skeleton className="h-5 w-32" />
+          <Skeleton className="h-6 w-12 rounded-full" />
+        </div>
+      </CardHeader>
+      <CardContent className="text-center">
+        <div className="flex justify-around items-center">
+          <Skeleton className="h-5 w-24" />
+          <Skeleton className="h-8 w-16" />
+          <Skeleton className="h-5 w-24" />
+        </div>
+        <Skeleton className="h-4 w-12 mt-3 mx-auto" />
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function HomePage() {
-  const { posts, addPost, loading } = usePosts();
+  const { posts, addPost, loading: postsLoading } = usePosts();
   const { toast } = useToast();
 
-  const videoPosts = posts.filter(post => post.media?.some(m => m.type === 'video'));
+  const [liveMatches, setLiveMatches] = useState<MatchType[]>([]);
+  const [upcomingMatches, setUpcomingMatches] = useState<MatchType[]>([]);
+  const [matchesLoading, setMatchesLoading] = useState(true);
 
-  const handlePost = async (data: { text: string; media: Media[], poll?: PostType['poll'] }) => {
+  useEffect(() => {
+    const fetchMatches = async () => {
+      setMatchesLoading(true);
+      try {
+        const [live, upcoming] = await Promise.all([
+          getLiveMatches(),
+          getUpcomingMatches(),
+        ]);
+        setLiveMatches(live);
+        setUpcomingMatches(upcoming);
+      } catch (error) {
+        console.error('Failed to fetch matches:', error);
+      } finally {
+        setMatchesLoading(false);
+      }
+    };
+    fetchMatches();
+  }, []);
+
+  const videoPosts = posts.filter((post) =>
+    post.media?.some((m) => m.type === 'video')
+  );
+
+  const handlePost = async (data: {
+    text: string;
+    media: Media[];
+    poll?: PostType['poll'];
+  }) => {
     try {
-        await addPost(data);
-        toast({ description: "Your post has been published!" });
+      await addPost(data);
+      toast({ description: 'Your post has been published!' });
     } catch (error) {
-        console.error("Failed to create post:", error);
-        toast({ variant: 'destructive', description: "Something went wrong. Please try again." });
+      console.error('Failed to create post:', error);
+      toast({
+        variant: 'destructive',
+        description: 'Something went wrong. Please try again.',
+      });
     }
   };
 
@@ -85,7 +106,7 @@ export default function HomePage() {
             >
               Video
             </TabsTrigger>
-             <TabsTrigger
+            <TabsTrigger
               value="live"
               className="h-auto shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold data-[state=active]:border-primary data-[state=active]:shadow-none px-4"
             >
@@ -96,29 +117,27 @@ export default function HomePage() {
         <main className="flex-1">
           <TabsContent value="foryou">
             <div className="border-b">
-                <CreatePost onPost={handlePost} />
+              <CreatePost onPost={handlePost} />
             </div>
             <div className="divide-y divide-border">
-              {loading ? (
+              {postsLoading ? (
                 <>
-                    <PostSkeleton />
-                    <PostSkeleton />
-                    <PostSkeleton />
+                  <PostSkeleton />
+                  <PostSkeleton />
+                  <PostSkeleton />
                 </>
               ) : posts.length > 0 ? (
-                posts.map((post) => (
-                    <Post key={post.id} {...post} />
-                ))
+                posts.map((post) => <Post key={post.id} {...post} />)
               ) : (
                 <div className="p-8 text-center text-muted-foreground">
-                    <h2 className="text-xl font-bold">No posts yet!</h2>
-                    <p>Be the first one to kick-it!</p>
+                  <h2 className="text-xl font-bold">No posts yet!</h2>
+                  <p>Be the first one to kick-it!</p>
                 </div>
               )}
             </div>
           </TabsContent>
           <TabsContent value="discover">
-            {loading ? (
+            {postsLoading ? (
               <>
                 <PostSkeleton />
                 <PostSkeleton />
@@ -129,65 +148,112 @@ export default function HomePage() {
             )}
           </TabsContent>
           <TabsContent value="video">
-             {videoPosts.length > 0 ? (
-                <div className="divide-y divide-border">
+            {videoPosts.length > 0 ? (
+              <div className="divide-y divide-border">
                 {videoPosts.map((post) => (
-                    <Post key={post.id} {...post} />
+                  <Post key={post.id} {...post} />
                 ))}
-                </div>
+              </div>
             ) : (
-                <div className="p-8 text-center text-muted-foreground">
+              <div className="p-8 text-center text-muted-foreground">
                 <h2 className="text-xl font-bold">No videos yet</h2>
                 <p>When users post videos, they'll appear here.</p>
-                </div>
+              </div>
             )}
           </TabsContent>
           <TabsContent value="live">
             <div className="p-4 space-y-8">
-                <div>
-                    <h2 className="text-lg font-semibold mb-4">Live Now</h2>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                        {liveMatches.map((match, index) => (
-                            <Card key={index} className="hover:bg-accent cursor-pointer">
-                                <CardHeader>
-                                    <div className="flex justify-between items-center">
-                                        <CardTitle className="text-base">{match.league}</CardTitle>
-                                        <Badge variant="destructive" className="bg-accent text-accent-foreground">LIVE</Badge>
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="text-center">
-                                    <div className="flex justify-around items-center">
-                                        <span className="font-medium">{match.team1}</span>
-                                        <span className="text-2xl font-bold">{match.score}</span>
-                                        <span className="font-medium">{match.team2}</span>
-                                    </div>
-                                    <p className="text-sm text-muted-foreground mt-2">{match.time}</p>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
-                </div>
+              <div>
+                <h2 className="text-lg font-semibold mb-4">Live Now</h2>
+                {matchesLoading ? (
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <MatchCardSkeleton />
+                    <MatchCardSkeleton />
+                  </div>
+                ) : liveMatches.length > 0 ? (
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {liveMatches.map((match) => (
+                      <Card
+                        key={match.id}
+                        className="hover:bg-accent cursor-pointer"
+                      >
+                        <CardHeader>
+                          <div className="flex justify-between items-center">
+                            <CardTitle className="text-base">
+                              {match.league}
+                            </CardTitle>
+                            <Badge
+                              variant="destructive"
+                              className="bg-accent text-accent-foreground"
+                            >
+                              LIVE
+                            </Badge>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="text-center">
+                          <div className="flex justify-around items-center">
+                            <span className="font-medium">
+                              {match.team1.name}
+                            </span>
+                            <span className="text-2xl font-bold">
+                              {match.score}
+                            </span>
+                            <span className="font-medium">
+                              {match.team2.name}
+                            </span>
+                          </div>
+                          <p className="text-sm text-muted-foreground mt-2">
+                            {match.time}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-center">
+                    No live matches right now.
+                  </p>
+                )}
+              </div>
 
-                <div>
-                    <h2 className="text-lg font-semibold mb-4">Upcoming</h2>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                        {upcomingMatches.map((match, index) => (
-                            <Card key={index} className="hover:bg-accent cursor-pointer">
-                                <CardHeader>
-                                    <CardTitle className="text-base">{match.league}</CardTitle>
-                                </CardHeader>
-                                <CardContent className="text-center">
-                                    <div className="flex justify-around items-center font-medium">
-                                        <span>{match.team1}</span>
-                                        <span className="text-lg font-bold">VS</span>
-                                        <span>{match.team2}</span>
-                                    </div>
-                                    <p className="text-sm text-muted-foreground mt-2">{match.time}</p>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
-                </div>
+              <div>
+                <h2 className="text-lg font-semibold mb-4">Upcoming</h2>
+                {matchesLoading ? (
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <MatchCardSkeleton />
+                    <MatchCardSkeleton />
+                  </div>
+                ) : upcomingMatches.length > 0 ? (
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {upcomingMatches.map((match) => (
+                      <Card
+                        key={match.id}
+                        className="hover:bg-accent cursor-pointer"
+                      >
+                        <CardHeader>
+                          <CardTitle className="text-base">
+                            {match.league}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="text-center">
+                          <div className="flex justify-around items-center font-medium">
+                            <span>{match.team1.name}</span>
+                            <span className="text-lg font-bold">VS</span>
+                            <span>{match.team2.name}</span>
+                          </div>
+                          <p className="text-sm text-muted-foreground mt-2">
+                            {match.time}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-center">
+                    No upcoming matches found.
+                  </p>
+                )}
+              </div>
             </div>
           </TabsContent>
         </main>
