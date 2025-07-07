@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -7,7 +6,7 @@ import { MessageCircle, Repeat, Heart, Share2, CheckCircle2, MoreHorizontal, Edi
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useMemo, useRef, useEffect } from "react";
-import { cn, linkify, formatTimestamp } from "@/lib/utils";
+import { cn, linkify } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -117,19 +116,20 @@ export function Post(props: PostProps) {
   
   const router = useRouter();
   const { user } = useAuth();
-  const { editPost, deletePost, likePost, repostPost } = usePosts();
+  const { editPost, deletePost, likePost, repostPost, bookmarkPost, bookmarkedPostIds } = usePosts();
   const { toast } = useToast();
 
   const [likeCount, setLikeCount] = useState(initialLikes);
   const [isLiked, setIsLiked] = useState(false);
   const [repostCount, setRepostCount] = useState(initialReposts);
   const [isReposted, setIsReposted] = useState(false);
-  const [isBookmarked, setIsBookmarked] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
 
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(content);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  
+  const isBookmarked = useMemo(() => bookmarkedPostIds.has(id), [bookmarkedPostIds, id]);
 
   const mediaExists = media && media.length > 0;
   const isVideo = mediaExists && media[0].type === 'video';
@@ -179,7 +179,10 @@ export function Post(props: PostProps) {
 
   const handleBookmark = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsBookmarked(!isBookmarked);
+    bookmarkPost(id, isBookmarked);
+    toast({
+      description: !isBookmarked ? "Post bookmarked." : "Bookmark removed.",
+    });
   };
 
   const handleFollow = (e: React.MouseEvent) => {

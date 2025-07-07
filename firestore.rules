@@ -1,60 +1,64 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper functions
-    function isAuthor(docData) {
-      return request.auth.uid == docData.authorId;
+    // Helper functions to improve readability
+    function isAuthor(postId) {
+      return get(/databases/$(database)/documents/posts/$(postId)).data.authorId == request.auth.uid;
     }
 
-    function isInteractionUpdate(requestData, resourceData) {
-      return requestData.content == resourceData.content &&
-             requestData.authorId == resourceData.authorId &&
-             // Allow interaction counters to change
-             requestData.likes != resourceData.likes ||
-             requestData.comments != resourceData.comments ||
-             requestData.reposts != resourceData.reposts ||
-             // Allow poll vote updates
-             (requestData.poll != null && resourceData.poll != null && requestData.poll.choices != resourceData.poll.choices);
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    function canInteract(postData) {
+      let nonInteractiveFields = ['authorId', 'authorName', 'authorHandle', 'authorAvatar', 'content', 'createdAt', 'media'];
+      return request.resource.data.diff(postData).affectedKeys().hasOnly(nonInteractiveFields) == false;
+    }
+
+    // Rules for posts
+    match /posts/{postId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.resource.data.authorId == request.auth.uid;
+      
+      // Separate update rules for clarity
+      allow update: if request.auth != null && isAuthor(postId) && !canInteract(resource.data); // Author can edit content
+      allow update: if request.auth != null && !isAuthor(postId) && canInteract(resource.data); // Others can interact (like, comment, vote)
+
+      allow delete: if request.auth != null && isAuthor(postId);
+
+      // Rules for comments subcollection
+      match /comments/{commentId} {
+        allow read: if request.auth != null;
+        allow create: if request.auth != null && request.resource.data.authorId == request.auth.uid;
+        // Comments are immutable
+        allow update, delete: if false;
+      }
     }
     
-    function isContentUpdate(requestData, resourceData) {
-        return requestData.content != resourceData.content;
-    }
-
-    match /posts/{postId} {
-      allow read;
-      allow create: if request.auth.uid == request.resource.data.authorId;
-      // Allow authors to update content.
-      // Allow any authenticated user to update interaction fields (likes, etc.)
-      allow update: if (isAuthor(resource.data) && isContentUpdate(request.resource.data, resource.data)) ||
-                       (request.auth.uid != null && isInteractionUpdate(request.resource.data, resource.data));
-      allow delete: if isAuthor(resource.data);
-
-      match /comments/{commentId} {
-          allow read;
-          allow create: if request.auth.uid != null;
-      }
-    }
-
+    // Rules for user profiles
     match /users/{userId} {
-      allow read;
-      allow create: if request.auth.uid == userId;
-      allow update: if request.auth.uid == userId;
+      allow read: if request.auth != null;
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
 
-      // Notifications subcollection rules
+      // Rules for user notifications
       match /notifications/{notificationId} {
-        // Any authenticated user can create a notification for another user
-        allow create: if request.auth.uid != null;
-        // Only the user themselves can read or update (e.g., mark as read) their notifications
-        allow read, update, delete: if request.auth.uid == userId;
+        allow read: if isOwner(userId);
+        allow create: if request.auth != null; // Allow server-side creation
+        allow update, delete: if isOwner(userId);
+      }
+      
+      // Rules for user bookmarks
+      match /bookmarks/{postId} {
+        allow read, create, delete: if isOwner(userId);
       }
     }
-
+    
+    // Rules for topics
     match /topics/{topicId} {
-        allow read;
-        allow create: if request.auth.uid != null;
+        allow read: if request.auth != null;
+        allow create: if request.auth != null; // Let any authenticated user create topics
     }
   }
 }

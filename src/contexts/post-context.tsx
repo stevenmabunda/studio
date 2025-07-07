@@ -1,4 +1,3 @@
-
 'use client';
 
 import type { ReactNode } from 'react';
@@ -21,6 +20,8 @@ type PostContextType = {
   addComment: (postId: string, commentText: string) => Promise<void>;
   likePost: (postId: string, isLiked: boolean) => Promise<void>;
   repostPost: (postId: string, isReposted: boolean) => Promise<void>;
+  bookmarkPost: (postId: string, isBookmarked: boolean) => Promise<void>;
+  bookmarkedPostIds: Set<string>;
   loading: boolean;
 };
 
@@ -110,6 +111,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
   const [posts, setPosts] = useState<PostType[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const [bookmarkedPostIds, setBookmarkedPostIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!db) {
@@ -117,7 +119,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
         return;
     }
 
-    const fetchPosts = async () => {
+    const fetchPostsAndBookmarks = async () => {
         setLoading(true);
         try {
             await seedDatabaseIfEmpty();
@@ -147,14 +149,23 @@ export function PostProvider({ children }: { children: ReactNode }) {
             .filter(post => post.authorId !== 'bholo-bot');
     
             setPosts(postsData);
+
+            if (user) {
+                const bookmarksRef = collection(db, 'users', user.uid, 'bookmarks');
+                const bookmarksSnapshot = await getDocs(bookmarksRef);
+                const bookmarkIds = new Set(bookmarksSnapshot.docs.map(doc => doc.id));
+                setBookmarkedPostIds(bookmarkIds);
+            } else {
+                setBookmarkedPostIds(new Set());
+            }
         } catch (error) {
-            console.error("Error fetching posts:", error);
+            console.error("Error fetching data:", error);
         } finally {
             setLoading(false);
         }
     };
 
-    fetchPosts();
+    fetchPostsAndBookmarks();
   }, [user]);
 
   const addPost = async ({ text, media, poll }: { text: string; media: Media[]; poll?: PostType['poll'] }) => {
@@ -398,8 +409,33 @@ export function PostProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const bookmarkPost = async (postId: string, isBookmarked: boolean) => {
+    if (!db || !user) return;
+    const bookmarkRef = doc(db, 'users', user.uid, 'bookmarks', postId);
+
+    try {
+        if (isBookmarked) {
+            await deleteDoc(bookmarkRef);
+            setBookmarkedPostIds(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(postId);
+                return newSet;
+            });
+        } else {
+            await setDoc(bookmarkRef, { createdAt: serverTimestamp() });
+            setBookmarkedPostIds(prev => {
+                const newSet = new Set(prev);
+                newSet.add(postId);
+                return newSet;
+            });
+        }
+    } catch (error) {
+        console.error("Error updating bookmark:", error);
+    }
+  };
+
   return (
-    <PostContext.Provider value={{ posts, addPost, editPost, deletePost, addVote, addComment, likePost, repostPost, loading }}>
+    <PostContext.Provider value={{ posts, addPost, editPost, deletePost, addVote, addComment, likePost, repostPost, bookmarkPost, bookmarkedPostIds, loading }}>
       {children}
     </PostContext.Provider>
   );
