@@ -21,8 +21,8 @@ export type PostType = {
 
 export type MatchType = {
   id: number;
-  team1: { name: string; logo?: string };
-  team2: { name: string; logo?: string };
+  team1: { name: string; };
+  team2: { name: string; };
   score?: string;
   time: string;
   league: string;
