@@ -1,64 +1,63 @@
+
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper functions to improve readability
-    function isAuthor(postId) {
-      return get(/databases/$(database)/documents/posts/$(postId)).data.authorId == request.auth.uid;
+
+    function isSignedIn() {
+      return request.auth != null;
     }
 
     function isOwner(userId) {
       return request.auth.uid == userId;
     }
 
-    function canInteract(postData) {
-      let nonInteractiveFields = ['authorId', 'authorName', 'authorHandle', 'authorAvatar', 'content', 'createdAt', 'media'];
-      return request.resource.data.diff(postData).affectedKeys().hasOnly(nonInteractiveFields) == false;
-    }
-
-    // Rules for posts
-    match /posts/{postId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null && request.resource.data.authorId == request.auth.uid;
-      
-      // Separate update rules for clarity
-      allow update: if request.auth != null && isAuthor(postId) && !canInteract(resource.data); // Author can edit content
-      allow update: if request.auth != null && !isAuthor(postId) && canInteract(resource.data); // Others can interact (like, comment, vote)
-
-      allow delete: if request.auth != null && isAuthor(postId);
-
-      // Rules for comments subcollection
-      match /comments/{commentId} {
-        allow read: if request.auth != null;
-        allow create: if request.auth != null && request.resource.data.authorId == request.auth.uid;
-        // Comments are immutable
-        allow update, delete: if false;
-      }
-    }
-    
-    // Rules for user profiles
     match /users/{userId} {
-      allow read: if request.auth != null;
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId);
-
-      // Rules for user notifications
-      match /notifications/{notificationId} {
-        allow read: if isOwner(userId);
-        allow create: if request.auth != null; // Allow server-side creation
-        allow update, delete: if isOwner(userId);
-      }
-      
-      // Rules for user bookmarks
-      match /bookmarks/{postId} {
-        allow read, create, delete: if isOwner(userId);
-      }
+      allow read: if true;
+      // User can create their own doc, and update/delete it.
+      allow write: if isSignedIn() && isOwner(userId);
     }
-    
-    // Rules for topics
+
+    match /posts/{postId} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow delete: if isSignedIn() && isOwner(resource.data.authorId);
+      
+      // Update Rule:
+      // An update is allowed if...
+      allow update: if isSignedIn() && (
+        // EITHER the user is the author (they can change their own post's content)
+        isOwner(resource.data.authorId)
+        ||
+        // OR the user is NOT the author, but they are only interacting (e.g. liking, commenting).
+        // In this case, the core content fields must not be changed.
+        (
+          !isOwner(resource.data.authorId) &&
+          request.resource.data.content == resource.data.content &&
+          request.resource.data.authorId == resource.data.authorId &&
+          request.resource.data.createdAt == resource.data.createdAt &&
+          request.resource.data.media == resource.data.media
+        )
+      );
+    }
+
+    match /posts/{postId}/comments/{commentId} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      // To keep it simple, nobody can update/delete comments for now.
+      allow update, delete: if false;
+    }
+
+    // This rule covers subcollections like 'bookmarks' and 'notifications' within a user's document.
+    match /users/{userId}/{subcollection}/{docId} {
+       allow read, write: if isSignedIn() && isOwner(userId);
+    }
+
     match /topics/{topicId} {
-        allow read: if request.auth != null;
-        allow create: if request.auth != null; // Let any authenticated user create topics
+      allow read: if true;
+      allow create: if isSignedIn();
+      // No updates or deletes on topics for now.
+      allow update, delete: if false;
     }
   }
 }
