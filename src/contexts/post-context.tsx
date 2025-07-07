@@ -15,7 +15,7 @@ import { extractPostTopics } from '@/ai/flows/extract-post-topics';
 type PostContextType = {
   posts: PostType[];
   addPost: (data: { text: string; media: Media[], poll?: PostType['poll'] }) => Promise<void>;
-  editPost: (postId: string, data: { text: string }) => Promise<void>;
+  editPost: (postId: string, data: { text:string }) => Promise<void>;
   deletePost: (postId: string) => Promise<void>;
   addVote: (postId: string, choiceIndex: number) => Promise<void>;
   addComment: (postId: string, commentText: string) => Promise<void>;
@@ -317,6 +317,25 @@ export function PostProvider({ children }: { children: ReactNode }) {
         
         setPosts(posts => posts.map(p => p.id === postId ? { ...p, comments: (p.comments || 0) + 1 } : p));
         
+        // Create notification
+        const postDoc = await getDoc(postRef);
+        if (postDoc.exists()) {
+            const postAuthorId = postDoc.data().authorId;
+            if (user.uid !== postAuthorId) {
+                const notificationRef = collection(db, 'users', postAuthorId, 'notifications');
+                await addDoc(notificationRef, {
+                    type: 'comment',
+                    fromUserId: user.uid,
+                    fromUserName: user.displayName || 'User',
+                    fromUserAvatar: user.photoURL || 'https://placehold.co/40x40.png',
+                    postId: postId,
+                    postContentSnippet: commentText.substring(0, 50),
+                    createdAt: serverTimestamp(),
+                    read: false,
+                });
+            }
+        }
+
     } catch (e) {
         console.error("Error adding comment: ", e);
         throw new Error("Could not post comment.");
@@ -324,7 +343,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
   };
 
   const likePost = async (postId: string, isLiked: boolean) => {
-    if (!db) return;
+    if (!db || !user) return;
     const postRef = doc(db, "posts", postId);
     try {
       await runTransaction(db, async (transaction) => {
@@ -335,6 +354,28 @@ export function PostProvider({ children }: { children: ReactNode }) {
         const newLikes = postDoc.data().likes + (isLiked ? -1 : 1);
         transaction.update(postRef, { likes: newLikes < 0 ? 0 : newLikes });
       });
+
+      // Create notification only on like, not on unlike
+      if (!isLiked) {
+        const postDoc = await getDoc(postRef);
+        if (postDoc.exists()) {
+            const postData = postDoc.data();
+            if (user.uid !== postData.authorId) {
+                const notificationRef = collection(db, 'users', postData.authorId, 'notifications');
+                await addDoc(notificationRef, {
+                    type: 'like',
+                    fromUserId: user.uid,
+                    fromUserName: user.displayName || 'User',
+                    fromUserAvatar: user.photoURL || 'https://placehold.co/40x40.png',
+                    postId: postId,
+                    postContentSnippet: (postData.content || '').substring(0, 50),
+                    createdAt: serverTimestamp(),
+                    read: false,
+                });
+            }
+        }
+      }
+
     } catch (error) {
       console.error("Error updating likes:", error);
     }

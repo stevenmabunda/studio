@@ -1,76 +1,60 @@
+
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
     // Helper functions
-    function isSignedIn() {
-      return request.auth != null;
+    function isAuthor(docData) {
+      return request.auth.uid == docData.authorId;
     }
 
-    function isAuthor(userId) {
-      return isSignedIn() && request.auth.uid == userId;
+    function isInteractionUpdate(requestData, resourceData) {
+      return requestData.content == resourceData.content &&
+             requestData.authorId == resourceData.authorId &&
+             // Allow interaction counters to change
+             requestData.likes != resourceData.likes ||
+             requestData.comments != resourceData.comments ||
+             requestData.reposts != resourceData.reposts ||
+             // Allow poll vote updates
+             (requestData.poll != null && resourceData.poll != null && requestData.poll.choices != resourceData.poll.choices);
     }
     
-    function isOwner(resourceId) {
-      return isSignedIn() && request.auth.uid == resourceId;
+    function isContentUpdate(requestData, resourceData) {
+        return requestData.content != resourceData.content;
     }
 
-    // This function is the key fix. It ensures that when a non-author updates a post
-    // (e.g., for a like or comment count), they are not changing the original content.
-    function corePostFieldsUnchanged() {
-      return request.resource.data.authorId == resource.data.authorId &&
-             request.resource.data.authorName == resource.data.authorName &&
-             request.resource.data.authorHandle == resource.data.authorHandle &&
-             request.resource.data.authorAvatar == resource.data.authorAvatar &&
-             request.resource.data.content == resource.data.content &&
-             request.resource.data.createdAt == resource.data.createdAt &&
-             request.resource.data.media == resource.data.media;
-    }
-
-    // USERS collection: Users can read any profile, but only create/update their own.
-    match /users/{userId} {
-      allow read: if isSignedIn();
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId);
-      allow delete: if false; // Do not allow users to delete their own profiles
-    }
-    
-    // TOPICS collection: Authenticated users can create topics (triggered by posting), but not modify them.
-    match /topics/{topicId} {
-      allow read: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update: if false;
-      allow delete: if false;
-    }
-
-    // STORIES collection: Users can read stories, create/delete their own, but not update them.
-    match /stories/{storyId} {
-      allow read: if isSignedIn();
-      allow create: if isAuthor(request.resource.data.userId);
-      allow update: if false;
-      allow delete: if isAuthor(resource.data.userId);
-    }
-    
-    // POSTS collection
     match /posts/{postId} {
-      allow read: if isSignedIn();
-      allow create: if isAuthor(request.resource.data.authorId);
-      
-      // UPDATE: Allow if the user is the author OR if it's an interaction update
-      // by any other signed-in user where the core post content does not change.
-      allow update: if (isAuthor(resource.data.authorId)) || 
-                       (isSignedIn() && corePostFieldsUnchanged());
+      allow read;
+      allow create: if request.auth.uid == request.resource.data.authorId;
+      // Allow authors to update content.
+      // Allow any authenticated user to update interaction fields (likes, etc.)
+      allow update: if (isAuthor(resource.data) && isContentUpdate(request.resource.data, resource.data)) ||
+                       (request.auth.uid != null && isInteractionUpdate(request.resource.data, resource.data));
+      allow delete: if isAuthor(resource.data);
 
-      allow delete: if isAuthor(resource.data.authorId);
-
-      // COMMENTS subcollection
       match /comments/{commentId} {
-        allow read: if isSignedIn();
-        allow create: if isAuthor(request.resource.data.authorId);
-        allow update: if isAuthor(request.resource.data.authorId); // Allow authors to edit their own comments
-        allow delete: if isAuthor(resource.data.authorId); // Allow authors to delete their own comments
+          allow read;
+          allow create: if request.auth.uid != null;
       }
+    }
+
+    match /users/{userId} {
+      allow read;
+      allow create: if request.auth.uid == userId;
+      allow update: if request.auth.uid == userId;
+
+      // Notifications subcollection rules
+      match /notifications/{notificationId} {
+        // Any authenticated user can create a notification for another user
+        allow create: if request.auth.uid != null;
+        // Only the user themselves can read or update (e.g., mark as read) their notifications
+        allow read, update, delete: if request.auth.uid == userId;
+      }
+    }
+
+    match /topics/{topicId} {
+        allow read;
+        allow create: if request.auth.uid != null;
     }
   }
 }
