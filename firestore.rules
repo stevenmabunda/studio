@@ -2,62 +2,45 @@
 rules_version = '2';
 
 service cloud.firestore {
-  match /databases/{database}/documents {
+  match /databases/bholo/documents {
 
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    function isOwner(userId) {
-      return request.auth.uid == userId;
-    }
-
+    // Users can view profiles, but only write to their own
     match /users/{userId} {
       allow read: if true;
-      // User can create their own doc, and update/delete it.
-      allow write: if isSignedIn() && isOwner(userId);
+      allow write: if request.auth.uid == userId;
     }
 
+    // Rules for posts
     match /posts/{postId} {
       allow read: if true;
-      allow create: if isSignedIn();
-      allow delete: if isSignedIn() && isOwner(resource.data.authorId);
+      allow create: if request.auth.uid == request.resource.data.authorId;
+      allow delete: if request.auth.uid == resource.data.authorId;
       
-      // Update Rule:
-      // An update is allowed if...
-      allow update: if isSignedIn() && (
-        // EITHER the user is the author (they can change their own post's content)
-        isOwner(resource.data.authorId)
-        ||
-        // OR the user is NOT the author, but they are only interacting (e.g. liking, commenting).
-        // In this case, the core content fields must not be changed.
-        (
-          !isOwner(resource.data.authorId) &&
-          request.resource.data.content == resource.data.content &&
-          request.resource.data.authorId == resource.data.authorId &&
-          request.resource.data.createdAt == resource.data.createdAt &&
-          request.resource.data.media == resource.data.media
-        )
-      );
+      // For updates:
+      // - The author can update anything.
+      // - Other authenticated users can update interaction fields (likes, comments, etc.)
+      //   but are blocked from changing immutable fields like content, authorId, or createdAt.
+      allow update: if request.auth.uid == resource.data.authorId ||
+                     ( request.auth != null &&
+                       request.resource.data.content == resource.data.content &&
+                       request.resource.data.authorId == resource.data.authorId &&
+                       request.resource.data.createdAt == resource.data.createdAt
+                     );
     }
 
+    // Authenticated users can read and create comments
     match /posts/{postId}/comments/{commentId} {
-      allow read: if true;
-      allow create: if isSignedIn();
-      // To keep it simple, nobody can update/delete comments for now.
-      allow update, delete: if false;
+      allow read, create: if request.auth != null;
     }
 
-    // This rule covers subcollections like 'bookmarks' and 'notifications' within a user's document.
+    // Users can only read and write to their own subcollections (notifications, bookmarks)
     match /users/{userId}/{subcollection}/{docId} {
-       allow read, write: if isSignedIn() && isOwner(userId);
+      allow read, write: if request.auth.uid == userId;
     }
 
+    // Authenticated users can read and create topics
     match /topics/{topicId} {
-      allow read: if true;
-      allow create: if isSignedIn();
-      // No updates or deletes on topics for now.
-      allow update, delete: if false;
+      allow read, create: if request.auth != null;
     }
   }
 }
