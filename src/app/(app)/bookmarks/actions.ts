@@ -10,33 +10,37 @@ export async function getBookmarkedPosts(userId: string): Promise<PostType[]> {
     return [];
   }
 
-  // Path to the user's bookmarks collection
   const bookmarksRef = collection(db, 'users', userId, 'bookmarks');
   
   try {
-    // Fetch all bookmark documents without server-side ordering to avoid index issues.
     const bookmarksSnapshot = await getDocs(bookmarksRef);
     
-    // Create an array of bookmarks with their creation timestamps.
-    const bookmarksWithTimestamp = bookmarksSnapshot.docs.map(doc => ({
-        id: doc.id,
-        createdAt: (doc.data().createdAt as Timestamp)?.toDate() || new Date(0) // Fallback date
-    }));
+    if (bookmarksSnapshot.empty) {
+      return [];
+    }
 
-    // Sort the bookmarks by timestamp in descending order on the server.
-    bookmarksWithTimestamp.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    // Create a map of postId -> creation date for sorting later.
+    const bookmarkTimestamps = new Map<string, Date>();
+    bookmarksSnapshot.docs.forEach(doc => {
+        const createdAt = (doc.data().createdAt as Timestamp)?.toDate();
+        // Only add bookmarks that have a valid timestamp.
+        if (createdAt) {
+            bookmarkTimestamps.set(doc.id, createdAt);
+        }
+    });
 
-    const postIds = bookmarksWithTimestamp.map(bookmark => bookmark.id);
+    const postIds = Array.from(bookmarkTimestamps.keys());
 
     if (postIds.length === 0) {
         return [];
     }
 
-    // Fetch the actual post documents.
+    // Fetch all the post documents in parallel.
     const postPromises = postIds.map(postId => getDoc(doc(db, 'posts', postId)));
     const postDocs = await Promise.all(postPromises);
 
-    const bookmarkedPosts = postDocs
+    // Map Firestore documents to PostType objects, filtering out any that don't exist.
+    let bookmarkedPosts = postDocs
         .filter(docSnap => docSnap.exists())
         .map(docSnap => {
             const data = docSnap.data()!;
@@ -57,8 +61,13 @@ export async function getBookmarkedPosts(userId: string): Promise<PostType[]> {
             } as PostType;
         });
 
-    // The order of postDocs from Promise.all matches the order of postIds,
-    // so we don't need to re-sort here.
+    // Sort the final list of posts based on when they were bookmarked (most recent first).
+    bookmarkedPosts.sort((a, b) => {
+        const timeA = bookmarkTimestamps.get(a.id)?.getTime() || 0;
+        const timeB = bookmarkTimestamps.get(b.id)?.getTime() || 0;
+        return timeB - timeA;
+    });
+
     return bookmarkedPosts;
   } catch (error) {
     console.error("Error fetching bookmarked posts:", error);
