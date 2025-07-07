@@ -19,11 +19,3 @@ export type PostType = {
     choices: { text: string; votes: number }[];
   };
 };
-
-export type StoryType = {
-  id: string;
-  userId: string;
-  username: string;
-  avatar: string;
-  storyImageUrl: string;
-};

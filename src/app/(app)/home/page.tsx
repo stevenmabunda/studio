@@ -6,7 +6,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { usePosts } from '@/contexts/post-context';
-import { StoryReel } from '@/components/story-reel';
 import { PostSkeleton } from '@/components/post-skeleton';
 import { DiscoverFeed } from '@/components/discover-feed';
 import { CreatePost, type Media } from '@/components/create-post';
@@ -96,7 +95,9 @@ export default function HomePage() {
         </header>
         <main className="flex-1">
           <TabsContent value="foryou">
-            <StoryReel />
+            <div className="border-b">
+                <CreatePost onPost={handlePost} />
+            </div>
             <div className="divide-y divide-border">
               {loading ? (
                 <>
