@@ -12,11 +12,16 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { Input } from "./ui/input";
 import type { PostType } from "@/lib/data";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 
 export type Media = {
   url: string;
   type: 'image' | 'video';
 };
+
+const EMOJIS = [
+    '😀', '😂', '😍', '🤔', '😭', '🙏', '❤️', '🔥', '👍', '⚽️', '🥅', '🏆', '🎉', '👏', '🚀', '💯'
+];
 
 export function CreatePost({ onPost }: { onPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null }) => Promise<void> }) {
   const { user } = useAuth();
@@ -173,6 +178,10 @@ export function CreatePost({ onPost }: { onPost: (data: { text: string; media: M
     }
   };
 
+  const handleEmojiClick = (emoji: string) => {
+    setText(prevText => prevText + emoji);
+  };
+
   const isPostable = text.trim().length > 0 || media.length > 0 || (showPoll && pollChoices.some(c => c.trim()));
   const hasVideo = media.length > 0 && media[0].type === 'video';
   const hasImages = media.length > 0 && media[0].type === 'image';
@@ -297,9 +306,27 @@ export function CreatePost({ onPost }: { onPost: (data: { text: string; media: M
               <Button variant="ghost" size="icon" onClick={togglePoll} disabled={posting}>
                 <ListOrdered className="h-5 w-5 text-primary" />
               </Button>
-              <Button variant="ghost" size="icon" disabled>
-                <Smile className="h-5 w-5 text-primary" />
-              </Button>
+              <Popover>
+                <PopoverTrigger asChild>
+                    <Button variant="ghost" size="icon" disabled={posting}>
+                        <Smile className="h-5 w-5 text-primary" />
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-2 border-none bg-background/80 backdrop-blur-sm shadow-lg">
+                    <div className="grid grid-cols-6 gap-1">
+                        {EMOJIS.map((emoji) => (
+                            <Button
+                                key={emoji}
+                                variant="ghost"
+                                className="text-xl rounded-full p-2 hover:bg-accent"
+                                onClick={() => handleEmojiClick(emoji)}
+                            >
+                                {emoji}
+                            </Button>
+                        ))}
+                    </div>
+                </PopoverContent>
+              </Popover>
               <Button variant="ghost" size="icon" onClick={handleLocationClick} disabled={posting}>
                 <MapPin className={cn("h-5 w-5 text-primary", location && "fill-current text-primary")} />
               </Button>
