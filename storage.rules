@@ -1,12 +1,40 @@
-
 rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
+    
+    // Helper function to check if a user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if the user is the owner of the path
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // Avatars: Allow users to upload their own avatar
+    match /avatars/{userId}/{fileId} {
+      allow write: if isOwner(userId) && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+    
+    // Banners: Allow users to upload their own profile banner
+    match /banners/{userId}/{fileId} {
+      allow write: if isOwner(userId) && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+    
+    // Posts: Allow users to upload images and videos to their own post folders
+    match /posts/{userId}/{fileId} {
+      allow write: if isOwner(userId) && request.resource.size < 25 * 1024 * 1024 // 25MB limit
+                   && (request.resource.contentType.matches('image/.*') || request.resource.contentType.matches('video/.*'));
+    }
+
+    // Default deny all other writes
     match /{allPaths=**} {
-      // Temporarily allow read and write access for any authenticated user
-      // to diagnose the upload issue. This is not secure for production.
-      allow read, write: if request.auth != null;
+      allow read; // Allow public reads for all files by default
+      allow write: if false;
     }
   }
 }

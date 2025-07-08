@@ -7,7 +7,7 @@ import type { Media } from '@/components/create-post';
 import { useAuth } from '@/hooks/use-auth';
 import { db, storage } from '@/lib/firebase/config';
 import { collection, addDoc, serverTimestamp, getDocs, query, type Timestamp, doc, updateDoc, runTransaction, deleteDoc, orderBy, getDoc, setDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { formatTimestamp } from '@/lib/utils';
 import { extractPostTopics } from '@/ai/flows/extract-post-topics';
 
@@ -177,10 +177,10 @@ export function PostProvider({ children }: { children: ReactNode }) {
         media.map(async (m) => {
             const fileName = crypto.randomUUID();
             const mediaRef = ref(storage, `posts/${user.uid}/${fileName}`);
-            const response = await fetch(m.url);
-            const blob = await response.blob();
+            
+            // Use uploadString with 'data_url' format which is more reliable for data URIs.
+            await uploadString(mediaRef, m.url, 'data_url');
 
-            await uploadBytes(mediaRef, blob, { contentType: blob.type });
             const downloadURL = await getDownloadURL(mediaRef);
             return { url: downloadURL, type: m.type, hint: 'user uploaded content' };
         })
