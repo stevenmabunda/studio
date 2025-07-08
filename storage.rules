@@ -1,12 +1,23 @@
-
 rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
-    // Allow anyone to read images (for public posts)
-    // Allow authenticated users to write to their own user-specific folder
-    match /{folder}/{userId}/{fileName} where folder in ['posts', 'avatars', 'banners'] {
-      allow read: if true;
+    // Allow public read access to all files.
+    // This is suitable for a social media app where content is public.
+    match /{allPaths=**} {
+      allow read;
+    }
+
+    // Users can only write to their own user-specific folders for posts, avatars, and banners.
+    match /posts/{userId}/{fileName} {
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    match /avatars/{userId} {
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    match /banners/{userId} {
       allow write: if request.auth != null && request.auth.uid == userId;
     }
   }
