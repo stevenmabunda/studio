@@ -1,46 +1,68 @@
 
 rules_version = '2';
-
 service cloud.firestore {
-  match /databases/bholo/documents {
-
-    // Users can view profiles, but only write to their own
+  match /databases/{database}/documents {
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
     match /users/{userId} {
-      allow read: if true;
+      // Profile data is public, but only owner can write.
+      allow read;
       allow write: if request.auth.uid == userId;
-    }
-
-    // Rules for posts
-    match /posts/{postId} {
-      allow read: if true;
-      allow create: if request.auth.uid == request.resource.data.authorId;
-      allow delete: if request.auth.uid == resource.data.authorId;
       
-      // For updates:
-      // - The author can update anything.
-      // - Other authenticated users can update interaction fields (likes, comments, etc.)
-      //   but are blocked from changing immutable fields like content, authorId, or createdAt.
-      allow update: if request.auth.uid == resource.data.authorId ||
-                     ( request.auth != null &&
-                       request.resource.data.content == resource.data.content &&
-                       request.resource.data.authorId == resource.data.authorId &&
-                       request.resource.data.createdAt == resource.data.createdAt
-                     );
+      match /notifications/{notificationId} {
+        // Only the user can read/delete their notifications.
+        // Creation is done via client-side code with user's auth, so any authenticated user
+        // can create a notification for another user. This is a potential spam vector
+        // but required by the current app architecture.
+        allow read, delete: if request.auth.uid == userId;
+        allow create: if isAuthenticated();
+      }
+      
+      match /bookmarks/{bookmarkId} {
+        allow read, write, delete: if request.auth.uid == userId;
+      }
     }
 
-    // Authenticated users can read and create comments
-    match /posts/{postId}/comments/{commentId} {
-      allow read, create: if request.auth != null;
-    }
-
-    // Users can only read and write to their own subcollections (notifications, bookmarks)
-    match /users/{userId}/{subcollection}/{docId} {
-      allow read, write: if request.auth.uid == userId;
-    }
-
-    // Authenticated users can read and create topics
     match /topics/{topicId} {
-      allow read, create: if request.auth != null;
+      allow read;
+      allow create: if isAuthenticated();
+    }
+    
+    match /posts/{postId} {
+      allow read;
+      
+      // CREATE: User must be authenticated and the author of the new post.
+      allow create: if isAuthenticated() && request.resource.data.authorId == request.auth.uid;
+      
+      // DELETE: User must be the author of the existing post.
+      allow delete: if isAuthenticated() && resource.data.authorId == request.auth.uid;
+      
+      // UPDATE: Split into two clear cases: editing vs. interacting.
+      allow update: if isAuthenticated() && (
+        // Case 1: Author is editing the post.
+        // Only the `content` field can be changed.
+        (
+          resource.data.authorId == request.auth.uid &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['content'])
+        )
+        ||
+        // Case 2: Any user is interacting (like, comment count, vote).
+        // Only interaction-related fields can be changed.
+        (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'reposts', 'comments', 'poll'])
+        )
+      );
+
+      match /comments/{commentId} {
+        allow read;
+        // CREATE: User must be authenticated and the author of the new comment.
+        allow create: if isAuthenticated() && request.resource.data.authorId == request.auth.uid;
+        // DELETE: User must be the author of the existing comment.
+        allow delete: if isAuthenticated() && resource.data.authorId == request.auth.uid;
+      }
     }
   }
 }
