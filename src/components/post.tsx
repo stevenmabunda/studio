@@ -2,7 +2,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { MessageCircle, Repeat, Heart, Share2, CheckCircle2, MoreHorizontal, Edit, Trash2, Bookmark } from "lucide-react";
+import { MessageCircle, Repeat, Heart, Share2, CheckCircle2, MoreHorizontal, Edit, Trash2, Bookmark, MapPin } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useMemo, useRef, useEffect } from "react";
@@ -111,6 +111,7 @@ export function Post(props: PostProps) {
     likes: initialLikes,
     media,
     poll,
+    location,
     isStandalone = false,
   } = props;
   
@@ -244,6 +245,15 @@ export function Post(props: PostProps) {
               <span className="truncate text-muted-foreground">@{authorHandle}</span>
               <span className="text-muted-foreground">·</span>
               <span className="flex-shrink-0 text-muted-foreground">{timestamp}</span>
+              {location && (
+                <>
+                  <span className="text-muted-foreground">·</span>
+                  <span className="flex-shrink-0 text-muted-foreground flex items-center gap-1">
+                    <MapPin className="h-3 w-3" />
+                    {location}
+                  </span>
+                </>
+              )}
             </div>
             <div className="flex items-center">
                 {!isAuthor && isStandalone && (

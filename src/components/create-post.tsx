@@ -18,7 +18,7 @@ export type Media = {
   type: 'image' | 'video';
 };
 
-export function CreatePost({ onPost }: { onPost: (data: { text: string; media: Media[], poll?: PostType['poll'] }) => Promise<void> }) {
+export function CreatePost({ onPost }: { onPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null }) => Promise<void> }) {
   const { user } = useAuth();
   const [text, setText] = useState("");
   const [media, setMedia] = useState<Media[]>([]);
@@ -29,6 +29,7 @@ export function CreatePost({ onPost }: { onPost: (data: { text: string; media: M
 
   const [showPoll, setShowPoll] = useState(false);
   const [pollChoices, setPollChoices] = useState<string[]>(['', '']);
+  const [location, setLocation] = useState<string | null>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
@@ -101,11 +102,12 @@ export function CreatePost({ onPost }: { onPost: (data: { text: string; media: M
     }
 
     try {
-        await onPost({ text, media, poll: pollData });
+        await onPost({ text, media, poll: pollData, location });
         setText("");
         setMedia([]);
         setShowPoll(false);
         setPollChoices(['', '']);
+        setLocation(null);
         if (imageInputRef.current) imageInputRef.current.value = "";
         if (videoInputRef.current) videoInputRef.current.value = "";
     } catch (error) {
@@ -139,6 +141,36 @@ export function CreatePost({ onPost }: { onPost: (data: { text: string; media: M
         setMedia([]);
     }
     setShowPoll(!showPoll);
+  };
+
+  const handleLocationClick = () => {
+    if (location) {
+        setLocation(null);
+        toast({ description: "Location removed." });
+        return;
+    }
+
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords;
+                const locationString = `Lat: ${latitude.toFixed(2)}, Lon: ${longitude.toFixed(2)}`;
+                setLocation(locationString);
+                toast({ description: "Location added!" });
+            },
+            () => {
+                toast({
+                    variant: "destructive",
+                    description: "Could not get location. Please enable browser permissions.",
+                });
+            }
+        );
+    } else {
+        toast({
+            variant: "destructive",
+            description: "Geolocation is not supported by your browser.",
+        });
+    }
   };
 
   const isPostable = text.trim().length > 0 || media.length > 0 || (showPoll && pollChoices.some(c => c.trim()));
@@ -228,7 +260,16 @@ export function CreatePost({ onPost }: { onPost: (data: { text: string; media: M
                 )}
             </div>
           )}
-          <div className="flex justify-between items-center">
+          {location && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground border-t pt-3">
+              <MapPin className="h-4 w-4 text-primary" />
+              <span>{location}</span>
+              <Button variant="ghost" size="icon" className="h-6 w-6 ml-auto -mr-2" onClick={() => setLocation(null)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+          <div className="flex justify-between items-center pt-1">
             <div>
               <input
                 type="file"
@@ -259,8 +300,8 @@ export function CreatePost({ onPost }: { onPost: (data: { text: string; media: M
               <Button variant="ghost" size="icon" disabled>
                 <Smile className="h-5 w-5 text-primary" />
               </Button>
-              <Button variant="ghost" size="icon" disabled>
-                <MapPin className="h-5 w-5 text-primary" />
+              <Button variant="ghost" size="icon" onClick={handleLocationClick} disabled={posting}>
+                <MapPin className={cn("h-5 w-5 text-primary", location && "fill-current text-primary")} />
               </Button>
             </div>
             <Button disabled={!isPostable || posting} onClick={handlePost}>

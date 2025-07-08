@@ -9,6 +9,7 @@ export type PostType = {
   comments: number;
   reposts: number;
   likes: number;
+  location?: string;
   media?: Array<{
     url: string;
     type: 'image' | 'video';

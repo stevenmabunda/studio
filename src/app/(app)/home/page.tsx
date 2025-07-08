@@ -70,6 +70,7 @@ export default function HomePage() {
     text: string;
     media: Media[];
     poll?: PostType['poll'];
+    location?: string | null;
   }) => {
     try {
       await addPost(data);

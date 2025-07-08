@@ -13,7 +13,7 @@ import { extractPostTopics } from '@/ai/flows/extract-post-topics';
 
 type PostContextType = {
   posts: PostType[];
-  addPost: (data: { text: string; media: Media[], poll?: PostType['poll'] }) => Promise<void>;
+  addPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null }) => Promise<void>;
   editPost: (postId: string, data: { text:string }) => Promise<void>;
   deletePost: (postId: string) => Promise<void>;
   addVote: (postId: string, choiceIndex: number) => Promise<void>;
@@ -140,6 +140,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
                     comments: data.comments,
                     reposts: data.reposts,
                     likes: data.likes,
+                    location: data.location,
                     media: data.media,
                     poll: data.poll,
                     timestamp: createdAt ? formatTimestamp(createdAt) : 'now',
@@ -168,7 +169,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
     fetchPostsAndBookmarks();
   }, [user]);
 
-  const addPost = async ({ text, media, poll }: { text: string; media: Media[]; poll?: PostType['poll'] }) => {
+  const addPost = async ({ text, media, poll, location }: { text: string; media: Media[]; poll?: PostType['poll'], location?: string | null }) => {
     if (!user || !db || !storage) {
         throw new Error("Cannot add post: user not logged in or Firebase not configured.");
     }
@@ -178,7 +179,6 @@ export function PostProvider({ children }: { children: ReactNode }) {
             const fileName = crypto.randomUUID();
             const mediaRef = ref(storage, `posts/${user.uid}/${fileName}`);
             
-            // Use uploadString with 'data_url' format which is more reliable for data URIs.
             await uploadString(mediaRef, m.url, 'data_url');
 
             const downloadURL = await getDownloadURL(mediaRef);
@@ -201,6 +201,9 @@ export function PostProvider({ children }: { children: ReactNode }) {
 
     if (poll) {
         postData.poll = poll;
+    }
+    if (location) {
+        postData.location = location;
     }
 
     const docRef = await addDoc(collection(db, "posts"), postData);
@@ -233,6 +236,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
         likes: postData.likes,
         media: postData.media,
         poll: postData.poll,
+        location: postData.location,
     };
 
     setPosts((prevPosts) => [newPost, ...prevPosts]);

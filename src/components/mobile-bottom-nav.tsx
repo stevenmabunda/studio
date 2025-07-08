@@ -49,7 +49,7 @@ export function MobileBottomNav() {
     };
   }, []);
 
-  const handlePost = async (data: { text: string; media: Media[], poll?: PostType['poll'] }) => {
+  const handlePost = async (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null }) => {
     try {
         await addPost(data);
         setIsDialogOpen(false);

@@ -15,7 +15,7 @@ export function FloatingCreatePostButton() {
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const handlePost = async (data: { text: string; media: Media[], poll?: PostType['poll'] }) => {
+  const handlePost = async (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null }) => {
     try {
         await addPost(data);
         setIsDialogOpen(false);
