@@ -1,3 +1,4 @@
+
 'use server';
 
 import { db } from '@/lib/firebase/config';
@@ -79,7 +80,9 @@ export async function getIsFollowing(
   currentUserId: string,
   profileId: string
 ): Promise<boolean> {
-  if (!db || currentUserId === profileId) return false;
+  if (!db || !currentUserId || !profileId || currentUserId === profileId) {
+    return false;
+  }
   const followDocRef = doc(
     db,
     'users',

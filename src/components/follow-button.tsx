@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
@@ -14,7 +15,7 @@ export function FollowButton({ profileId, onFollowToggle }: { profileId: string,
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        if (user && user.uid !== profileId) {
+        if (user && profileId && user.uid !== profileId) {
             setIsLoading(true);
             getIsFollowing(user.uid, profileId)
                 .then(status => {
