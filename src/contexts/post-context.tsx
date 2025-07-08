@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { ReactNode } from 'react';
@@ -7,7 +8,7 @@ import type { Media } from '@/components/create-post';
 import { useAuth } from '@/hooks/use-auth';
 import { db, storage } from '@/lib/firebase/config';
 import { collection, addDoc, serverTimestamp, getDocs, query, type Timestamp, doc, updateDoc, runTransaction, deleteDoc, orderBy, getDoc, setDoc } from 'firebase/firestore';
-import { ref, uploadString, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { formatTimestamp } from '@/lib/utils';
 import { extractPostTopics } from '@/ai/flows/extract-post-topics';
 
@@ -179,7 +180,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
             const fileName = crypto.randomUUID();
             const mediaRef = ref(storage, `posts/${user.uid}/${fileName}`);
             
-            await uploadString(mediaRef, m.url, 'data_url');
+            await uploadBytes(mediaRef, m.file);
 
             const downloadURL = await getDownloadURL(mediaRef);
             return { url: downloadURL, type: m.type, hint: 'user uploaded content' };

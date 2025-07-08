@@ -15,7 +15,8 @@ import type { PostType } from "@/lib/data";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 
 export type Media = {
-  url: string;
+  file: File;
+  previewUrl: string;
   type: 'image' | 'video';
 };
 
@@ -42,36 +43,29 @@ export function CreatePost({ onPost }: { onPost: (data: { text: string; media: M
 
     const fileType = files[0].type.startsWith('image/') ? 'image' : 'video';
 
+    // Clear existing media before adding new ones
+    media.forEach(m => URL.revokeObjectURL(m.previewUrl));
+
     if (fileType === 'video') {
         if (files.length > 1) {
             toast({ variant: 'destructive', description: "You can only upload one video per post." });
             return;
         }
         const file = files[0];
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            setMedia([{ url: reader.result as string, type: 'video' }]);
-        };
-        reader.readAsDataURL(file);
+        setMedia([{ file, previewUrl: URL.createObjectURL(file), type: 'video' }]);
     } else { // Images
-        if (media.length + files.length > 4) {
+        if (files.length > 4) {
             toast({ variant: 'destructive', description: "You can only upload up to 4 images." });
             return;
         }
         
-        const newMediaPromises = files.map(file => {
-            return new Promise<Media>((resolve) => {
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                    resolve({ url: reader.result as string, type: 'image' });
-                };
-                reader.readAsDataURL(file);
-            });
-        });
-
-        Promise.all(newMediaPromises).then(newMedia => {
-            setMedia(prevMedia => [...prevMedia, ...newMedia]);
-        });
+        const newMedia = files.map(file => ({
+            file,
+            previewUrl: URL.createObjectURL(file),
+            type: 'image' as const
+        }));
+        
+        setMedia(newMedia);
     }
   };
 
@@ -84,7 +78,14 @@ export function CreatePost({ onPost }: { onPost: (data: { text: string; media: M
   }
 
   const removeMedia = (index: number) => {
-    setMedia(prevMedia => prevMedia.filter((_, i) => i !== index));
+    setMedia(prevMedia => {
+        const newMedia = [...prevMedia];
+        const removed = newMedia.splice(index, 1);
+        if (removed[0]) {
+            URL.revokeObjectURL(removed[0].previewUrl);
+        }
+        return newMedia;
+    });
     if (imageInputRef.current) imageInputRef.current.value = "";
     if (videoInputRef.current) videoInputRef.current.value = "";
   }
@@ -108,6 +109,10 @@ export function CreatePost({ onPost }: { onPost: (data: { text: string; media: M
 
     try {
         await onPost({ text, media, poll: pollData, location });
+        
+        // Clean up object URLs after successful post
+        media.forEach(m => URL.revokeObjectURL(m.previewUrl));
+
         setText("");
         setMedia([]);
         setShowPoll(false);
@@ -143,6 +148,7 @@ export function CreatePost({ onPost }: { onPost: (data: { text: string; media: M
 
   const togglePoll = () => {
     if (!showPoll) {
+        media.forEach(m => URL.revokeObjectURL(m.previewUrl));
         setMedia([]);
     }
     setShowPoll(!showPoll);
@@ -243,14 +249,14 @@ export function CreatePost({ onPost }: { onPost: (data: { text: string; media: M
             <div className="mt-3 rounded-2xl overflow-hidden border max-h-[50vh] overflow-y-auto">
                 {hasVideo ? (
                     <div className="relative">
-                        <video src={media[0].url} controls className="w-full h-auto max-h-96" />
+                        <video src={media[0].previewUrl} controls className="w-full h-auto max-h-96" />
                         <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-8 w-8 rounded-full bg-black/50 hover:bg-black/75 text-white hover:text-white" onClick={() => removeMedia(0)}>
                             <X className="h-4 w-4" />
                         </Button>
                     </div>
                 ) : singleImage ? (
                     <div className="relative">
-                        <Image src={media[0].url} alt="Preview 1" width={500} height={500} className="w-full h-auto object-contain bg-black" />
+                        <Image src={media[0].previewUrl} alt="Preview 1" width={500} height={500} className="w-full h-auto object-contain bg-black" />
                         <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-8 w-8 rounded-full bg-black/50 hover:bg-black/75 text-white hover:text-white" onClick={() => removeMedia(0)}>
                             <X className="h-4 w-4" />
                         </Button>
@@ -259,7 +265,7 @@ export function CreatePost({ onPost }: { onPost: (data: { text: string; media: M
                     <div className={cn("grid aspect-video gap-0.5", gridClasses)}>
                         {media.map((item, index) => (
                             <div key={index} className={cn("relative", media.length === 3 && index === 0 && 'row-span-2')}>
-                                <Image src={item.url} alt={`Preview ${index + 1}`} fill className="object-cover" />
+                                <Image src={item.previewUrl} alt={`Preview ${index + 1}`} fill className="object-cover" />
                                 <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-8 w-8 rounded-full bg-black/50 hover:bg-black/75 text-white hover:text-white" onClick={() => removeMedia(index)}>
                                     <X className="h-4 w-4" />
                                 </Button>
