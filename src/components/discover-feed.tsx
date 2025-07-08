@@ -6,8 +6,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import React, { useMemo } from 'react';
+import { FollowButton } from './follow-button';
+import Link from 'next/link';
 
 type Author = {
+    id: string;
     name: string;
     handle: string;
     avatar: string;
@@ -19,6 +22,7 @@ export function DiscoverFeed({ posts }: { posts: PostType[] }) {
         posts.forEach(post => {
             if (!authors.has(post.authorHandle)) {
                 authors.set(post.authorHandle, {
+                    id: post.authorId,
                     name: post.authorName,
                     handle: post.authorHandle,
                     avatar: post.authorAvatar
@@ -50,19 +54,17 @@ export function DiscoverFeed({ posts }: { posts: PostType[] }) {
                         <div className="flex flex-col gap-4">
                             {suggestedUsers.map((user) => (
                                 <div key={user.handle} className="flex items-center justify-between gap-2">
-                                    <div className="flex items-center gap-3">
+                                    <Link href={`/profile/${user.id}`} className="flex items-center gap-3">
                                         <Avatar className="h-10 w-10">
                                             <AvatarImage src={user.avatar} data-ai-hint="user avatar" />
                                             <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                                         </Avatar>
                                         <div className="grid">
-                                            <p className="font-semibold leading-none">{user.name}</p>
+                                            <p className="font-semibold leading-none hover:underline">{user.name}</p>
                                             <p className="text-sm text-muted-foreground">@{user.handle}</p>
                                         </div>
-                                    </div>
-                                    <Button variant="default" size="sm" className="shrink-0 rounded-full bg-foreground text-background hover:bg-foreground/90">
-                                        Follow
-                                    </Button>
+                                    </Link>
+                                    <FollowButton profileId={user.id} />
                                 </div>
                             ))}
                         </div>

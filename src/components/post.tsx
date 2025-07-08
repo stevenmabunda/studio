@@ -37,6 +37,7 @@ import { usePosts } from "@/contexts/post-context";
 import { useAuth } from "@/hooks/use-auth";
 import { Textarea } from "./ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { FollowButton } from "./follow-button";
 
 
 type PostProps = PostType & {
@@ -124,8 +125,7 @@ export function Post(props: PostProps) {
   const [isLiked, setIsLiked] = useState(false);
   const [repostCount, setRepostCount] = useState(initialReposts);
   const [isReposted, setIsReposted] = useState(false);
-  const [isFollowing, setIsFollowing] = useState(false);
-
+  
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(content);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -185,12 +185,6 @@ export function Post(props: PostProps) {
       description: !isBookmarked ? "Post bookmarked." : "Bookmark removed.",
     });
   };
-
-  const handleFollow = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsFollowing(!isFollowing);
-  }
   
   const handleEditSave = async () => {
     if (editedContent.trim() === content.trim()) {
@@ -232,14 +226,16 @@ export function Post(props: PostProps) {
 
   const postUiContent = (
       <div className="flex space-x-3 p-3 md:p-4">
-        <Avatar>
-          <AvatarImage src={authorAvatar} alt={authorName} data-ai-hint="user avatar"/>
-          <AvatarFallback>{authorName.charAt(0)}</AvatarFallback>
-        </Avatar>
+        <Link href={`/profile/${authorId}`} onClick={(e) => e.stopPropagation()}>
+            <Avatar>
+            <AvatarImage src={authorAvatar} alt={authorName} data-ai-hint="user avatar"/>
+            <AvatarFallback>{authorName.charAt(0)}</AvatarFallback>
+            </Avatar>
+        </Link>
         <div className="flex-1">
-          <div className="flex items-center justify-between">
-            <div className="flex min-w-0 items-center gap-2 text-sm">
-              <Link href="/profile" className="truncate font-bold hover:underline" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-start justify-between">
+            <div className="flex min-w-0 flex-wrap items-center gap-x-2 text-sm">
+              <Link href={`/profile/${authorId}`} className="truncate font-bold hover:underline" onClick={(e) => e.stopPropagation()}>
                 {authorName}
               </Link>
               <span className="truncate text-muted-foreground">@{authorHandle}</span>
@@ -247,7 +243,7 @@ export function Post(props: PostProps) {
               <span className="flex-shrink-0 text-muted-foreground">{timestamp}</span>
               {location && (
                 <>
-                  <span className="text-muted-foreground">·</span>
+                  <span className="text-muted-foreground hidden sm:inline">·</span>
                   <span className="flex-shrink-0 text-muted-foreground flex items-center gap-1">
                     <MapPin className="h-3 w-3" />
                     {location}
@@ -255,17 +251,8 @@ export function Post(props: PostProps) {
                 </>
               )}
             </div>
-            <div className="flex items-center">
-                {!isAuthor && isStandalone && (
-                  <Button 
-                    variant={isFollowing ? 'outline' : 'default'}
-                    size="sm" 
-                    className={cn("rounded-full h-8 px-4 font-bold", !isFollowing && "bg-foreground text-background hover:bg-foreground/90")}
-                    onClick={handleFollow}
-                  >
-                    {isFollowing ? 'Following' : 'Follow'}
-                  </Button>
-                )}
+            <div className="flex items-center -mt-1">
+                {!isAuthor && isStandalone && <FollowButton profileId={authorId} />}
                 {isAuthor && (
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>

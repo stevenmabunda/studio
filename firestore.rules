@@ -1,68 +1,65 @@
-
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-    
-    match /users/{userId} {
-      // Profile data is public, but only owner can write.
-      allow read;
-      allow write: if request.auth.uid == userId;
-      
-      match /notifications/{notificationId} {
-        // Only the user can read/delete their notifications.
-        // Creation is done via client-side code with user's auth, so any authenticated user
-        // can create a notification for another user. This is a potential spam vector
-        // but required by the current app architecture.
-        allow read, delete: if request.auth.uid == userId;
-        allow create: if isAuthenticated();
-      }
-      
-      match /bookmarks/{bookmarkId} {
-        allow read, write, delete: if request.auth.uid == userId;
-      }
-    }
-
-    match /topics/{topicId} {
-      allow read;
-      allow create: if isAuthenticated();
-    }
     
     match /posts/{postId} {
       allow read;
       
-      // CREATE: User must be authenticated and the author of the new post.
-      allow create: if isAuthenticated() && request.resource.data.authorId == request.auth.uid;
+      // Allow post creation for any authenticated user.
+      allow create: if request.auth != null;
       
-      // DELETE: User must be the author of the existing post.
-      allow delete: if isAuthenticated() && resource.data.authorId == request.auth.uid;
+      // Allow the author of a post to delete it.
+      allow delete: if request.auth.uid == resource.data.authorId;
       
-      // UPDATE: Split into two clear cases: editing vs. interacting.
-      allow update: if isAuthenticated() && (
-        // Case 1: Author is editing the post.
-        // Only the `content` field can be changed.
-        (
-          resource.data.authorId == request.auth.uid &&
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['content'])
-        )
-        ||
-        // Case 2: Any user is interacting (like, comment count, vote).
-        // Only interaction-related fields can be changed.
-        (
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'reposts', 'comments', 'poll'])
-        )
-      );
+      // Allow the author to edit only the content of their post.
+      allow update: if request.auth.uid == resource.data.authorId
+                      && request.resource.data.content != resource.data.content
+                      && request.resource.data.keys().hasOnly(['content']);
+                      
+      // Allow any authenticated user to update interaction fields (likes, comments, etc.).
+      allow update: if request.auth != null
+                      && request.resource.data.diff(resource.data).affectedKeys()
+                         .hasAny(['likes', 'comments', 'reposts', 'poll']);
 
+      // Allow anyone to read/write comments. This could be tightened.
       match /comments/{commentId} {
-        allow read;
-        // CREATE: User must be authenticated and the author of the new comment.
-        allow create: if isAuthenticated() && request.resource.data.authorId == request.auth.uid;
-        // DELETE: User must be the author of the existing comment.
-        allow delete: if isAuthenticated() && resource.data.authorId == request.auth.uid;
+        allow read, write: if request.auth != null;
       }
+    }
+
+    match /users/{userId} {
+      allow read;
+      // Allow a user to update their own profile information.
+      allow update: if request.auth.uid == userId;
+
+      match /followers/{followerId} {
+        allow read;
+        // A user can add/remove themselves from another user's followers list.
+        allow write: if request.auth.uid == followerId;
+      }
+
+      match /following/{followingId} {
+        allow read;
+        // A user can only manage their own 'following' list.
+        allow write: if request.auth.uid == userId;
+      }
+      
+      match /bookmarks/{bookmarkId} {
+        // A user can only manage their own bookmarks.
+        allow read, write: if request.auth.uid == userId;
+      }
+      
+      match /notifications/{notificationId} {
+        // A user can only read and write to their own notifications.
+        allow read, write: if request.auth.uid == userId;
+      }
+    }
+
+    match /topics/{topicId} {
+      // Allow anyone to read topics, and any authenticated user to create them.
+      allow read;
+      allow create: if request.auth != null;
     }
   }
 }
