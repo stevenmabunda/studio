@@ -16,10 +16,17 @@ export function FollowButton({ profileId, onFollowToggle }: { profileId: string,
     useEffect(() => {
         if (user && user.uid !== profileId) {
             setIsLoading(true);
-            getIsFollowing(user.uid, profileId).then(status => {
-                setIsFollowing(status);
-                setIsLoading(false);
-            });
+            getIsFollowing(user.uid, profileId)
+                .then(status => {
+                    setIsFollowing(status);
+                })
+                .catch((error) => {
+                    console.error("Failed to check follow status:", error);
+                    // Don't show a toast here to avoid being noisy on feed load.
+                })
+                .finally(() => {
+                    setIsLoading(false);
+                });
         } else {
             setIsLoading(false);
         }

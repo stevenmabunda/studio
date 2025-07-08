@@ -1,65 +1,76 @@
 rules_version = '2';
 
 service cloud.firestore {
-  match /databases/{database}/documents {
+  match /databases/bholo/documents {
     
-    match /posts/{postId} {
-      allow read;
-      
-      // Allow post creation for any authenticated user.
-      allow create: if request.auth != null;
-      
-      // Allow the author of a post to delete it.
-      allow delete: if request.auth.uid == resource.data.authorId;
-      
-      // Allow the author to edit only the content of their post.
-      allow update: if request.auth.uid == resource.data.authorId
-                      && request.resource.data.content != resource.data.content
-                      && request.resource.data.keys().hasOnly(['content']);
-                      
-      // Allow any authenticated user to update interaction fields (likes, comments, etc.).
-      allow update: if request.auth != null
-                      && request.resource.data.diff(resource.data).affectedKeys()
-                         .hasAny(['likes', 'comments', 'reposts', 'poll']);
-
-      // Allow anyone to read/write comments. This could be tightened.
-      match /comments/{commentId} {
-        allow read, write: if request.auth != null;
-      }
+    // Helper functions
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function isPostOwner(postId) {
+        return get(/databases/$(database)/documents/posts/$(postId)).data.authorId == request.auth.uid;
     }
 
+    // Users can read any profile, but only write to their own.
     match /users/{userId} {
       allow read;
-      // Allow a user to update their own profile information.
-      allow update: if request.auth.uid == userId;
-
+      allow write: if isOwner(userId);
+      
+      // Anyone can see who follows a user.
       match /followers/{followerId} {
         allow read;
-        // A user can add/remove themselves from another user's followers list.
-        allow write: if request.auth.uid == followerId;
       }
-
+      
+      // A user can only see their own 'following' list.
       match /following/{followingId} {
-        allow read;
-        // A user can only manage their own 'following' list.
-        allow write: if request.auth.uid == userId;
+        allow read: if isOwner(userId);
       }
       
-      match /bookmarks/{bookmarkId} {
-        // A user can only manage their own bookmarks.
-        allow read, write: if request.auth.uid == userId;
+      // Users can only manage their own bookmarks and notifications.
+      match /bookmarks/{postId} {
+        allow read, write: if isOwner(userId);
       }
-      
       match /notifications/{notificationId} {
-        // A user can only read and write to their own notifications.
-        allow read, write: if request.auth.uid == userId;
+        allow read, write: if isOwner(userId);
       }
     }
+    
+    // Transactions for following/unfollowing must happen through the backend functions.
+    // Direct client writes to followers/following subcollections are denied.
+    match /users/{userId}/{collection}/{docId} {
+      allow write: if false; // Deny direct writes to subcollections like followers/following
+    }
 
-    match /topics/{topicId} {
-      // Allow anyone to read topics, and any authenticated user to create them.
-      allow read;
+    match /posts/{postId} {
+      // Any authenticated user can read any post.
+      allow read: if request.auth != null;
+      
+      // Only the author can delete their post.
+      allow delete: if isPostOwner(postId);
+      
+      // Users can create a post if they are logged in.
       allow create: if request.auth != null;
+
+      // Complex update logic
+      allow update: if request.auth != null && (
+          // Rule 1: The owner can update the 'content' field.
+          (isPostOwner(postId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['content'])) ||
+          // Rule 2: Any authenticated user can update interaction fields.
+          (request.resource.data.diff(resource.data).affectedKeys().hasAny(['likes', 'comments', 'reposts']) || 
+           (request.resource.data.poll.choices.size() == resource.data.poll.choices.size() &&
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['poll.choices'])))
+      );
+      
+      // Comments
+      match /comments/{commentId} {
+        allow read, create: if request.auth != null;
+        // Logic to allow comment deletion/editing could go here if needed.
+      }
+    }
+    
+    match /topics/{topicId} {
+      allow read, create: if request.auth != null;
     }
   }
 }
