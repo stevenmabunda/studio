@@ -175,17 +175,16 @@ export function PostProvider({ children }: { children: ReactNode }) {
         throw new Error("Cannot add post: user not logged in or Firebase not configured.");
     }
 
-    const mediaUrls = await Promise.all(
-        media.map(async (m) => {
-            const fileName = crypto.randomUUID();
-            const mediaRef = ref(storage, `posts/${user.uid}/${fileName}`);
-            
-            await uploadBytes(mediaRef, m.file);
+    const mediaUrls = [];
+    for (const m of media) {
+        const fileName = `${Date.now()}-${m.file.name}`;
+        const mediaRef = ref(storage, `posts/${user.uid}/${fileName}`);
+        
+        await uploadBytes(mediaRef, m.file);
 
-            const downloadURL = await getDownloadURL(mediaRef);
-            return { url: downloadURL, type: m.type, hint: 'user uploaded content' };
-        })
-    );
+        const downloadURL = await getDownloadURL(mediaRef);
+        mediaUrls.push({ url: downloadURL, type: m.type, hint: 'user uploaded content' });
+    }
 
     const postData: Omit<PostType, 'id' | 'timestamp'> & { createdAt: any } = {
       authorId: user.uid,
