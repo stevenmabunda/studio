@@ -1,3 +1,4 @@
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,7 +36,7 @@ export function WhoToFollow() {
   return (
     <Card className="bg-secondary">
       <CardHeader className="p-4">
-        <CardTitle className="text-lg font-bold">Who to follow</CardTitle>
+        <CardTitle className="text-lg font-bold text-primary">Who to follow</CardTitle>
       </CardHeader>
       <CardContent className="p-4 pt-0">
         <div className="flex flex-col gap-4">
