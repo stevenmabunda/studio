@@ -173,77 +173,79 @@ export function PostProvider({ children }: { children: ReactNode }) {
     if (!user || !db || !storage) {
         throw new Error("Cannot add post: user not logged in or Firebase not configured.");
     }
+    
+    try {
+        const mediaUrls = [];
+        for (const m of media) {
+            const fileName = `${user.uid}-${Date.now()}-${m.file.name}`;
+            const storageRef = ref(storage, `posts/${user.uid}/${fileName}`);
+            
+            const snapshot = await uploadBytes(storageRef, m.file);
+            const downloadURL = await getDownloadURL(snapshot.ref);
+            
+            mediaUrls.push({ url: downloadURL, type: m.type, hint: 'user uploaded content' });
+        }
 
-    const mediaUrls = [];
-    for (const m of media) {
-        const fileName = `${Date.now()}-${m.file.name}`;
-        const storageRef = ref(storage, `posts/${user.uid}/${fileName}`);
+        const postData: Omit<PostType, 'id' | 'timestamp'> & { createdAt: any } = {
+          authorId: user.uid,
+          authorName: user.displayName || 'Anonymous User',
+          authorHandle: user.email?.split('@')[0] || 'user',
+          authorAvatar: user.photoURL || 'https://placehold.co/40x40.png',
+          content: text,
+          createdAt: serverTimestamp(),
+          comments: 0,
+          reposts: 0,
+          likes: 0,
+          media: mediaUrls,
+        };
+
+        if (poll) {
+            postData.poll = poll;
+        }
+        if (location) {
+            postData.location = location;
+        }
         
-        // Use uploadBytes for direct file upload, which is more robust
-        const snapshot = await uploadBytes(storageRef, m.file);
-        const downloadURL = await getDownloadURL(snapshot.ref);
+        const docRef = await addDoc(collection(db, "posts"), postData);
         
-        mediaUrls.push({ url: downloadURL, type: m.type, hint: 'user uploaded content' });
-    }
+        const newPostForState: PostType = {
+            id: docRef.id,
+            authorId: postData.authorId,
+            authorName: postData.authorName,
+            authorHandle: postData.authorHandle,
+            authorAvatar: postData.authorAvatar,
+            content: postData.content,
+            timestamp: 'Just now',
+            comments: postData.comments,
+            reposts: postData.reposts,
+            likes: postData.likes,
+            media: mediaUrls,
+            poll: postData.poll,
+            location: postData.location,
+        };
 
-    const postData: Omit<PostType, 'id' | 'timestamp'> & { createdAt: any } = {
-      authorId: user.uid,
-      authorName: user.displayName || 'Anonymous User',
-      authorHandle: user.email?.split('@')[0] || 'user',
-      authorAvatar: user.photoURL || 'https://placehold.co/40x40.png',
-      content: text,
-      createdAt: serverTimestamp(),
-      comments: 0,
-      reposts: 0,
-      likes: 0,
-      media: mediaUrls,
-    };
-
-    if (poll) {
-        postData.poll = poll;
-    }
-    if (location) {
-        postData.location = location;
-    }
-    
-    // Create the post document in Firestore
-    const docRef = await addDoc(collection(db, "posts"), postData);
-    
-    // After successful upload and DB write, add post to the local state
-    const newPostForState: PostType = {
-        id: docRef.id,
-        authorId: postData.authorId,
-        authorName: postData.authorName,
-        authorHandle: postData.authorHandle,
-        authorAvatar: postData.authorAvatar,
-        content: postData.content,
-        timestamp: 'Just now',
-        comments: postData.comments,
-        reposts: postData.reposts,
-        likes: postData.likes,
-        media: mediaUrls,
-        poll: postData.poll,
-        location: postData.location,
-    };
-
-    setPosts((prevPosts) => [newPostForState, ...prevPosts]);
-    
-    // Perform topic extraction in the background without blocking UI
-    if (text) {
-        extractPostTopics({ content: text })
-            .then(async ({ topics }) => {
-                if (!db) return;
-                const topicsCollectionRef = collection(db, 'topics');
-                for (const topic of topics) {
-                    await addDoc(topicsCollectionRef, {
-                        topic: topic.toLowerCase(),
-                        createdAt: serverTimestamp(),
-                    });
-                }
-            })
-            .catch(error => {
-                console.error("Background topic extraction failed:", error);
-            });
+        setPosts((prevPosts) => [newPostForState, ...prevPosts]);
+        
+        if (text) {
+            extractPostTopics({ content: text })
+                .then(async ({ topics }) => {
+                    if (!db) return;
+                    const topicsCollectionRef = collection(db, 'topics');
+                    for (const topic of topics) {
+                        await addDoc(topicsCollectionRef, {
+                            topic: topic.toLowerCase(),
+                            createdAt: serverTimestamp(),
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error("Background topic extraction failed:", error);
+                });
+        }
+    } catch (error) {
+        console.error("Failed to create post:", error);
+        // Re-throw the error to be caught by the calling component
+        throw error;
     }
   };
 

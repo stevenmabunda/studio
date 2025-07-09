@@ -11,6 +11,8 @@ import type { PostType, MatchType } from '@/lib/data';
 import { useEffect, useState } from 'react';
 import { getLiveMatches, getUpcomingMatches } from './actions';
 import { Skeleton } from '@/components/ui/skeleton';
+import { VideoFeed } from '@/components/video-feed';
+import { cn } from '@/lib/utils';
 
 function MatchCardSkeleton() {
   return (
@@ -65,7 +67,7 @@ export default function HomePage() {
 
   return (
     <div className="flex h-full min-h-screen flex-col">
-      <Tabs defaultValue="foryou" className="w-full">
+      <Tabs defaultValue="foryou" className="w-full flex flex-col flex-1">
         <header className="sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur-sm">
           <TabsList className="flex w-full overflow-x-auto bg-transparent p-0 no-scrollbar sm:grid sm:grid-cols-4">
             <TabsTrigger
@@ -95,7 +97,7 @@ export default function HomePage() {
           </TabsList>
         </header>
         <main className="flex-1">
-          <TabsContent value="foryou">
+          <TabsContent value="foryou" className="h-full">
             <div className="divide-y divide-border">
               {postsLoading ? (
                 <>
@@ -113,7 +115,7 @@ export default function HomePage() {
               )}
             </div>
           </TabsContent>
-          <TabsContent value="discover">
+          <TabsContent value="discover" className="h-full">
             {postsLoading ? (
               <>
                 <PostSkeleton />
@@ -124,19 +126,8 @@ export default function HomePage() {
               <DiscoverFeed posts={posts} />
             )}
           </TabsContent>
-          <TabsContent value="video">
-            {videoPosts.length > 0 ? (
-              <div className="divide-y divide-border">
-                {videoPosts.map((post) => (
-                  <Post key={post.id} {...post} />
-                ))}
-              </div>
-            ) : (
-              <div className="p-8 text-center text-muted-foreground">
-                <h2 className="text-xl font-bold">No videos yet</h2>
-                <p>When users post videos, they'll appear here.</p>
-              </div>
-            )}
+          <TabsContent value="video" className="h-[calc(100vh-8.5rem)] md:h-[calc(100vh-4rem)] p-0 m-0">
+             <VideoFeed posts={videoPosts} />
           </TabsContent>
           <TabsContent value="live">
             <div className="p-4 space-y-8">
