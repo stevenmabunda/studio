@@ -6,8 +6,8 @@ const sampleHeadlines = [
     category: "Transfers",
     topic: "Man United agree terms with Jarrad Branthwaite",
     postCount: "21.3K posts",
-    image: "https://placehold.co/100x100.png",
-    hint: "football player signing",
+    image: "https://placehold.co/600x400.png",
+    hint: "football player action",
   },
   {
     category: "Euro 2024",
@@ -40,10 +40,31 @@ const sampleHeadlines = [
 ];
 
 export function DiscoverHeadlines() {
+  const [heroHeadline, ...otherHeadlines] = sampleHeadlines;
+
   return (
-    <div>
-      {sampleHeadlines.map((item, index) => (
-        <div key={index} className="group cursor-pointer p-4 hover:bg-accent flex items-start justify-between gap-4 border-b">
+    <div className="border-b">
+      {/* Hero Section */}
+      <div className="relative w-full h-64 cursor-pointer group mb-2">
+        <Image
+          src={heroHeadline.image}
+          alt={heroHeadline.topic}
+          layout="fill"
+          objectFit="cover"
+          className="group-hover:opacity-90 transition-opacity"
+          data-ai-hint={heroHeadline.hint}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+        <div className="absolute bottom-0 left-0 p-4 text-white">
+          <p className="text-sm font-semibold">{heroHeadline.category} • Trending</p>
+          <h2 className="text-2xl font-bold leading-tight mt-1">{heroHeadline.topic}</h2>
+          <p className="text-sm mt-1">{heroHeadline.postCount}</p>
+        </div>
+      </div>
+
+      {/* List of other headlines */}
+      {otherHeadlines.map((item, index) => (
+        <div key={index} className="group cursor-pointer p-4 hover:bg-accent flex items-start justify-between gap-4 border-t">
           <div className="flex-1">
             <p className="text-sm text-muted-foreground">{item.category} • Trending</p>
             <p className="font-bold text-base group-hover:underline">{item.topic}</p>
@@ -52,7 +73,7 @@ export function DiscoverHeadlines() {
           <Image src={item.image} alt={item.topic} width={80} height={80} className="w-20 h-20 rounded-lg object-cover" data-ai-hint={item.hint} />
         </div>
       ))}
-      <div className="p-4 hover:bg-accent cursor-pointer">
+      <div className="p-4 hover:bg-accent cursor-pointer border-t">
          <Button variant="link" className="p-0 text-primary text-sm">Show more</Button>
       </div>
     </div>
