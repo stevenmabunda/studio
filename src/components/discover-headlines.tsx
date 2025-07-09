@@ -6,7 +6,7 @@ const sampleHeadlines = [
     category: "Transfers",
     topic: "Man United agree terms with Jarrad Branthwaite",
     postCount: "21.3K posts",
-    image: "https://images.unsplash.com/photo-1504016798928-b9f1b2961e15?q=80&w=1200&auto=format&fit=crop",
+    image: "https://placehold.co/600x300.png",
     hint: "football stadium",
   },
   {
@@ -70,7 +70,7 @@ export function DiscoverHeadlines() {
             <p className="font-bold text-base group-hover:underline">{item.topic}</p>
             <p className="text-sm text-muted-foreground">{item.postCount}</p>
           </div>
-          <Image src={item.image} alt={item.topic} width={80} height={80} className="w-20 h-20 rounded-lg object-cover" data-ai-hint={item.hint} />
+          <Image src={item.image} alt={item.topic} width={40} height={40} className="w-10 h-10 rounded-lg object-cover" data-ai-hint={item.hint} />
         </div>
       ))}
       <div className="p-4 hover:bg-accent cursor-pointer border-t">
