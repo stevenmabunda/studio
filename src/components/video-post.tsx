@@ -26,11 +26,12 @@ export function VideoPost({ post, isActive, isMuted, onToggleMute, isDesktop = f
     if (!videoElement) return;
 
     if (isActive) {
-      setIsPlaying(true);
+      setIsPlaying(false); // Assume it's not playing until the promise resolves
       const playPromise = videoElement.play();
       if (playPromise !== undefined) {
-        playPromise.catch(error => {
-          // Autoplay was prevented.
+        playPromise.then(() => {
+          setIsPlaying(true);
+        }).catch(error => {
           setIsPlaying(false);
           console.warn("Autoplay was prevented for video:", post.id, error);
         });
@@ -47,8 +48,7 @@ export function VideoPost({ post, isActive, isMuted, onToggleMute, isDesktop = f
     const videoElement = videoRef.current;
     if (videoElement) {
       if (videoElement.paused) {
-        videoElement.play();
-        setIsPlaying(true);
+        videoElement.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
       } else {
         videoElement.pause();
         setIsPlaying(false);
@@ -67,13 +67,13 @@ export function VideoPost({ post, isActive, isMuted, onToggleMute, isDesktop = f
   }
 
   return (
-    <div className="relative h-full w-full snap-start bg-black" onClick={togglePlay}>
+    <div className="relative h-full w-full snap-start bg-black flex items-center justify-center" onClick={togglePlay}>
       <video
         ref={videoRef}
         src={videoUrl}
         loop
         muted={isMuted}
-        className="h-full w-full object-contain"
+        className="max-h-full max-w-full"
         playsInline // Important for iOS
       />
       
