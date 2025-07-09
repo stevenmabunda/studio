@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Users, Plus, Search, Hash } from 'lucide-react';
+import { Home, Plus, Search, Hash, Radio } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import React, { useState, useEffect, useRef } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -17,7 +17,7 @@ const navItems = [
   { href: '/explore', icon: Hash, label: 'Explore' },
   { href: 'POST_ACTION', icon: Plus, label: 'Post' },
   { href: '/explore', icon: Search, label: 'Search' },
-  { href: '/communities', icon: Users, label: 'Communities' },
+  { href: '/live', icon: Radio, label: 'Live' },
 ];
 
 export function MobileBottomNav() {
