@@ -26,7 +26,7 @@ export function VideoPost({ post, isActive, isMuted, onToggleMute, isDesktop = f
     if (!videoElement) return;
 
     if (isActive) {
-      setIsPlaying(false); // Assume it's not playing until the promise resolves
+      setIsPlaying(false);
       const playPromise = videoElement.play();
       if (playPromise !== undefined) {
         playPromise.then(() => {
@@ -38,7 +38,7 @@ export function VideoPost({ post, isActive, isMuted, onToggleMute, isDesktop = f
       }
     } else {
       videoElement.pause();
-      videoElement.currentTime = 0; // Rewind video when it's not active
+      videoElement.currentTime = 0;
       setIsPlaying(false);
     }
   }, [isActive, post.id]);
@@ -63,95 +63,92 @@ export function VideoPost({ post, isActive, isMuted, onToggleMute, isDesktop = f
 
   const videoUrl = post.media?.[0]?.url;
   if (!videoUrl || post.media?.[0]?.type !== 'video') {
-    return null; // Should not happen if data is filtered correctly
+    return null;
   }
 
   return (
-    <div className="relative h-full w-full snap-start bg-black flex items-center justify-center" onClick={togglePlay}>
+    <div className="relative h-full w-full bg-black" onClick={togglePlay}>
+      {/* Video Player */}
       <video
         ref={videoRef}
         src={videoUrl}
         loop
         muted={isMuted}
-        className="max-h-full max-w-full"
-        playsInline // Important for iOS
+        playsInline
+        className="h-full w-full object-cover"
       />
-      
-      <div className="absolute top-4 left-4 z-10 pointer-events-auto">
-        <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full bg-black/30 text-white hover:bg-black/50 hover:text-white" onClick={handleToggleMute}>
-            {isMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
+
+      {/* Gradient Overlay for text readability */}
+      <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
+
+      {/* Play/Pause Indicator */}
+      {!isPlaying && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <Play className="h-20 w-20 text-white/70" />
+        </div>
+      )}
+
+      {/* Top Left Controls */}
+      <div className="absolute top-4 left-4 z-10">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-10 w-10 rounded-full bg-black/30 text-white hover:bg-black/50 hover:text-white"
+          onClick={handleToggleMute}
+        >
+          {isMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
         </Button>
       </div>
-      
-      {!isPlaying && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none">
-          <Play className="h-16 w-16 text-white/70" />
-        </div>
-      )}
 
-      {isDesktop ? (
-          <div className="absolute bottom-0 left-0 right-0 z-10 p-4 text-white bg-gradient-to-t from-black/60 to-transparent pointer-events-auto">
-              <div className="flex items-start gap-3">
-                  <Link href={`/profile/${post.authorId}`} onClick={e => e.stopPropagation()} className="shrink-0">
-                      <Avatar className="h-10 w-10">
-                          <AvatarImage src={post.authorAvatar} data-ai-hint="user avatar" />
-                          <AvatarFallback>{post.authorName.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                  </Link>
-                  <div className="space-y-1 text-sm">
-                      <Link href={`/profile/${post.authorId}`} onClick={e => e.stopPropagation()}>
-                          <p className="font-bold hover:underline">{post.authorName}</p>
-                      </Link>
-                      <p className="whitespace-pre-wrap">{post.content}</p>
-                      <div className="flex items-center gap-2 pt-1">
-                          <Music4 className="h-4 w-4" />
-                          <p className="text-xs">Original sound - {post.authorName}</p>
-                      </div>
-                  </div>
-              </div>
+      {/* Bottom Left Info */}
+      <div className="absolute bottom-4 left-4 z-10 text-white space-y-2 max-w-[calc(100%-6rem)]">
+         <Link href={`/profile/${post.authorId}`} onClick={(e) => e.stopPropagation()} className="flex items-center gap-2 group">
+          <div>
+            <p className="font-bold group-hover:underline">{post.authorName}</p>
+            <p className="text-sm">@{post.authorHandle}</p>
           </div>
-      ) : (
-        <div className={cn(
-            "absolute bottom-0 left-0 right-0 z-10 p-4 text-white bg-gradient-to-t from-black/60 to-transparent pointer-events-none transition-opacity duration-300",
-            isPlaying ? "opacity-0" : "opacity-100"
-        )}>
-            {/* Bottom Info: Description and sound */}
-            <div className="space-y-3 pr-12">
-                <p className="text-sm whitespace-pre-wrap">{post.content}</p>
-                 <div className="flex items-center gap-2">
-                    <Music4 className="h-4 w-4" />
-                    <p className="text-xs">Original sound - {post.authorName}</p>
-                </div>
-            </div>
+        </Link>
+        <p className="text-sm whitespace-pre-wrap">{post.content}</p>
+        <div className="flex items-center gap-2">
+          <Music4 className="h-4 w-4" />
+          <p className="text-sm font-medium">Original sound - {post.authorName}</p>
         </div>
-      )}
+      </div>
 
-        {/* Right side: Actions */}
-        <div className="absolute bottom-16 right-2 z-10 flex flex-col items-center space-y-6 pointer-events-auto">
-            {!isDesktop && (
-                <Link href={`/profile/${post.authorId}`} onClick={e => e.stopPropagation()}>
-                    <Avatar className="h-12 w-12 border-2 border-white/80">
-                        <AvatarImage src={post.authorAvatar} data-ai-hint="user avatar" />
-                        <AvatarFallback>{post.authorName.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                </Link>
-            )}
-             <Button variant="ghost" size="icon" className="h-auto flex-col p-0 text-white hover:bg-transparent hover:text-white" onClick={e => e.stopPropagation()}>
-                <Eye className={cn("h-8 w-8", isDesktop && "h-20 w-20")} />
-                <span className="text-sm font-bold">{post.views || 0}</span>
+      {/* Right Side Actions */}
+      <div className="absolute bottom-4 right-2 z-10 flex flex-col items-center space-y-4">
+        <Link href={`/profile/${post.authorId}`} onClick={e => e.stopPropagation()}>
+            <Avatar className="h-12 w-12 border-2 border-white/80">
+                <AvatarImage src={post.authorAvatar} data-ai-hint="user avatar" />
+                <AvatarFallback>{post.authorName.charAt(0)}</AvatarFallback>
+            </Avatar>
+        </Link>
+        
+        <div className="flex flex-col items-center space-y-1 text-center">
+            <Button variant="ghost" className="h-12 w-12 rounded-full bg-black/30 p-0 text-white hover:bg-black/50 hover:text-white">
+                <Heart className="h-7 w-7" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-auto flex-col p-0 text-white hover:bg-transparent hover:text-white" onClick={e => e.stopPropagation()}>
-                <Heart className={cn("h-8 w-8", isDesktop && "h-20 w-20")} />
-                <span className="text-sm font-bold">{post.likes}</span>
-            </Button>
-            <Button variant="ghost" size="icon" className="h-auto flex-col p-0 text-white hover:bg-transparent hover:text-white" onClick={e => e.stopPropagation()}>
-                <MessageCircle className={cn("h-8 w-8", isDesktop && "h-20 w-20")} />
-                <span className="text-sm font-bold">{post.comments}</span>
-            </Button>
-            <Button variant="ghost" size="icon" className="h-auto flex-col p-0 text-white hover:bg-transparent hover:text-white" onClick={e => e.stopPropagation()}>
-                <Share2 className={cn("h-8 w-8", isDesktop && "h-20 w-20")} />
-            </Button>
+            <span className="text-sm font-bold">{post.likes}</span>
         </div>
+        <div className="flex flex-col items-center space-y-1 text-center">
+            <Button variant="ghost" className="h-12 w-12 rounded-full bg-black/30 p-0 text-white hover:bg-black/50 hover:text-white">
+                <MessageCircle className="h-7 w-7" />
+            </Button>
+            <span className="text-sm font-bold">{post.comments}</span>
+        </div>
+         <div className="flex flex-col items-center space-y-1 text-center">
+            <Button variant="ghost" className="h-12 w-12 rounded-full bg-black/30 p-0 text-white hover:bg-black/50 hover:text-white">
+                <Eye className="h-7 w-7" />
+            </Button>
+            <span className="text-sm font-bold">{post.views || 0}</span>
+        </div>
+        <div className="flex flex-col items-center space-y-1 text-center">
+            <Button variant="ghost" className="h-12 w-12 rounded-full bg-black/30 p-0 text-white hover:bg-black/50 hover:text-white">
+                <Share2 className="h-7 w-7" />
+            </Button>
+             <span className="text-sm font-bold">Share</span>
+        </div>
+      </div>
     </div>
   );
 }
