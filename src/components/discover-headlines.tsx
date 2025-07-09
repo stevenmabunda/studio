@@ -6,8 +6,8 @@ const sampleHeadlines = [
     category: "Transfers",
     topic: "Man United agree terms with Jarrad Branthwaite",
     postCount: "21.3K posts",
-    image: "https://placehold.co/600x400.png",
-    hint: "football player action",
+    image: "https://images.unsplash.com/photo-1504016798928-b9f1b2961e15?q=80&w=1200&auto=format&fit=crop",
+    hint: "football stadium",
   },
   {
     category: "Euro 2024",
