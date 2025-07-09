@@ -13,9 +13,10 @@ interface VideoPostProps {
   isActive: boolean;
   isMuted: boolean;
   onToggleMute: () => void;
+  isDesktop?: boolean;
 }
 
-export function VideoPost({ post, isActive, isMuted, onToggleMute }: VideoPostProps) {
+export function VideoPost({ post, isActive, isMuted, onToggleMute, isDesktop = false }: VideoPostProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(isActive);
   
@@ -85,28 +86,53 @@ export function VideoPost({ post, isActive, isMuted, onToggleMute }: VideoPostPr
         </div>
       )}
 
-      <div className={cn(
-        "absolute bottom-0 left-0 right-0 z-10 p-4 text-white bg-gradient-to-t from-black/60 to-transparent pointer-events-none transition-opacity duration-300",
-        isPlaying ? "opacity-0" : "opacity-100"
-      )}>
-        {/* Bottom Info: Description and sound */}
-        <div className="space-y-3 pr-12">
-            <p className="text-sm whitespace-pre-wrap">{post.content}</p>
-             <div className="flex items-center gap-2">
-                <Music4 className="h-4 w-4" />
-                <p className="text-xs">Original sound - {post.authorName}</p>
+      {isDesktop ? (
+          <div className="absolute bottom-0 left-0 right-0 z-10 p-4 text-white bg-gradient-to-t from-black/60 to-transparent pointer-events-auto">
+              <div className="flex items-start gap-3">
+                  <Link href={`/profile/${post.authorId}`} onClick={e => e.stopPropagation()} className="shrink-0">
+                      <Avatar className="h-10 w-10">
+                          <AvatarImage src={post.authorAvatar} data-ai-hint="user avatar" />
+                          <AvatarFallback>{post.authorName.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                  </Link>
+                  <div className="space-y-1 text-sm">
+                      <Link href={`/profile/${post.authorId}`} onClick={e => e.stopPropagation()}>
+                          <p className="font-bold hover:underline">{post.authorName}</p>
+                      </Link>
+                      <p className="whitespace-pre-wrap">{post.content}</p>
+                      <div className="flex items-center gap-2 pt-1">
+                          <Music4 className="h-4 w-4" />
+                          <p className="text-xs">Original sound - {post.authorName}</p>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      ) : (
+        <div className={cn(
+            "absolute bottom-0 left-0 right-0 z-10 p-4 text-white bg-gradient-to-t from-black/60 to-transparent pointer-events-none transition-opacity duration-300",
+            isPlaying ? "opacity-0" : "opacity-100"
+        )}>
+            {/* Bottom Info: Description and sound */}
+            <div className="space-y-3 pr-12">
+                <p className="text-sm whitespace-pre-wrap">{post.content}</p>
+                 <div className="flex items-center gap-2">
+                    <Music4 className="h-4 w-4" />
+                    <p className="text-xs">Original sound - {post.authorName}</p>
+                </div>
             </div>
         </div>
-      </div>
+      )}
 
         {/* Right side: Actions */}
         <div className="absolute bottom-16 right-2 z-10 flex flex-col items-center space-y-6 pointer-events-auto">
-             <Link href={`/profile/${post.authorId}`} onClick={e => e.stopPropagation()}>
-                <Avatar className="h-12 w-12 border-2 border-white/80">
-                    <AvatarImage src={post.authorAvatar} data-ai-hint="user avatar" />
-                    <AvatarFallback>{post.authorName.charAt(0)}</AvatarFallback>
-                </Avatar>
-            </Link>
+            {!isDesktop && (
+                <Link href={`/profile/${post.authorId}`} onClick={e => e.stopPropagation()}>
+                    <Avatar className="h-12 w-12 border-2 border-white/80">
+                        <AvatarImage src={post.authorAvatar} data-ai-hint="user avatar" />
+                        <AvatarFallback>{post.authorName.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                </Link>
+            )}
              <Button variant="ghost" size="icon" className="h-auto flex-col p-0 text-white hover:bg-transparent hover:text-white" onClick={e => e.stopPropagation()}>
                 <Eye className="h-8 w-8" />
                 <span className="text-sm font-bold">{post.views || 0}</span>

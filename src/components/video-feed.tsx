@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -106,6 +105,7 @@ export function VideoFeed({ posts }: { posts: PostType[] }) {
                   isActive={index === activeIndex} 
                   isMuted={isMuted}
                   onToggleMute={() => setIsMuted(prev => !prev)}
+                  isDesktop={false}
                 />
              </div>
           ))}
@@ -123,6 +123,7 @@ export function VideoFeed({ posts }: { posts: PostType[] }) {
                   isActive={index === activeIndex} 
                   isMuted={isMuted}
                   onToggleMute={() => setIsMuted(prev => !prev)}
+                  isDesktop={true}
                 />
             </div>
          ))}
