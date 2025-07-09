@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -55,7 +56,7 @@ export function LiveMatches() {
   return (
     <Card className="bg-secondary">
       <CardHeader className="p-4">
-        <CardTitle className="text-lg font-bold">Matches</CardTitle>
+        <CardTitle className="text-lg font-bold">Live matches</CardTitle>
       </CardHeader>
       <CardContent className="p-4 pt-0 space-y-4">
         <div>
