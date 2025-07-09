@@ -1,10 +1,14 @@
+'use client';
 
 import { PinnedContent } from "@/components/pinned-content";
 import { TrendingTopics } from "@/components/trending-topics";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function ExplorePage() {
+  const isMobile = useIsMobile();
+  
   return (
     <div className="flex h-full min-h-screen flex-col">
       <header className="sticky top-0 z-10 border-b bg-background/80 p-4 backdrop-blur-sm">
@@ -14,7 +18,7 @@ export default function ExplorePage() {
         </div>
       </header>
       <main className="flex-1 space-y-6 pt-4">
-        <PinnedContent />
+        {isMobile === false && <PinnedContent />}
         <div className="px-4">
           <TrendingTopics />
         </div>
