@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Post } from '@/components/post';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { usePosts } from '@/contexts/post-context';
@@ -14,6 +14,7 @@ import { getLiveMatches, getUpcomingMatches } from './actions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { VideoFeed } from '@/components/video-feed';
 
 function MatchCardSkeleton() {
   return (
@@ -43,6 +44,11 @@ export default function HomePage() {
   const [liveMatches, setLiveMatches] = useState<MatchType[]>([]);
   const [upcomingMatches, setUpcomingMatches] = useState<MatchType[]>([]);
   const [matchesLoading, setMatchesLoading] = useState(true);
+
+  const videoPosts = useMemo(
+    () => posts.filter(post => post.media?.some(m => m.type === 'video')),
+    [posts]
+  );
 
   useEffect(() => {
     const fetchMatches = async () => {
@@ -77,7 +83,7 @@ export default function HomePage() {
     <div className="flex h-full min-h-screen flex-col">
       <Tabs defaultValue="foryou" className="w-full flex flex-col flex-1">
         <header className="sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur-sm">
-          <TabsList className="flex w-full overflow-x-auto bg-transparent p-0 no-scrollbar sm:grid sm:grid-cols-3">
+          <TabsList className="flex w-full overflow-x-auto bg-transparent p-0 no-scrollbar sm:grid sm:grid-cols-4">
             <TabsTrigger
               value="foryou"
               className="h-auto shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold data-[state=active]:border-primary data-[state=active]:shadow-none px-4"
@@ -89,6 +95,12 @@ export default function HomePage() {
               className="h-auto shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold data-[state=active]:border-primary data-[state=active]:shadow-none px-4"
             >
               Discover
+            </TabsTrigger>
+            <TabsTrigger
+              value="video"
+              className="h-auto shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold data-[state=active]:border-primary data-[state=active]:shadow-none px-4"
+            >
+              Video
             </TabsTrigger>
             <TabsTrigger
               value="live"
@@ -122,6 +134,9 @@ export default function HomePage() {
           </TabsContent>
           <TabsContent value="discover" className="h-full">
             <DiscoverHeadlines />
+          </TabsContent>
+          <TabsContent value="video" className="h-full bg-black md:rounded-lg md:overflow-hidden">
+             <VideoFeed posts={videoPosts} />
           </TabsContent>
           <TabsContent value="live" className="h-full">
             <div className="p-4 space-y-8">
