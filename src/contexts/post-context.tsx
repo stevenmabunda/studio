@@ -178,11 +178,10 @@ export function PostProvider({ children }: { children: ReactNode }) {
     const mediaUrls = [];
     for (const m of media) {
         const fileName = `${Date.now()}-${m.file.name}`;
-        const mediaRef = ref(storage, `posts/${user.uid}/${fileName}`);
+        const storageRef = ref(storage, `posts/${user.uid}/${fileName}`);
         
-        await uploadBytes(mediaRef, m.file);
-
-        const downloadURL = await getDownloadURL(mediaRef);
+        const snapshot = await uploadBytes(storageRef, m.file);
+        const downloadURL = await getDownloadURL(snapshot.ref);
         mediaUrls.push({ url: downloadURL, type: m.type, hint: 'user uploaded content' });
     }
 
@@ -208,21 +207,6 @@ export function PostProvider({ children }: { children: ReactNode }) {
 
     const docRef = await addDoc(collection(db, "posts"), postData);
     
-    if (text) {
-        try {
-            const { topics } = await extractPostTopics({ content: text });
-            const topicsCollectionRef = collection(db, 'topics');
-            for (const topic of topics) {
-                await addDoc(topicsCollectionRef, {
-                    topic: topic.toLowerCase(),
-                    createdAt: serverTimestamp(),
-                });
-            }
-        } catch (error) {
-            console.error("Failed to extract or save topics:", error);
-        }
-    }
-
     const newPost: PostType = {
         id: docRef.id,
         authorId: postData.authorId,
@@ -240,6 +224,24 @@ export function PostProvider({ children }: { children: ReactNode }) {
     };
 
     setPosts((prevPosts) => [newPost, ...prevPosts]);
+
+    // Perform topic extraction in the background without blocking UI
+    if (text) {
+        extractPostTopics({ content: text })
+            .then(async ({ topics }) => {
+                if (!db) return;
+                const topicsCollectionRef = collection(db, 'topics');
+                for (const topic of topics) {
+                    await addDoc(topicsCollectionRef, {
+                        topic: topic.toLowerCase(),
+                        createdAt: serverTimestamp(),
+                    });
+                }
+            })
+            .catch(error => {
+                console.error("Background topic extraction failed:", error);
+            });
+    }
   };
 
   const editPost = async (postId: string, data: { text: string }) => {
