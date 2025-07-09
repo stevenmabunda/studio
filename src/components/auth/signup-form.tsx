@@ -64,6 +64,8 @@ export function SignupForm() {
         location: '',
         website: '',
         bannerUrl: 'https://placehold.co/1200x400.png',
+        followersCount: 0,
+        followingCount: 0,
       });
       
       router.push('/');

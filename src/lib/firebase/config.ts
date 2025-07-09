@@ -1,6 +1,6 @@
 
 import { initializeApp, getApps, getApp, type FirebaseApp, type FirebaseOptions } from 'firebase/app';
-import { getAuth, type Auth, initializeAuth, indexedDBLocalPersistence } from 'firebase/auth';
+import { getAuth, type Auth } from 'firebase/auth';
 import { getFirestore, type Firestore } from 'firebase/firestore';
 import { getStorage, type FirebaseStorage } from 'firebase/storage';
 
@@ -23,8 +23,8 @@ let storage: FirebaseStorage | undefined;
 if (firebaseConfig.apiKey) {
   try {
     app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-    // Use initializeAuth with indexedDB persistence for better CSP compatibility
-    auth = initializeAuth(app, { persistence: indexedDBLocalPersistence });
+    // getAuth is safe to use on both server and client
+    auth = getAuth(app); 
     db = getFirestore(app, "bholo");
     storage = getStorage(app);
   } catch (error) {
