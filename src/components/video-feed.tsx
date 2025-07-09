@@ -12,7 +12,7 @@ export function VideoFeed({ posts }: { posts: PostType[] }) {
   // Embla Carousel setup for mobile
   const [emblaRef, emblaApi] = useEmblaCarousel({
     axis: 'y',
-    loop: false,
+    loop: true, // Loop the carousel on mobile
     containScroll: false,
     active: isMobile === true, // Only enable carousel on mobile
   });
@@ -20,6 +20,7 @@ export function VideoFeed({ posts }: { posts: PostType[] }) {
 
   // IntersectionObserver setup for desktop
   const containerRef = React.useRef<HTMLDivElement>(null);
+  const sentinelRef = React.useRef<HTMLDivElement>(null); // Ref for the looping trigger
   const [desktopActiveIndex, setDesktopActiveIndex] = React.useState(0);
 
   // Shared state
@@ -43,7 +44,7 @@ export function VideoFeed({ posts }: { posts: PostType[] }) {
 
   // Effect for IntersectionObserver (desktop)
   React.useEffect(() => {
-    if (isMobile !== false || !containerRef.current) return;
+    if (isMobile !== false || !containerRef.current || posts.length === 0) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -71,8 +72,26 @@ export function VideoFeed({ posts }: { posts: PostType[] }) {
     const elements = containerRef.current.querySelectorAll('[data-index]');
     elements.forEach(el => observer.observe(el));
 
+    // Sentinel observer for looping
+    const sentinel = sentinelRef.current;
+    let sentinelObserver: IntersectionObserver;
+    if (sentinel) {
+      sentinelObserver = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting) {
+            containerRef.current?.scrollTo({ top: 0 });
+          }
+        },
+        { threshold: 0.1 } // Trigger when the sentinel is slightly visible
+      );
+      sentinelObserver.observe(sentinel);
+    }
+    
     return () => {
         elements.forEach(el => observer.unobserve(el));
+        if (sentinel && sentinelObserver) {
+            sentinelObserver.unobserve(sentinel);
+        }
     };
   }, [isMobile, posts]);
 
@@ -127,6 +146,8 @@ export function VideoFeed({ posts }: { posts: PostType[] }) {
                 />
             </div>
          ))}
+         {/* Sentinel to detect when user scrolls past the last video */}
+         <div ref={sentinelRef} className="h-1" />
       </div>
     );
   }
