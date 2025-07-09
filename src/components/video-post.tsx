@@ -1,3 +1,4 @@
+
 'use client';
 
 import { PostType } from '@/lib/data';
@@ -70,18 +71,22 @@ export function VideoPost({ post, isActive }: VideoPostProps) {
         </div>
       )}
 
+      <div className="absolute top-4 left-4 z-10 pointer-events-auto">
+        <Link href={`/profile/${post.authorId}`} onClick={e => e.stopPropagation()}>
+          <Avatar className="h-12 w-12 border-2 border-white/80">
+          <AvatarImage src={post.authorAvatar} data-ai-hint="user avatar" />
+          <AvatarFallback>{post.authorName.charAt(0)}</AvatarFallback>
+          </Avatar>
+        </Link>
+      </div>
+
+
       <div className="absolute bottom-0 left-0 right-0 z-10 p-4 text-white bg-gradient-to-t from-black/60 to-transparent pointer-events-none">
         <div className="flex items-end justify-between">
-            <div className="flex-1 space-y-2 pr-4">
-                <Link href={`/profile/${post.authorId}`} className="flex items-center gap-2 pointer-events-auto" onClick={e => e.stopPropagation()}>
-                    <Avatar className="h-10 w-10 border-2 border-white">
-                    <AvatarImage src={post.authorAvatar} data-ai-hint="user avatar" />
-                    <AvatarFallback>{post.authorName.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div>
+            <div className="flex-1 space-y-3 pr-4">
+                <Link href={`/profile/${post.authorId}`} className="pointer-events-auto inline-block" onClick={e => e.stopPropagation()}>
                     <p className="font-bold text-base hover:underline">{post.authorName}</p>
                     <p className="text-sm">@{post.authorHandle}</p>
-                    </div>
                 </Link>
                 <p className="text-sm whitespace-pre-wrap">{post.content}</p>
                  <div className="flex items-center gap-2">
@@ -93,11 +98,11 @@ export function VideoPost({ post, isActive }: VideoPostProps) {
             <div className="flex flex-col items-center space-y-4 pointer-events-auto">
                 <Button variant="ghost" size="icon" className="h-auto flex-col p-2 text-white hover:bg-white/20" onClick={e => e.stopPropagation()}>
                     <Heart className="h-7 w-7" />
-                    <span className="text-xs font-bold">{post.likes}</span>
+                    {post.likes > 0 && <span className="text-xs font-bold">{post.likes}</span>}
                 </Button>
                 <Button variant="ghost" size="icon" className="h-auto flex-col p-2 text-white hover:bg-white/20" onClick={e => e.stopPropagation()}>
                     <MessageCircle className="h-7 w-7" />
-                    <span className="text-xs font-bold">{post.comments}</span>
+                    {post.comments > 0 && <span className="text-xs font-bold">{post.comments}</span>}
                 </Button>
                 <Button variant="ghost" size="icon" className="h-auto flex-col p-2 text-white hover:bg-white/20" onClick={e => e.stopPropagation()}>
                     <Share2 className="h-7 w-7" />
