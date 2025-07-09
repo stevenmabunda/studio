@@ -1,26 +1,30 @@
-
 rules_version = '2';
+
 service firebase.storage {
   match /b/{bucket}/o {
-    // Allow authenticated users to read content.
-    // In this app, content like avatars and post images are not private.
-    match /{allPaths=**} {
-      allow read: if request.auth != null;
-    }
-
-    // Allow users to upload media only to their own designated folders.
-    // The path for posts is `posts/{userId}/{fileName}`.
-    match /posts/{userId}/{allPaths=**} {
-      allow write: if request.auth != null && request.auth.uid == userId;
-    }
     
-    // The path for avatars is `avatars/{userId}`.
-    match /avatars/{userId}/{allPaths=**} {
+    // Allow users to upload their own avatar and banner images.
+    // The path should be avatars/{userId} or banners/{userId}.
+    match /avatars/{userId} {
+      // Allow public read access so anyone can see profile pictures.
+      allow read;
+      // Allow write access only for the authenticated user who owns the profile.
       allow write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // The path for banners is `banners/{userId}`.
-    match /banners/{userId}/{allPaths=**} {
+    match /banners/{userId} {
+      // Allow public read access so anyone can see banner images.
+      allow read;
+      // Allow write access only for the authenticated user who owns the profile.
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Allow users to upload images and videos for their posts.
+    // The path is posts/{userId}/{fileName}.
+    match /posts/{userId}/{fileName} {
+      // Allow public read access so anyone can see post media.
+      allow read; 
+      // Allow write access only for the authenticated user uploading the media.
       allow write: if request.auth != null && request.auth.uid == userId;
     }
   }
