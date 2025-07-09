@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Post } from '@/components/post';
@@ -13,6 +14,8 @@ import { getLiveMatches, getUpcomingMatches } from './actions';
 import { Skeleton } from '@/components/ui/skeleton';
 import { VideoFeed } from '@/components/video-feed';
 import { cn } from '@/lib/utils';
+import { CreatePost, type Media } from '@/components/create-post';
+import { useToast } from '@/hooks/use-toast';
 
 function MatchCardSkeleton() {
   return (
@@ -36,7 +39,8 @@ function MatchCardSkeleton() {
 }
 
 export default function HomePage() {
-  const { posts, loading: postsLoading } = usePosts();
+  const { posts, loading: postsLoading, addPost } = usePosts();
+  const { toast } = useToast();
 
   const [liveMatches, setLiveMatches] = useState<MatchType[]>([]);
   const [upcomingMatches, setUpcomingMatches] = useState<MatchType[]>([]);
@@ -64,6 +68,16 @@ export default function HomePage() {
   const videoPosts = posts.filter((post) =>
     post.media?.some((m) => m.type === 'video')
   );
+
+  const handlePost = async (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null }) => {
+    try {
+        await addPost(data);
+        toast({ description: "Your post has been published!" });
+    } catch (error) {
+        console.error("Failed to create post:", error);
+        toast({ variant: 'destructive', description: "Something went wrong. Please try again." });
+    }
+  };
 
   return (
     <div className="flex h-full min-h-screen flex-col">
@@ -98,6 +112,9 @@ export default function HomePage() {
         </header>
         <main className="flex-1">
           <TabsContent value="foryou" className="h-full">
+            <div className="hidden md:block">
+              <CreatePost onPost={handlePost} />
+            </div>
             <div className="divide-y divide-border">
               {postsLoading ? (
                 <>
