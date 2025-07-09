@@ -8,7 +8,7 @@ import type { Media } from '@/components/create-post';
 import { useAuth } from '@/hooks/use-auth';
 import { db, storage } from '@/lib/firebase/config';
 import { collection, addDoc, serverTimestamp, getDocs, query, type Timestamp, doc, updateDoc, runTransaction, deleteDoc, orderBy, getDoc, setDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { formatTimestamp } from '@/lib/utils';
 import { extractPostTopics } from '@/ai/flows/extract-post-topics';
 
@@ -58,6 +58,15 @@ const seedPostsData = [
       comments: 78,
     },
 ];
+
+const fileToDataUrl = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = (error) => reject(error);
+    });
+};
 
 async function seedDatabaseIfEmpty() {
     if (!db) return;
@@ -180,7 +189,9 @@ export function PostProvider({ children }: { children: ReactNode }) {
         const fileName = `${Date.now()}-${m.file.name}`;
         const storageRef = ref(storage, `posts/${user.uid}/${fileName}`);
         
-        const snapshot = await uploadBytes(storageRef, m.file);
+        const dataUrl = await fileToDataUrl(m.file);
+        const snapshot = await uploadString(storageRef, dataUrl, 'data_url');
+        
         const downloadURL = await getDownloadURL(snapshot.ref);
         mediaUrls.push({ url: downloadURL, type: m.type, hint: 'user uploaded content' });
     }
@@ -204,11 +215,10 @@ export function PostProvider({ children }: { children: ReactNode }) {
     if (location) {
         postData.location = location;
     }
-
-    const docRef = await addDoc(collection(db, "posts"), postData);
     
-    const newPost: PostType = {
-        id: docRef.id,
+    // Create the post document first to give instant feedback
+    const newPostForState: PostType = {
+        id: 'temp-' + Date.now(), // Temporary ID
         authorId: postData.authorId,
         authorName: postData.authorName,
         authorHandle: postData.authorHandle,
@@ -218,13 +228,18 @@ export function PostProvider({ children }: { children: ReactNode }) {
         comments: postData.comments,
         reposts: postData.reposts,
         likes: postData.likes,
-        media: postData.media,
+        media: mediaUrls,
         poll: postData.poll,
         location: postData.location,
     };
 
-    setPosts((prevPosts) => [newPost, ...prevPosts]);
+    setPosts((prevPosts) => [newPostForState, ...prevPosts]);
+    
+    const docRef = await addDoc(collection(db, "posts"), postData);
 
+    // Update the temporary post with the final ID from firestore
+    setPosts(prev => prev.map(p => p.id === newPostForState.id ? { ...p, id: docRef.id } : p));
+    
     // Perform topic extraction in the background without blocking UI
     if (text) {
         extractPostTopics({ content: text })
