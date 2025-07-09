@@ -4,7 +4,7 @@
 import { PostType } from '@/lib/data';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
-import { Heart, MessageCircle, Share2, Music4, Play, Pause } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Music4, Play } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 
@@ -71,23 +71,11 @@ export function VideoPost({ post, isActive }: VideoPostProps) {
         </div>
       )}
 
-      <div className="absolute top-4 left-4 z-10 pointer-events-auto">
-        <Link href={`/profile/${post.authorId}`} onClick={e => e.stopPropagation()}>
-          <Avatar className="h-12 w-12 border-2 border-white/80">
-          <AvatarImage src={post.authorAvatar} data-ai-hint="user avatar" />
-          <AvatarFallback>{post.authorName.charAt(0)}</AvatarFallback>
-          </Avatar>
-        </Link>
-      </div>
-
-
       <div className="absolute bottom-0 left-0 right-0 z-10 p-4 text-white bg-gradient-to-t from-black/60 to-transparent pointer-events-none">
-        <div className="flex items-end justify-between">
-            <div className="flex-1 space-y-3 pr-4">
-                <Link href={`/profile/${post.authorId}`} className="pointer-events-auto inline-block" onClick={e => e.stopPropagation()}>
-                    <p className="font-bold text-base hover:underline">{post.authorName}</p>
-                    <p className="text-sm">@{post.authorHandle}</p>
-                </Link>
+        <div className="flex items-end">
+            {/* Left side: Description and sound */}
+            <div className="flex-1 space-y-3 pr-12">
+                <p className="font-bold text-base">@{post.authorHandle}</p>
                 <p className="text-sm whitespace-pre-wrap">{post.content}</p>
                  <div className="flex items-center gap-2">
                     <Music4 className="h-4 w-4" />
@@ -95,17 +83,24 @@ export function VideoPost({ post, isActive }: VideoPostProps) {
                 </div>
             </div>
 
-            <div className="flex flex-col items-center space-y-4 pointer-events-auto">
-                <Button variant="ghost" size="icon" className="h-auto flex-col p-2 text-white hover:bg-white/20" onClick={e => e.stopPropagation()}>
-                    <Heart className="h-7 w-7" />
-                    {post.likes > 0 && <span className="text-xs font-bold">{post.likes}</span>}
+            {/* Right side: Actions */}
+            <div className="flex flex-col items-center space-y-6 pointer-events-auto">
+                <Link href={`/profile/${post.authorId}`} onClick={e => e.stopPropagation()}>
+                    <Avatar className="h-12 w-12 border-2 border-white/80">
+                        <AvatarImage src={post.authorAvatar} data-ai-hint="user avatar" />
+                        <AvatarFallback>{post.authorName.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                </Link>
+                <Button variant="ghost" size="icon" className="h-auto flex-col p-0 text-white hover:bg-transparent hover:text-white" onClick={e => e.stopPropagation()}>
+                    <Heart className="h-8 w-8" />
+                    <span className="text-sm font-bold">{post.likes > 0 ? post.likes : ''}</span>
                 </Button>
-                <Button variant="ghost" size="icon" className="h-auto flex-col p-2 text-white hover:bg-white/20" onClick={e => e.stopPropagation()}>
-                    <MessageCircle className="h-7 w-7" />
-                    {post.comments > 0 && <span className="text-xs font-bold">{post.comments}</span>}
+                <Button variant="ghost" size="icon" className="h-auto flex-col p-0 text-white hover:bg-transparent hover:text-white" onClick={e => e.stopPropagation()}>
+                    <MessageCircle className="h-8 w-8" />
+                    <span className="text-sm font-bold">{post.comments > 0 ? post.comments : ''}</span>
                 </Button>
-                <Button variant="ghost" size="icon" className="h-auto flex-col p-2 text-white hover:bg-white/20" onClick={e => e.stopPropagation()}>
-                    <Share2 className="h-7 w-7" />
+                <Button variant="ghost" size="icon" className="h-auto flex-col p-0 text-white hover:bg-transparent hover:text-white" onClick={e => e.stopPropagation()}>
+                    <Share2 className="h-8 w-8" />
                 </Button>
             </div>
         </div>
