@@ -71,7 +71,7 @@ export function VideoPost({ post, isActive, isMuted, onToggleMute, isDesktop = f
         src={videoUrl}
         loop
         muted={isMuted}
-        className="h-full w-full object-contain"
+        className="h-full w-full object-cover"
         playsInline // Important for iOS
       />
       
