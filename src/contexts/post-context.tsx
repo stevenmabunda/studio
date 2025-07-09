@@ -1,4 +1,3 @@
-
 'use client';
 
 import type { ReactNode } from 'react';
@@ -8,7 +7,7 @@ import type { Media } from '@/components/create-post';
 import { useAuth } from '@/hooks/use-auth';
 import { db, storage } from '@/lib/firebase/config';
 import { collection, addDoc, serverTimestamp, getDocs, query, type Timestamp, doc, updateDoc, runTransaction, deleteDoc, orderBy, getDoc, setDoc } from 'firebase/firestore';
-import { ref, uploadString, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { formatTimestamp } from '@/lib/utils';
 import { extractPostTopics } from '@/ai/flows/extract-post-topics';
 
@@ -58,15 +57,6 @@ const seedPostsData = [
       comments: 78,
     },
 ];
-
-const fileToDataUrl = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = (error) => reject(error);
-    });
-};
 
 async function seedDatabaseIfEmpty() {
     if (!db) return;
@@ -189,10 +179,10 @@ export function PostProvider({ children }: { children: ReactNode }) {
         const fileName = `${Date.now()}-${m.file.name}`;
         const storageRef = ref(storage, `posts/${user.uid}/${fileName}`);
         
-        const dataUrl = await fileToDataUrl(m.file);
-        const snapshot = await uploadString(storageRef, dataUrl, 'data_url');
-        
+        // Use uploadBytes for direct file upload, which is more robust
+        const snapshot = await uploadBytes(storageRef, m.file);
         const downloadURL = await getDownloadURL(snapshot.ref);
+        
         mediaUrls.push({ url: downloadURL, type: m.type, hint: 'user uploaded content' });
     }
 
@@ -216,9 +206,12 @@ export function PostProvider({ children }: { children: ReactNode }) {
         postData.location = location;
     }
     
-    // Create the post document first to give instant feedback
+    // Create the post document in Firestore
+    const docRef = await addDoc(collection(db, "posts"), postData);
+    
+    // After successful upload and DB write, add post to the local state
     const newPostForState: PostType = {
-        id: 'temp-' + Date.now(), // Temporary ID
+        id: docRef.id,
         authorId: postData.authorId,
         authorName: postData.authorName,
         authorHandle: postData.authorHandle,
@@ -234,11 +227,6 @@ export function PostProvider({ children }: { children: ReactNode }) {
     };
 
     setPosts((prevPosts) => [newPostForState, ...prevPosts]);
-    
-    const docRef = await addDoc(collection(db, "posts"), postData);
-
-    // Update the temporary post with the final ID from firestore
-    setPosts(prev => prev.map(p => p.id === newPostForState.id ? { ...p, id: docRef.id } : p));
     
     // Perform topic extraction in the background without blocking UI
     if (text) {
