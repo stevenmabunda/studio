@@ -16,7 +16,7 @@ interface VideoPostProps {
 
 export function VideoPost({ post, isActive }: VideoPostProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(isActive);
   const [isMuted, setIsMuted] = useState(true);
 
   useEffect(() => {
