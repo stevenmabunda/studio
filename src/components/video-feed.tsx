@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -114,7 +115,7 @@ export function VideoFeed({ posts }: { posts: PostType[] }) {
   } else {
     // Desktop view with standard mouse-wheel scrolling
     return (
-      <div ref={containerRef} className="h-full w-full overflow-y-auto snap-y snap-mandatory">
+      <div ref={containerRef} className="h-full w-full overflow-y-auto snap-y snap-mandatory no-scrollbar">
          {posts.map((post, index) => (
             <div key={post.id} data-index={index} className="h-full w-full flex-shrink-0 snap-start">
                 <VideoPost 
