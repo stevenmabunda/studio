@@ -284,8 +284,8 @@ export function CreatePost({ onPost }: { onPost: (data: { text: string; media: M
               </Button>
             </div>
           )}
-          <div className="flex justify-between items-center pt-1">
-            <div>
+          <div className="flex flex-col items-stretch gap-3 pt-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center -ml-2">
               <input
                 type="file"
                 accept="image/*"
@@ -337,7 +337,7 @@ export function CreatePost({ onPost }: { onPost: (data: { text: string; media: M
                 <MapPin className={cn("h-5 w-5 text-primary", location && "fill-current text-primary")} />
               </Button>
             </div>
-            <Button disabled={!isPostable || posting} onClick={handlePost}>
+            <Button className="w-full sm:w-auto" disabled={!isPostable || posting} onClick={handlePost}>
                 {posting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {posting ? 'Posting...' : 'Kick-It!'}
             </Button>
