@@ -1,3 +1,4 @@
+
 'use client';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { MapPin, Link as LinkIcon, CalendarDays, Camera, Loader2, ArrowLeft } fr
 import { useAuth } from "@/hooks/use-auth";
 import { usePosts } from "@/contexts/post-context";
 import { PostSkeleton } from "@/components/post-skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { db, storage } from "@/lib/firebase/config";
 import { doc, getDoc, setDoc } from "firebase/firestore";
