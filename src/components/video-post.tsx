@@ -1,3 +1,4 @@
+
 'use client';
 
 import { PostType } from '@/lib/data';
@@ -143,19 +144,19 @@ export function VideoPost({ post, isActive, isMuted, onToggleMute, isDesktop = f
                 </Link>
             )}
              <Button variant="ghost" size="icon" className="h-auto flex-col p-0 text-white hover:bg-transparent hover:text-white" onClick={e => e.stopPropagation()}>
-                <Eye className={cn("h-8 w-8", isDesktop && "h-16 w-16")} />
+                <Eye className={cn("h-8 w-8", isDesktop && "h-20 w-20")} />
                 <span className="text-sm font-bold">{post.views || 0}</span>
             </Button>
             <Button variant="ghost" size="icon" className="h-auto flex-col p-0 text-white hover:bg-transparent hover:text-white" onClick={e => e.stopPropagation()}>
-                <Heart className={cn("h-8 w-8", isDesktop && "h-16 w-16")} />
+                <Heart className={cn("h-8 w-8", isDesktop && "h-20 w-20")} />
                 <span className="text-sm font-bold">{post.likes}</span>
             </Button>
             <Button variant="ghost" size="icon" className="h-auto flex-col p-0 text-white hover:bg-transparent hover:text-white" onClick={e => e.stopPropagation()}>
-                <MessageCircle className={cn("h-8 w-8", isDesktop && "h-16 w-16")} />
+                <MessageCircle className={cn("h-8 w-8", isDesktop && "h-20 w-20")} />
                 <span className="text-sm font-bold">{post.comments}</span>
             </Button>
             <Button variant="ghost" size="icon" className="h-auto flex-col p-0 text-white hover:bg-transparent hover:text-white" onClick={e => e.stopPropagation()}>
-                <Share2 className={cn("h-8 w-8", isDesktop && "h-16 w-16")} />
+                <Share2 className={cn("h-8 w-8", isDesktop && "h-20 w-20")} />
             </Button>
         </div>
     </div>
