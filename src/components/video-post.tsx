@@ -143,19 +143,19 @@ export function VideoPost({ post, isActive, isMuted, onToggleMute, isDesktop = f
                 </Link>
             )}
              <Button variant="ghost" size="icon" className="h-auto flex-col p-0 text-white hover:bg-transparent hover:text-white" onClick={e => e.stopPropagation()}>
-                <Eye className="h-8 w-8" />
+                <Eye className={cn("h-8 w-8", isDesktop && "h-16 w-16")} />
                 <span className="text-sm font-bold">{post.views || 0}</span>
             </Button>
             <Button variant="ghost" size="icon" className="h-auto flex-col p-0 text-white hover:bg-transparent hover:text-white" onClick={e => e.stopPropagation()}>
-                <Heart className="h-8 w-8" />
+                <Heart className={cn("h-8 w-8", isDesktop && "h-16 w-16")} />
                 <span className="text-sm font-bold">{post.likes}</span>
             </Button>
             <Button variant="ghost" size="icon" className="h-auto flex-col p-0 text-white hover:bg-transparent hover:text-white" onClick={e => e.stopPropagation()}>
-                <MessageCircle className="h-8 w-8" />
+                <MessageCircle className={cn("h-8 w-8", isDesktop && "h-16 w-16")} />
                 <span className="text-sm font-bold">{post.comments}</span>
             </Button>
             <Button variant="ghost" size="icon" className="h-auto flex-col p-0 text-white hover:bg-transparent hover:text-white" onClick={e => e.stopPropagation()}>
-                <Share2 className="h-8 w-8" />
+                <Share2 className={cn("h-8 w-8", isDesktop && "h-16 w-16")} />
             </Button>
         </div>
     </div>
