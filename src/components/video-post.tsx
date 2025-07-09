@@ -19,20 +19,22 @@ interface VideoPostProps {
 
 export function VideoPost({ post, isActive, isMuted, onToggleMute, isDesktop = false }: VideoPostProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [isPlaying, setIsPlaying] = useState(isActive);
+  const [isPlaying, setIsPlaying] = useState(false);
   
   useEffect(() => {
     const videoElement = videoRef.current;
     if (!videoElement) return;
 
     if (isActive) {
-      // Optimistically set playing state
       setIsPlaying(true);
-      videoElement.play().catch(error => {
-        console.warn("Autoplay was prevented for video:", post.id, error);
-        // If play fails, correct the state
-        setIsPlaying(false);
-      });
+      const playPromise = videoElement.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          // Autoplay was prevented.
+          setIsPlaying(false);
+          console.warn("Autoplay was prevented for video:", post.id, error);
+        });
+      }
     } else {
       videoElement.pause();
       videoElement.currentTime = 0; // Rewind video when it's not active
@@ -71,7 +73,7 @@ export function VideoPost({ post, isActive, isMuted, onToggleMute, isDesktop = f
         src={videoUrl}
         loop
         muted={isMuted}
-        className="h-full w-full object-cover"
+        className="h-full w-full object-contain"
         playsInline // Important for iOS
       />
       
