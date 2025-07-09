@@ -4,9 +4,10 @@
 import { PostType } from '@/lib/data';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
-import { Heart, MessageCircle, Share2, Music4, Play } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Music4, Play, Volume2, VolumeX, Eye } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 interface VideoPostProps {
   post: PostType;
@@ -16,6 +17,7 @@ interface VideoPostProps {
 export function VideoPost({ post, isActive }: VideoPostProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
 
   useEffect(() => {
     const videoElement = videoRef.current;
@@ -49,6 +51,11 @@ export function VideoPost({ post, isActive }: VideoPostProps) {
     }
   };
 
+  const toggleMute = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsMuted(prev => !prev);
+  }
+
   const videoUrl = post.media?.[0]?.url;
   if (!videoUrl || post.media?.[0]?.type !== 'video') {
     return null; // Should not happen if data is filtered correctly
@@ -60,10 +67,16 @@ export function VideoPost({ post, isActive }: VideoPostProps) {
         ref={videoRef}
         src={videoUrl}
         loop
-        muted // Muted is often required for autoplay to work
+        muted={isMuted}
         className="h-full w-full object-contain"
         playsInline // Important for iOS
       />
+      
+      <div className="absolute top-4 left-4 z-10 pointer-events-auto">
+        <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full bg-black/30 text-white hover:bg-black/50 hover:text-white" onClick={toggleMute}>
+            {isMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
+        </Button>
+      </div>
       
       {!isPlaying && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none">
@@ -71,40 +84,44 @@ export function VideoPost({ post, isActive }: VideoPostProps) {
         </div>
       )}
 
-      <div className="absolute bottom-0 left-0 right-0 z-10 p-4 text-white bg-gradient-to-t from-black/60 to-transparent pointer-events-none">
-        <div className="flex items-end">
-            {/* Left side: Description and sound */}
-            <div className="flex-1 space-y-3 pr-12">
-                <p className="font-bold text-base">@{post.authorHandle}</p>
-                <p className="text-sm whitespace-pre-wrap">{post.content}</p>
-                 <div className="flex items-center gap-2">
-                    <Music4 className="h-4 w-4" />
-                    <p className="text-xs">Original sound - {post.authorName}</p>
-                </div>
-            </div>
-
-            {/* Right side: Actions */}
-            <div className="flex flex-col items-center space-y-6 pointer-events-auto">
-                <Link href={`/profile/${post.authorId}`} onClick={e => e.stopPropagation()}>
-                    <Avatar className="h-12 w-12 border-2 border-white/80">
-                        <AvatarImage src={post.authorAvatar} data-ai-hint="user avatar" />
-                        <AvatarFallback>{post.authorName.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                </Link>
-                <Button variant="ghost" size="icon" className="h-auto flex-col p-0 text-white hover:bg-transparent hover:text-white" onClick={e => e.stopPropagation()}>
-                    <Heart className="h-8 w-8" />
-                    <span className="text-sm font-bold">{post.likes > 0 ? post.likes : ''}</span>
-                </Button>
-                <Button variant="ghost" size="icon" className="h-auto flex-col p-0 text-white hover:bg-transparent hover:text-white" onClick={e => e.stopPropagation()}>
-                    <MessageCircle className="h-8 w-8" />
-                    <span className="text-sm font-bold">{post.comments > 0 ? post.comments : ''}</span>
-                </Button>
-                <Button variant="ghost" size="icon" className="h-auto flex-col p-0 text-white hover:bg-transparent hover:text-white" onClick={e => e.stopPropagation()}>
-                    <Share2 className="h-8 w-8" />
-                </Button>
+      <div className={cn(
+        "absolute bottom-0 left-0 right-0 z-10 p-4 text-white bg-gradient-to-t from-black/60 to-transparent pointer-events-none transition-opacity duration-300",
+        isPlaying ? "opacity-0" : "opacity-100"
+      )}>
+        {/* Bottom Info: Description and sound */}
+        <div className="space-y-3 pr-12">
+            <p className="text-sm whitespace-pre-wrap">{post.content}</p>
+             <div className="flex items-center gap-2">
+                <Music4 className="h-4 w-4" />
+                <p className="text-xs">Original sound - {post.authorName}</p>
             </div>
         </div>
       </div>
+
+        {/* Right side: Actions */}
+        <div className="absolute bottom-16 right-2 z-10 flex flex-col items-center space-y-6 pointer-events-auto">
+             <Link href={`/profile/${post.authorId}`} onClick={e => e.stopPropagation()}>
+                <Avatar className="h-12 w-12 border-2 border-white/80">
+                    <AvatarImage src={post.authorAvatar} data-ai-hint="user avatar" />
+                    <AvatarFallback>{post.authorName.charAt(0)}</AvatarFallback>
+                </Avatar>
+            </Link>
+             <Button variant="ghost" size="icon" className="h-auto flex-col p-0 text-white hover:bg-transparent hover:text-white" onClick={e => e.stopPropagation()}>
+                <Eye className="h-8 w-8" />
+                <span className="text-sm font-bold">{post.views || 0}</span>
+            </Button>
+            <Button variant="ghost" size="icon" className="h-auto flex-col p-0 text-white hover:bg-transparent hover:text-white" onClick={e => e.stopPropagation()}>
+                <Heart className="h-8 w-8" />
+                <span className="text-sm font-bold">{post.likes}</span>
+            </Button>
+            <Button variant="ghost" size="icon" className="h-auto flex-col p-0 text-white hover:bg-transparent hover:text-white" onClick={e => e.stopPropagation()}>
+                <MessageCircle className="h-8 w-8" />
+                <span className="text-sm font-bold">{post.comments}</span>
+            </Button>
+            <Button variant="ghost" size="icon" className="h-auto flex-col p-0 text-white hover:bg-transparent hover:text-white" onClick={e => e.stopPropagation()}>
+                <Share2 className="h-8 w-8" />
+            </Button>
+        </div>
     </div>
   );
 }

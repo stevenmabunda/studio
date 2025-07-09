@@ -34,6 +34,7 @@ const seedPostsData = [
       likes: 1200,
       reposts: 345,
       comments: 123,
+      views: 15000,
     },
     {
       id: '--seed-post-2--',
@@ -41,6 +42,7 @@ const seedPostsData = [
       likes: 890,
       reposts: 210,
       comments: 95,
+      views: 12300,
     },
     {
       id: '--seed-post-3--',
@@ -48,6 +50,7 @@ const seedPostsData = [
       likes: 2500,
       reposts: 800,
       comments: 450,
+      views: 50000,
     },
     {
       id: '--seed-post-4--',
@@ -55,6 +58,7 @@ const seedPostsData = [
       likes: 950,
       reposts: 150,
       comments: 78,
+      views: 18000,
     },
 ];
 
@@ -85,6 +89,7 @@ async function seedDatabaseIfEmpty() {
                 comments: seed.comments,
                 reposts: seed.reposts,
                 likes: seed.likes,
+                views: seed.views,
                 media: [],
             };
 
@@ -140,6 +145,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
                     comments: data.comments,
                     reposts: data.reposts,
                     likes: data.likes,
+                    views: data.views || 0,
                     location: data.location,
                     media: data.media,
                     poll: data.poll,
@@ -196,6 +202,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
           comments: 0,
           reposts: 0,
           likes: 0,
+          views: 0,
           media: mediaUrls,
         };
 
@@ -219,6 +226,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
             comments: postData.comments,
             reposts: postData.reposts,
             likes: postData.likes,
+            views: postData.views,
             media: mediaUrls,
             poll: postData.poll,
             location: postData.location,
