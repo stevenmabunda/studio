@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { usePosts } from '@/contexts/post-context';
 import { PostSkeleton } from '@/components/post-skeleton';
-import { DiscoverFeed } from '@/components/discover-feed';
+import { DiscoverHeadlines } from '@/components/discover-headlines';
 import type { PostType, MatchType } from '@/lib/data';
 import { useEffect, useState } from 'react';
 import { getLiveMatches, getUpcomingMatches } from './actions';
@@ -116,15 +116,7 @@ export default function HomePage() {
             </div>
           </TabsContent>
           <TabsContent value="discover" className="h-full">
-            {postsLoading ? (
-              <>
-                <PostSkeleton />
-                <PostSkeleton />
-                <PostSkeleton />
-              </>
-            ) : (
-              <DiscoverFeed posts={posts} />
-            )}
+            <DiscoverHeadlines />
           </TabsContent>
           <TabsContent value="video" className="h-[calc(100vh-8.5rem)] md:h-[calc(100vh-4rem)] p-0 m-0">
              <VideoFeed posts={videoPosts} />
