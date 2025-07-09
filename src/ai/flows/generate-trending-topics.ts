@@ -33,6 +33,7 @@ const TrendingTopicSchema = z.object({
     .describe(
       'The number of posts for the topic, as a formatted string e.g., "15.7K posts".'
     ),
+  imageHint: z.string().optional().describe('A one or two word hint for a relevant image. Only provide this for the first topic.'),
 });
 
 const GenerateTrendingTopicsOutputSchema = z.object({
@@ -62,6 +63,7 @@ For each topic, generate:
 - A category, which should always be "Football • Trending".
 - A short, engaging topic headline. For example, for the raw topic "messi retirement", a good headline would be "Messi's shock retirement". For "haaland man utd", a good headline would be "Haaland to Manchester United?".
 - A fictional post count, formatted as a string like "15.7K posts" or "2,123 posts". Make it look realistic.
+- For the VERY FIRST topic in the list ONLY, provide a concise one or two word \`imageHint\` for a relevant background image. Examples: "player celebrating", "stadium lights", "manager sideline". Do not provide a hint for other topics.
 
 Raw Topics:
 {{#each topics}}
