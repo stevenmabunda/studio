@@ -1,4 +1,3 @@
-
 'use client';
 
 import { PostType } from '@/lib/data';
@@ -12,22 +11,24 @@ import { cn } from '@/lib/utils';
 interface VideoPostProps {
   post: PostType;
   isActive: boolean;
+  isMuted: boolean;
+  onToggleMute: () => void;
 }
 
-export function VideoPost({ post, isActive }: VideoPostProps) {
+export function VideoPost({ post, isActive, isMuted, onToggleMute }: VideoPostProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(isActive);
-  const [isMuted, setIsMuted] = useState(true);
-
+  
   useEffect(() => {
     const videoElement = videoRef.current;
     if (!videoElement) return;
 
     if (isActive) {
-      videoElement.play().then(() => {
-        setIsPlaying(true);
-      }).catch(error => {
+      // Optimistically set playing state
+      setIsPlaying(true);
+      videoElement.play().catch(error => {
         console.warn("Autoplay was prevented for video:", post.id, error);
+        // If play fails, correct the state
         setIsPlaying(false);
       });
     } else {
@@ -51,9 +52,9 @@ export function VideoPost({ post, isActive }: VideoPostProps) {
     }
   };
 
-  const toggleMute = (e: React.MouseEvent) => {
+  const handleToggleMute = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsMuted(prev => !prev);
+    onToggleMute();
   }
 
   const videoUrl = post.media?.[0]?.url;
@@ -73,7 +74,7 @@ export function VideoPost({ post, isActive }: VideoPostProps) {
       />
       
       <div className="absolute top-4 left-4 z-10 pointer-events-auto">
-        <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full bg-black/30 text-white hover:bg-black/50 hover:text-white" onClick={toggleMute}>
+        <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full bg-black/30 text-white hover:bg-black/50 hover:text-white" onClick={handleToggleMute}>
             {isMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
         </Button>
       </div>

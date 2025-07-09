@@ -12,6 +12,7 @@ export function VideoFeed({ posts }: { posts: PostType[] }) {
     containScroll: false,
   });
   const [activeIndex, setActiveIndex] = React.useState(0);
+  const [isMuted, setIsMuted] = React.useState(true); // Shared mute state
 
   React.useEffect(() => {
     if (!emblaApi) return;
@@ -45,7 +46,12 @@ export function VideoFeed({ posts }: { posts: PostType[] }) {
       <div className="embla__container">
         {posts.map((post, index) => (
           <div className="embla__slide" key={post.id}>
-            <VideoPost post={post} isActive={index === activeIndex} />
+            <VideoPost 
+              post={post} 
+              isActive={index === activeIndex} 
+              isMuted={isMuted}
+              onToggleMute={() => setIsMuted(prev => !prev)}
+            />
           </div>
         ))}
       </div>
