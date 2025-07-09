@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -5,6 +6,7 @@ import useEmblaCarousel, { type EmblaCarouselType } from 'embla-carousel-react';
 import { PostType } from '@/lib/data';
 import { VideoPost } from './video-post';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Loader2 } from 'lucide-react';
 
 export function VideoFeed({ posts }: { posts: PostType[] }) {
   const isMobile = useIsMobile();
@@ -12,18 +14,15 @@ export function VideoFeed({ posts }: { posts: PostType[] }) {
   // Embla Carousel setup for mobile
   const [emblaRef, emblaApi] = useEmblaCarousel({
     axis: 'y',
-    loop: true, // Loop the carousel on mobile
-    containScroll: false,
-    active: isMobile === true, // Only enable carousel on mobile
+    loop: true,
+    active: isMobile === true,
   });
-  const [emblaActiveIndex, setEmblaActiveIndex] = React.useState(0);
-
+  
   // IntersectionObserver setup for desktop
   const containerRef = React.useRef<HTMLDivElement>(null);
-  const sentinelRef = React.useRef<HTMLDivElement>(null); // Ref for the looping trigger
-  const [desktopActiveIndex, setDesktopActiveIndex] = React.useState(0);
 
   // Shared state
+  const [activeIndex, setActiveIndex] = React.useState(0);
   const [isMuted, setIsMuted] = React.useState(true);
 
   // Effect for Embla (mobile)
@@ -31,11 +30,11 @@ export function VideoFeed({ posts }: { posts: PostType[] }) {
     if (!emblaApi || !isMobile) return;
 
     const onSelect = (api: EmblaCarouselType) => {
-      setEmblaActiveIndex(api.selectedScrollSnap());
+      setActiveIndex(api.selectedScrollSnap());
     };
 
     emblaApi.on('select', onSelect);
-    onSelect(emblaApi);
+    onSelect(emblaApi); // Set initial active index
     
     return () => {
       emblaApi.off('select', onSelect);
@@ -48,52 +47,39 @@ export function VideoFeed({ posts }: { posts: PostType[] }) {
 
     const observer = new IntersectionObserver(
       (entries) => {
-        let maxVisibleEntry: IntersectionObserverEntry | null = null;
-        let maxVisibility = -1;
-
-        entries.forEach(entry => {
-          if (entry.isIntersecting && entry.intersectionRatio > maxVisibility) {
-            maxVisibility = entry.intersectionRatio;
-            maxVisibleEntry = entry;
-          }
+        // Find the entry that is most visible
+        const visibleEntry = entries.reduce((prev, curr) => {
+            return prev.intersectionRatio > curr.intersectionRatio ? prev : curr;
         });
-        
-        if (maxVisibleEntry) {
-          const index = parseInt(maxVisibleEntry.target.getAttribute('data-index') || '0', 10);
-          setDesktopActiveIndex(index);
+
+        if (visibleEntry?.isIntersecting) {
+          const index = parseInt(visibleEntry.target.getAttribute('data-index') || '0', 10);
+          setActiveIndex(index);
         }
       },
       {
-        root: null, // observe intersections in the viewport
-        threshold: Array.from(Array(101).keys(), i => i / 100), // check visibility at every percentage point
+        root: null, // viewport
+        threshold: 0.5, // Trigger when 50% of the item is visible
       }
     );
 
     const elements = containerRef.current.querySelectorAll('[data-index]');
     elements.forEach(el => observer.observe(el));
-
-    // Sentinel observer for looping
-    const sentinel = sentinelRef.current;
-    let sentinelObserver: IntersectionObserver;
-    if (sentinel) {
-      sentinelObserver = new IntersectionObserver(
-        (entries) => {
-          if (entries[0].isIntersecting) {
-            containerRef.current?.scrollTo({ top: 0 });
-          }
-        },
-        { threshold: 0.1 } // Trigger when the sentinel is slightly visible
-      );
-      sentinelObserver.observe(sentinel);
-    }
     
     return () => {
         elements.forEach(el => observer.unobserve(el));
-        if (sentinel && sentinelObserver) {
-            sentinelObserver.unobserve(sentinel);
-        }
     };
   }, [isMobile, posts]);
+
+  // Render a loading state until we know if it's mobile or not
+  // to prevent server/client mismatch (hydration errors)
+  if (isMobile === undefined) {
+    return (
+        <div className="flex h-full items-center justify-center p-8 text-center text-muted-foreground">
+            <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+    );
+  }
 
   if (posts.length === 0) {
       return (
@@ -105,13 +91,6 @@ export function VideoFeed({ posts }: { posts: PostType[] }) {
         </div>
       );
   }
-  
-  // Avoid SSR mismatch by rendering nothing until the client has determined the device type
-  if (isMobile === undefined) {
-    return null; 
-  }
-
-  const activeIndex = isMobile ? emblaActiveIndex : desktopActiveIndex;
 
   if (isMobile) {
     return (
@@ -124,7 +103,6 @@ export function VideoFeed({ posts }: { posts: PostType[] }) {
                   isActive={index === activeIndex} 
                   isMuted={isMuted}
                   onToggleMute={() => setIsMuted(prev => !prev)}
-                  isDesktop={false}
                 />
              </div>
           ))}
@@ -136,18 +114,15 @@ export function VideoFeed({ posts }: { posts: PostType[] }) {
     return (
       <div ref={containerRef} className="h-full w-full overflow-y-auto snap-y snap-mandatory no-scrollbar">
          {posts.map((post, index) => (
-            <div key={post.id} data-index={index} className="h-full w-full flex-shrink-0 snap-start">
+            <div key={post.id} data-index={index} className="h-full w-full flex-shrink-0 snap-center">
                 <VideoPost 
                   post={post} 
                   isActive={index === activeIndex} 
                   isMuted={isMuted}
                   onToggleMute={() => setIsMuted(prev => !prev)}
-                  isDesktop={true}
                 />
             </div>
          ))}
-         {/* Sentinel to detect when user scrolls past the last video */}
-         <div ref={sentinelRef} className="h-1" />
       </div>
     );
   }

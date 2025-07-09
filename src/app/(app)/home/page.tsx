@@ -14,7 +14,7 @@ import { getLiveMatches, getUpcomingMatches } from './actions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { VideoGrid } from '@/components/video-grid';
+import { VideoFeed } from '@/components/video-feed';
 
 function MatchCardSkeleton() {
   return (
@@ -35,26 +35,6 @@ function MatchCardSkeleton() {
       </CardContent>
     </Card>
   );
-}
-
-function VideoGridSkeleton() {
-    return (
-        <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-8">
-            {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="space-y-3">
-                    <Skeleton className="w-full aspect-video rounded-lg" />
-                    <div className="flex items-start gap-3">
-                        <Skeleton className="h-10 w-10 rounded-full" />
-                        <div className="flex-1 space-y-2">
-                            <Skeleton className="h-4 w-full" />
-                            <Skeleton className="h-4 w-2/3" />
-                            <Skeleton className="h-4 w-1/2" />
-                        </div>
-                    </div>
-                </div>
-            ))}
-        </div>
-    );
 }
 
 export default function HomePage() {
@@ -155,17 +135,8 @@ export default function HomePage() {
           <TabsContent value="discover" className="h-full">
             <DiscoverHeadlines />
           </TabsContent>
-          <TabsContent value="video" className="h-full">
-            {postsLoading ? (
-              <VideoGridSkeleton />
-            ) : videoPosts.length > 0 ? (
-              <VideoGrid posts={videoPosts} />
-            ) : (
-              <div className="p-8 text-center text-muted-foreground">
-                <h2 className="text-xl font-bold">No videos yet</h2>
-                <p>When users post videos, they'll appear here.</p>
-              </div>
-            )}
+          <TabsContent value="video" className="h-full m-0 p-0">
+             <VideoFeed posts={videoPosts} />
           </TabsContent>
           <TabsContent value="live" className="h-full">
             <div className="p-4 space-y-8">
