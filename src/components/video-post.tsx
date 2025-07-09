@@ -8,8 +8,6 @@ import { Heart, MessageCircle, Share2, Music4, Play, Volume2, VolumeX, Eye } fro
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/hooks/use-auth';
-import { FollowButton } from './follow-button';
 
 interface VideoPostProps {
   post: PostType;
@@ -22,7 +20,6 @@ interface VideoPostProps {
 export function VideoPost({ post, isActive, isMuted, onToggleMute, isDesktop = false }: VideoPostProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(isActive);
-  const { user } = useAuth();
   
   useEffect(() => {
     const videoElement = videoRef.current;
@@ -83,12 +80,6 @@ export function VideoPost({ post, isActive, isMuted, onToggleMute, isDesktop = f
             {isMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
         </Button>
       </div>
-
-      {user && user.uid !== post.authorId && (
-        <div className="absolute top-4 right-4 z-10 pointer-events-auto" onClick={(e) => e.stopPropagation()}>
-          <FollowButton profileId={post.authorId} />
-        </div>
-      )}
       
       {!isPlaying && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none">
