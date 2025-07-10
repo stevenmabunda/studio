@@ -90,8 +90,13 @@ export function VideoPost({ post, isMuted, onToggleMute, isPlaying, onVisibility
   const [repostCount, setRepostCount] = useState(post.reposts);
   const [isReposted, setIsReposted] = useState(false);
   const [isShareSheetOpen, setShareSheetOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const videoUrl = post.media?.[0]?.url;
+  
+  const isLongDescription = post.content.length > 80;
+  const displayContent = isLongDescription && !isExpanded ? `${post.content.substring(0, 80)}... ` : post.content;
+
 
   useEffect(() => {
     const videoElement = videoRef.current;
@@ -228,9 +233,7 @@ export function VideoPost({ post, isMuted, onToggleMute, isPlaying, onVisibility
         {isMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
       </Button>
       
-      <div className={cn(
-        "absolute bottom-6 px-4 left-0 right-20 z-10 text-white pointer-events-auto transition-opacity duration-300",
-      )}>
+      <div className="absolute bottom-6 px-4 left-0 right-20 z-10 text-white pointer-events-auto">
         <div className="min-w-0">
           <Link
             href={`/profile/${post.authorId}`}
@@ -239,7 +242,14 @@ export function VideoPost({ post, isMuted, onToggleMute, isPlaying, onVisibility
           >
             <p className="font-bold text-lg group-hover:underline">@{post.authorHandle}</p>
           </Link>
-          <p className="text-sm whitespace-pre-wrap">{post.content}</p>
+          <p className="text-sm whitespace-pre-wrap">
+            {displayContent}
+            {isLongDescription && !isExpanded && (
+              <button onClick={(e) => { e.stopPropagation(); setIsExpanded(true); }} className="font-bold ml-1 text-white/90 hover:text-white">
+                more
+              </button>
+            )}
+          </p>
         </div>
       </div>
 
@@ -308,5 +318,7 @@ export function VideoPost({ post, isMuted, onToggleMute, isPlaying, onVisibility
     </div>
   );
 }
+
+    
 
     
