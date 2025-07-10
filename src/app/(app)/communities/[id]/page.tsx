@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
@@ -26,19 +27,19 @@ export default function CommunityPage() {
     const [community, setCommunity] = useState<Community | null>(null);
     const [posts, setPosts] = useState<PostType[]>([]);
     const [loading, setLoading] = useState(true);
+    const [postsLoading, setPostsLoading] = useState(true);
 
     const fetchCommunityData = useCallback(async () => {
         if (!communityId) return;
         setLoading(true);
+        setPostsLoading(true);
         try {
-            const [details, posts] = await Promise.all([
-                getCommunityDetails(communityId),
-                getCommunityPosts(communityId)
-            ]);
-            
+            const details = await getCommunityDetails(communityId);
             if (details) {
                 setCommunity(details);
-                setPosts(posts);
+                // Now fetch posts
+                const communityPosts = await getCommunityPosts(communityId);
+                setPosts(communityPosts);
             } else {
                 toast({ variant: 'destructive', description: "Community not found." });
                 router.push('/communities');
@@ -48,6 +49,7 @@ export default function CommunityPage() {
             toast({ variant: 'destructive', description: "Could not fetch community data." });
         } finally {
             setLoading(false);
+            setPostsLoading(false);
         }
     }, [communityId, toast, router]);
 
@@ -61,8 +63,10 @@ export default function CommunityPage() {
             await addPost({ ...data, communityId });
             toast({ description: "Your post has been published in the community!" });
             // Refresh posts after adding a new one
+            setPostsLoading(true);
             const newPosts = await getCommunityPosts(communityId);
             setPosts(newPosts);
+            setPostsLoading(false);
         } catch (error) {
             console.error("Failed to create community post:", error);
             toast({ variant: 'destructive', description: "Something went wrong. Please try again." });
@@ -128,7 +132,12 @@ export default function CommunityPage() {
             <CreatePost onPost={handlePost} communityId={communityId} />
 
             <div className="divide-y divide-border">
-                {posts.length > 0 ? (
+                {postsLoading ? (
+                     <div className="border-t">
+                        <PostSkeleton />
+                        <PostSkeleton />
+                    </div>
+                ) : posts.length > 0 ? (
                     posts.map((post) => <Post key={post.id} {...post} />)
                 ) : (
                     <div className="p-8 text-center text-muted-foreground">
