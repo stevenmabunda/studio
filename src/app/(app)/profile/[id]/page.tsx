@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Post } from "@/components/post";
 import Image from "next/image";
-import { MapPin, Link as LinkIcon, CalendarDays, Camera, Loader2, ArrowLeft } from "lucide-react";
+import { MapPin, Link as LinkIcon, CalendarDays, Camera, Loader2, ArrowLeft, Heart, Globe } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { usePosts } from "@/contexts/post-context";
 import { PostSkeleton } from "@/components/post-skeleton";
@@ -31,7 +31,8 @@ const profileFormSchema = z.object({
     displayName: z.string().min(2, "Name must be at least 2 characters."),
     bio: z.string().max(160, "Bio must not exceed 160 characters.").optional(),
     location: z.string().max(30, "Location must not exceed 30 characters.").optional(),
-    website: z.string().url("Please enter a valid URL.").or(z.literal("")).optional(),
+    country: z.string().max(50, "Country must not exceed 50 characters.").optional(),
+    favouriteClub: z.string().max(50, "Club name must not exceed 50 characters.").optional(),
 });
 
 
@@ -151,12 +152,16 @@ export default function ProfilePage() {
               <span>{profile.location}</span>
             </div>
           )}
-          {profile.website && (
+          {profile.country && (
             <div className="flex items-center gap-1">
-              <LinkIcon className="h-4 w-4" />
-              <a href={profile.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                {profile.website.replace(/https?:\/\//, '')}
-              </a>
+              <Globe className="h-4 w-4" />
+              <span>{profile.country}</span>
+            </div>
+          )}
+          {profile.favouriteClub && (
+            <div className="flex items-center gap-1">
+              <Heart className="h-4 w-4" />
+              <span>{profile.favouriteClub}</span>
             </div>
           )}
           <div className="flex items-center gap-1">
@@ -238,7 +243,8 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
             displayName: profile.displayName || '',
             bio: profile.bio || '',
             location: profile.location || '',
-            website: profile.website || '',
+            country: profile.country || '',
+            favouriteClub: profile.favouriteClub || '',
         },
     });
     
@@ -247,7 +253,8 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
             displayName: profile.displayName || '',
             bio: profile.bio || '',
             location: profile.location || '',
-            website: profile.website || '',
+            country: profile.country || '',
+            favouriteClub: profile.favouriteClub || '',
         });
         setAvatarPreview(profile.photoURL);
         setBannerPreview(profile.bannerUrl);
@@ -299,7 +306,8 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
                 photoURL: newAvatarUrl,
                 bio: data.bio,
                 location: data.location,
-                website: data.website,
+                country: data.country,
+                favouriteClub: data.favouriteClub,
                 bannerUrl: newBannerUrl,
             }, { merge: true });
 
@@ -354,8 +362,11 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
                     <Controller name="location" control={form.control} render={({ field }) => <Input placeholder="Location" {...field} />} />
                      {form.formState.errors.location && <p className="text-sm text-destructive">{form.formState.errors.location.message}</p>}
 
-                    <Controller name="website" control={form.control} render={({ field }) => <Input placeholder="Website" {...field} />} />
-                     {form.formState.errors.website && <p className="text-sm text-destructive">{form.formState.errors.website.message}</p>}
+                    <Controller name="country" control={form.control} render={({ field }) => <Input placeholder="Country" {...field} />} />
+                    {form.formState.errors.country && <p className="text-sm text-destructive">{form.formState.errors.country.message}</p>}
+
+                    <Controller name="favouriteClub" control={form.control} render={({ field }) => <Input placeholder="Favourite Club" {...field} />} />
+                    {form.formState.errors.favouriteClub && <p className="text-sm text-destructive">{form.formState.errors.favouriteClub.message}</p>}
 
                     <DialogFooter>
                         <DialogClose asChild>

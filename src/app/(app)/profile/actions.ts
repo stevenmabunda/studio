@@ -21,7 +21,8 @@ export type ProfileData = {
   bannerUrl: string;
   bio: string;
   location: string;
-  website: string;
+  country: string;
+  favouriteClub: string;
   joined: string;
   followersCount: number;
   followingCount: number;
@@ -46,7 +47,8 @@ export async function getUserProfile(
         joined: 'A while ago',
         bio: 'The official bot of BHOLO.',
         location: 'The Internet',
-        website: '',
+        country: 'Digital Realm',
+        favouriteClub: 'All of them',
         bannerUrl: 'https://placehold.co/1200x400.png',
         followersCount: 999,
         followingCount: 1,
@@ -69,7 +71,8 @@ export async function getUserProfile(
       : 'recently',
     bio: data.bio || '',
     location: data.location || '',
-    website: data.website || '',
+    country: data.country || '',
+    favouriteClub: data.favouriteClub || '',
     bannerUrl: data.bannerUrl || 'https://placehold.co/1200x400.png',
     followersCount: data.followersCount || 0,
     followingCount: data.followingCount || 0,
