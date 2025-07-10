@@ -104,7 +104,7 @@ export function SidebarNav() {
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
-        <div className="px-2 mt-4">
+        <div className="px-2 mt-4 md:block hidden">
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="w-full h-14 text-lg rounded-full">Kick-It!</Button>
