@@ -66,7 +66,15 @@ export async function createCommunity(
     
     // Automatically add the creator to the members subcollection
     const memberRef = doc(db, 'communities', communityDocRef.id, 'members', userId);
-    await setDoc(memberRef, { joinedAt: serverTimestamp() });
+    const userDoc = await getDoc(doc(db, 'users', userId));
+    const userData = userDoc.data();
+
+    await setDoc(memberRef, { 
+      joinedAt: serverTimestamp(),
+      displayName: userData?.displayName || 'User',
+      handle: userData?.handle || 'user',
+      photoURL: userData?.photoURL || 'https://placehold.co/40x40.png'
+    });
 
 
     return { success: true };
@@ -159,8 +167,15 @@ export async function toggleCommunityMembership(
         } else {
             // Join community
             newMemberCount = currentMemberCount + 1;
+            const userDoc = await getDoc(doc(db, 'users', userId));
+            const userData = userDoc.data();
             transaction.update(communityRef, { memberCount: increment(1) });
-            transaction.set(memberRef, { joinedAt: serverTimestamp() });
+            transaction.set(memberRef, { 
+                joinedAt: serverTimestamp(),
+                displayName: userData?.displayName || 'User',
+                handle: userData?.handle || 'user',
+                photoURL: userData?.photoURL || 'https://placehold.co/40x40.png'
+            });
         }
     });
     return { success: true, newMemberCount };
@@ -221,27 +236,21 @@ export async function getCommunityMembers(communityId: string): Promise<Communit
     if (!db) return [];
 
     const membersRef = collection(db, 'communities', communityId, 'members');
-    const memberSnapshots = await getDocs(membersRef);
+    const q = query(membersRef, orderBy('joinedAt', 'desc'));
+    const memberSnapshots = await getDocs(q);
 
     if (memberSnapshots.empty) {
         return [];
     }
 
-    const memberIds = memberSnapshots.docs.map(doc => doc.id);
-    
-    // Fetch user profiles for each member
-    const userPromises = memberIds.map(id => getDoc(doc(db, 'users', id)));
-    const userDocs = await Promise.all(userPromises);
-
-    return userDocs
-        .filter(doc => doc.exists())
-        .map(doc => {
-            const data = doc.data()!;
-            return {
-                uid: doc.id,
-                displayName: data.displayName || 'Unknown User',
-                handle: data.handle || 'user',
-                photoURL: data.photoURL || 'https://placehold.co/40x40.png',
-            };
-        });
+    // Now, the member documents themselves contain the user data we need.
+    return memberSnapshots.docs.map(doc => {
+        const data = doc.data();
+        return {
+            uid: doc.id, // The document ID is the user's UID
+            displayName: data.displayName || 'Unknown User',
+            handle: data.handle || 'user',
+            photoURL: data.photoURL || 'https://placehold.co/40x40.png',
+        };
+    });
 }
