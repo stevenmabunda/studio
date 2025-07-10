@@ -23,8 +23,9 @@ import * as z from "zod";
 import { updateProfile } from "firebase/auth";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useParams, useRouter } from "next/navigation";
-import { getUserProfile, getIsFollowing, toggleFollow, type ProfileData } from "../actions";
+import { getUserProfile, getIsFollowing, toggleFollow, type ProfileData, getLikedPosts } from "../actions";
 import { FollowButton } from "@/components/follow-button";
+import type { PostType } from "@/lib/data";
 
 
 const profileFormSchema = z.object({
@@ -46,10 +47,13 @@ export default function ProfilePage() {
 
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
+  const [likedPosts, setLikedPosts] = useState<PostType[]>([]);
+  const [likedPostsLoading, setLikedPostsLoading] = useState(false);
   
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   
   const isMyProfile = currentUser?.uid === profileId;
+  const hasFetchedLikedPosts = useRef(false);
 
   const fetchProfile = useCallback(async () => {
     if (!profileId) return;
@@ -69,6 +73,22 @@ export default function ProfilePage() {
         setProfileLoading(false);
     }
   }, [profileId, toast, router]);
+
+  const handleTabChange = async (value: string) => {
+    if (value === 'likes' && !hasFetchedLikedPosts.current) {
+        setLikedPostsLoading(true);
+        try {
+            const fetchedLikedPosts = await getLikedPosts(profileId);
+            setLikedPosts(fetchedLikedPosts);
+            hasFetchedLikedPosts.current = true;
+        } catch (error) {
+            console.error("Error fetching liked posts:", error);
+            toast({ variant: 'destructive', title: "Error", description: "Could not fetch liked posts." });
+        } finally {
+            setLikedPostsLoading(false);
+        }
+    }
+  }
 
   useEffect(() => {
     if (!authLoading) {
@@ -188,7 +208,7 @@ export default function ProfilePage() {
             onProfileUpdate={fetchProfile}
         />
       )}
-      <Tabs defaultValue="posts" className="w-full border-t">
+      <Tabs defaultValue="posts" className="w-full border-t" onValueChange={handleTabChange}>
         <TabsList className="flex w-full justify-around rounded-none border-b bg-transparent p-0">
           <TabsTrigger value="posts" className="flex-1 rounded-none py-3 text-sm font-semibold text-muted-foreground data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none">Posts</TabsTrigger>
           <TabsTrigger value="replies" className="flex-1 rounded-none py-3 text-sm font-semibold text-muted-foreground data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none">Replies</TabsTrigger>
@@ -216,7 +236,22 @@ export default function ProfilePage() {
             <div className="p-8 text-center text-muted-foreground">No media yet.</div>
         </TabsContent>
         <TabsContent value="likes">
-            <div className="p-8 text-center text-muted-foreground">No liked posts yet.</div>
+             <div className="divide-y divide-border">
+                {likedPostsLoading ? (
+                    <>
+                        <PostSkeleton />
+                        <PostSkeleton />
+                        <PostSkeleton />
+                    </>
+                ) : likedPosts.length > 0 ? (
+                    likedPosts.map(post => <Post key={post.id} {...post} />)
+                ) : (
+                    <div className="p-8 text-center text-muted-foreground">
+                        <h2 className="text-xl font-bold">No liked posts yet</h2>
+                        <p>When {isMyProfile ? "you like" : `@${profile.handle} likes`} posts, they'll appear here.</p>
+                    </div>
+                )}
+            </div>
         </TabsContent>
       </Tabs>
     </div>

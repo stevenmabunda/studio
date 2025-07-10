@@ -11,7 +11,13 @@ import {
   serverTimestamp,
   increment,
   writeBatch,
+  getDocs,
+  type Timestamp,
+  query,
+  orderBy,
 } from 'firebase/firestore';
+import type { PostType } from '@/lib/data';
+import { formatTimestamp } from '@/lib/utils';
 
 export type ProfileData = {
   uid: string;
@@ -177,5 +183,57 @@ export async function toggleFollow(
   } catch (error) {
     console.error('Toggle follow transaction failed: ', error);
     return { success: false };
+  }
+}
+
+export async function getLikedPosts(userId: string): Promise<PostType[]> {
+  if (!db || !userId) {
+    return [];
+  }
+
+  const likesRef = collection(db, 'users', userId, 'likes');
+  const q = query(likesRef, orderBy('createdAt', 'desc'));
+  
+  try {
+    const likesSnapshot = await getDocs(q);
+    
+    if (likesSnapshot.empty) {
+      return [];
+    }
+
+    const postIds = likesSnapshot.docs.map(doc => doc.id);
+
+    // Fetch all the post documents in parallel.
+    const postPromises = postIds.map(postId => getDoc(doc(db, 'posts', postId)));
+    const postDocs = await Promise.all(postPromises);
+
+    // Map Firestore documents to PostType objects, filtering out any that don't exist.
+    const likedPosts = postDocs
+        .filter(docSnap => docSnap.exists())
+        .map(docSnap => {
+            const data = docSnap.data()!;
+            const createdAt = (data.createdAt as Timestamp)?.toDate();
+            return {
+                id: docSnap.id,
+                authorId: data.authorId,
+                authorName: data.authorName,
+                authorHandle: data.authorHandle,
+                authorAvatar: data.authorAvatar,
+                content: data.content,
+                comments: data.comments,
+                reposts: data.reposts,
+                likes: data.likes,
+                media: data.media,
+                poll: data.poll,
+                timestamp: createdAt ? formatTimestamp(createdAt) : 'now',
+            } as PostType;
+        });
+
+    // The posts are already sorted by the `likes` collection query, so we can just return them.
+    return likedPosts;
+
+  } catch (error) {
+    console.error("Error fetching liked posts:", error);
+    return [];
   }
 }

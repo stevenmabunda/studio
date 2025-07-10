@@ -381,39 +381,51 @@ export function PostProvider({ children }: { children: ReactNode }) {
   const likePost = async (postId: string, isLiked: boolean) => {
     if (!db || !user) return;
     const postRef = doc(db, "posts", postId);
-    try {
-      await runTransaction(db, async (transaction) => {
-        const postDoc = await transaction.get(postRef);
-        if (!postDoc.exists()) {
-          throw "Document does not exist!";
-        }
-        const newLikes = postDoc.data().likes + (isLiked ? -1 : 1);
-        transaction.update(postRef, { likes: newLikes < 0 ? 0 : newLikes });
-      });
+    const likeRef = doc(db, 'users', user.uid, 'likes', postId);
 
-      // Create notification only on like, not on unlike
-      if (!isLiked) {
-        const postDoc = await getDoc(postRef);
-        if (postDoc.exists()) {
-            const postData = postDoc.data();
-            if (user.uid !== postData.authorId) {
-                const notificationRef = collection(db, 'users', postData.authorId, 'notifications');
-                await addDoc(notificationRef, {
-                    type: 'like',
-                    fromUserId: user.uid,
-                    fromUserName: user.displayName || 'User',
-                    fromUserAvatar: user.photoURL || 'https://placehold.co/40x40.png',
-                    postId: postId,
-                    postContentSnippet: (postData.content || '').substring(0, 50),
-                    createdAt: serverTimestamp(),
-                    read: false,
-                });
+    try {
+        await runTransaction(db, async (transaction) => {
+            const postDoc = await transaction.get(postRef);
+            if (!postDoc.exists()) {
+                throw "Post does not exist!";
+            }
+            
+            if (isLiked) {
+                // Unlike
+                const newLikes = Math.max(0, postDoc.data().likes - 1);
+                transaction.update(postRef, { likes: newLikes });
+                transaction.delete(likeRef);
+            } else {
+                // Like
+                const newLikes = postDoc.data().likes + 1;
+                transaction.update(postRef, { likes: newLikes });
+                transaction.set(likeRef, { createdAt: serverTimestamp() });
+            }
+        });
+
+        // Create notification only on like, not on unlike
+        if (!isLiked) {
+            const postDoc = await getDoc(postRef);
+            if (postDoc.exists()) {
+                const postData = postDoc.data();
+                if (user.uid !== postData.authorId) {
+                    const notificationRef = collection(db, 'users', postData.authorId, 'notifications');
+                    await addDoc(notificationRef, {
+                        type: 'like',
+                        fromUserId: user.uid,
+                        fromUserName: user.displayName || 'User',
+                        fromUserAvatar: user.photoURL || 'https://placehold.co/40x40.png',
+                        postId: postId,
+                        postContentSnippet: (postData.content || '').substring(0, 50),
+                        createdAt: serverTimestamp(),
+                        read: false,
+                    });
+                }
             }
         }
-      }
 
     } catch (error) {
-      console.error("Error updating likes:", error);
+        console.error("Error updating likes:", error);
     }
   };
   
