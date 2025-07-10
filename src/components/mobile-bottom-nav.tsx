@@ -14,10 +14,10 @@ import type { PostType } from '@/lib/data';
 
 const navItems = [
   { href: '/home', icon: Home, label: 'Home' },
-  { href: '/explore', icon: Hash, label: 'Explore' },
+  { href: '/explore', icon: Search, label: 'Explore' },
   { href: 'POST_ACTION', icon: Plus, label: 'Post' },
   { href: '/communities', icon: Users, label: 'Communities' },
-  { href: '/explore', icon: Search, label: 'Search' },
+  { href: '/messages', icon: Hash, label: 'Messages', isHidden: true }, // Example for a hidden item
 ];
 
 export function MobileBottomNav() {
@@ -66,7 +66,7 @@ export function MobileBottomNav() {
         !isVisible && "translate-y-full"
     )}>
       <div className="flex justify-around items-center h-full">
-        {navItems.map((item) => {
+        {navItems.filter(item => !item.isHidden).map((item) => {
           if (item.href === 'POST_ACTION') {
             return (
               <Sheet key={item.label} open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -78,7 +78,6 @@ export function MobileBottomNav() {
                 <SheetContent 
                     side="bottom" 
                     className="rounded-t-lg p-0"
-                    // Prevent focus trap from interfering with file input on mobile
                     onOpenAutoFocus={(e) => e.preventDefault()}
                 >
                     <SheetHeader className="p-3 md:p-4 pb-0">
@@ -92,7 +91,7 @@ export function MobileBottomNav() {
             );
           }
           
-          const isActive = pathname.startsWith(item.href) && (item.href !== '/home' || pathname === '/home') && (item.label !== 'Search');
+          const isActive = pathname === item.href;
           return (
             <Link key={item.href + item.label} href={item.href} className="flex-1 flex justify-center items-center h-full">
               <item.icon

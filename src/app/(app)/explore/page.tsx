@@ -1,14 +1,15 @@
+
 'use client';
 
-import { PinnedContent } from "@/components/pinned-content";
 import { TrendingTopics } from "@/components/trending-topics";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { WhoToFollow } from "@/components/who-to-follow";
+import { ActiveLiveMatches } from "@/components/active-live-matches";
+import { UpcomingMatches } from "@/components/live-matches";
+import { SuggestedCommunities } from "@/components/suggested-communities";
 
 export default function ExplorePage() {
-  const isMobile = useIsMobile();
-  
   return (
     <div className="flex h-full min-h-screen flex-col">
       <header className="sticky top-0 z-10 border-b bg-background/80 p-4 backdrop-blur-sm">
@@ -18,9 +19,20 @@ export default function ExplorePage() {
         </div>
       </header>
       <main className="flex-1 space-y-6 pt-4">
-        {isMobile === false && <PinnedContent />}
         <div className="px-4">
           <TrendingTopics />
+        </div>
+        <div className="px-4">
+          <SuggestedCommunities />
+        </div>
+        <div className="px-4">
+          <ActiveLiveMatches />
+        </div>
+        <div className="px-4">
+          <UpcomingMatches />
+        </div>
+        <div className="px-4">
+          <WhoToFollow />
         </div>
       </main>
     </div>
