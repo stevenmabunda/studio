@@ -113,7 +113,10 @@ export function VideoPost({ post, isMuted, onToggleMute, isPlaying, onPlay, onPa
         {isMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
       </Button>
       
-      <div className="absolute bottom-6 px-4 left-0 right-20 z-10 text-white pointer-events-none">
+      <div className={cn(
+        "absolute bottom-6 px-4 left-0 right-20 z-10 text-white pointer-events-none transition-opacity duration-300",
+        isPlaying ? "opacity-0" : "opacity-100"
+      )}>
         <div className="flex items-start gap-3">
           <Link
             href={`/profile/${post.authorId}`}
@@ -138,7 +141,7 @@ export function VideoPost({ post, isMuted, onToggleMute, isPlaying, onPlay, onPa
         </div>
       </div>
 
-      <div className="absolute bottom-6 right-2 z-10 flex flex-col gap-4">
+      <div className="absolute bottom-6 right-4 z-10 flex flex-col gap-4">
         <div className="flex flex-col items-center gap-1 text-white">
             <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-black/30 hover:bg-black/50 text-white hover:text-white pointer-events-auto" onClick={(e) => e.stopPropagation() /* TODO: wire up like action */}>
                 <Heart className="h-7 w-7" />
