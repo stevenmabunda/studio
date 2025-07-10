@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { ReactNode } from 'react';
@@ -408,7 +409,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
             const postDoc = await getDoc(postRef);
             if (postDoc.exists()) {
                 const postData = postDoc.data();
-                if (user.uid !== postData.authorId) {
+                if (postData && postData.authorId && user.uid !== postData.authorId) {
                     const notificationRef = collection(db, 'users', postData.authorId, 'notifications');
                     await addDoc(notificationRef, {
                         type: 'like',
