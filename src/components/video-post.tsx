@@ -113,19 +113,19 @@ export function VideoPost({ post, isMuted, onToggleMute, isPlaying, onPlay, onPa
         {isMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
       </Button>
       
-      <div className="absolute bottom-6 px-6 left-0 right-24 z-10 text-white pointer-events-none">
-        <div className="flex items-end gap-3">
+      <div className="absolute bottom-6 px-4 left-0 right-20 z-10 text-white pointer-events-none">
+        <div className="flex items-start gap-3">
           <Link
             href={`/profile/${post.authorId}`}
             onClick={(e) => e.stopPropagation()}
-            className="pointer-events-auto hidden md:block"
+            className="pointer-events-auto hidden md:block flex-shrink-0"
           >
             <Avatar className="h-10 w-10 border-2 border-white">
               <AvatarImage src={post.authorAvatar} data-ai-hint="user avatar" />
               <AvatarFallback>{post.authorName.charAt(0)}</AvatarFallback>
             </Avatar>
           </Link>
-          <div>
+          <div className="min-w-0">
             <Link
               href={`/profile/${post.authorId}`}
               onClick={(e) => e.stopPropagation()}
@@ -138,7 +138,7 @@ export function VideoPost({ post, isMuted, onToggleMute, isPlaying, onPlay, onPa
         </div>
       </div>
 
-      <div className="absolute bottom-6 right-6 z-10 flex flex-col gap-4">
+      <div className="absolute bottom-6 right-2 z-10 flex flex-col gap-4">
         <div className="flex flex-col items-center gap-1 text-white">
             <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-black/30 hover:bg-black/50 text-white hover:text-white pointer-events-auto" onClick={(e) => e.stopPropagation() /* TODO: wire up like action */}>
                 <Heart className="h-7 w-7" />
