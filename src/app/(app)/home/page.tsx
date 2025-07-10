@@ -44,12 +44,25 @@ export default function HomePage() {
   const [liveMatches, setLiveMatches] = useState<MatchType[]>([]);
   const [upcomingMatches, setUpcomingMatches] = useState<MatchType[]>([]);
   const [matchesLoading, setMatchesLoading] = useState(true);
+  
   const [isMuted, setIsMuted] = useState(true);
+  const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
 
   const videoPosts = useMemo(
     () => posts.filter(post => post.media?.some(m => m.type === 'video')),
     [posts]
   );
+  
+  const handlePlay = useCallback((id: string) => {
+    setPlayingVideoId(id);
+  }, []);
+
+  const handlePause = useCallback((id: string) => {
+    if (playingVideoId === id) {
+      setPlayingVideoId(null);
+    }
+  }, [playingVideoId]);
+
 
   useEffect(() => {
     const fetchMatches = async () => {
@@ -69,6 +82,13 @@ export default function HomePage() {
     };
     fetchMatches();
   }, []);
+  
+  // Set the first video to autoplay when the component mounts
+  useEffect(() => {
+    if (videoPosts.length > 0 && playingVideoId === null) {
+        setPlayingVideoId(videoPosts[0].id);
+    }
+  }, [videoPosts, playingVideoId]);
 
   const handlePost = async (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null }) => {
     try {
@@ -137,19 +157,22 @@ export default function HomePage() {
             <DiscoverHeadlines />
           </TabsContent>
           <TabsContent value="video" className="h-full bg-black">
-            <div className="h-[calc(100vh-160px)] md:h-[calc(100vh-110px)] overflow-y-auto snap-y snap-mandatory">
+             <div className="h-[calc(100vh-160px)] md:h-[calc(100vh-110px)] overflow-y-auto snap-y snap-mandatory">
               {postsLoading ? (
                 <div className="flex items-center justify-center h-full">
                   <PostSkeleton />
                 </div>
               ) : videoPosts.length > 0 ? (
                 <div className="h-full w-full">
-                  {videoPosts.map((post, index) => (
+                  {videoPosts.map((post) => (
                     <div key={post.id} className="h-full w-full snap-start flex items-center justify-center">
-                      <VideoPost 
+                       <VideoPost
                         post={post}
                         isMuted={isMuted}
                         onToggleMute={() => setIsMuted(prev => !prev)}
+                        isPlaying={playingVideoId === post.id}
+                        onPlay={handlePlay}
+                        onPause={handlePause}
                       />
                     </div>
                   ))}
