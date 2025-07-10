@@ -1,7 +1,11 @@
+'use client';
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { PlusCircle, Users } from "lucide-react";
 import Image from "next/image";
+import { CreateCommunityDialog } from "@/components/create-community-dialog";
+import { useState } from "react";
 
 const sampleCommunities = [
   {
@@ -43,14 +47,18 @@ const sampleCommunities = [
 ];
 
 export default function CommunitiesPage() {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   return (
     <div className="flex h-full min-h-screen flex-col">
       <header className="sticky top-0 z-10 border-b bg-background/80 p-4 backdrop-blur-sm flex justify-between items-center">
         <h1 className="text-xl font-bold">Communities</h1>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Create Community
-        </Button>
+        <CreateCommunityDialog isOpen={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <Button>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Create Community
+          </Button>
+        </CreateCommunityDialog>
       </header>
       <main className="flex-1 p-4">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
