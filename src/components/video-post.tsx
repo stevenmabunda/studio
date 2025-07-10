@@ -15,11 +15,10 @@ interface VideoPostProps {
   isMuted: boolean;
   onToggleMute: () => void;
   isPlaying: boolean;
-  onPlay: (id: string) => void;
-  onPause: (id: string) => void;
+  onVisibilityChange: (id: string, isVisible: boolean) => void;
 }
 
-export function VideoPost({ post, isMuted, onToggleMute, isPlaying, onPlay, onPause }: VideoPostProps) {
+export function VideoPost({ post, isMuted, onToggleMute, isPlaying, onVisibilityChange }: VideoPostProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -32,21 +31,40 @@ export function VideoPost({ post, isMuted, onToggleMute, isPlaying, onPlay, onPa
         if (isPlaying) {
             videoElement.play().catch(error => {
                 console.error("Video play failed:", error);
-                // If autoplay fails, we should pause the video state
-                onPause(post.id);
             });
         } else {
             videoElement.pause();
         }
     }
-  }, [isPlaying, post.id, onPause]);
+  }, [isPlaying]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        // isIntersecting is true when the element is at least 50% visible
+        onVisibilityChange(post.id, entry.isIntersecting);
+      },
+      {
+        root: null, // observes intersections relative to the viewport
+        rootMargin: '0px',
+        threshold: 0.5, // 50% of the item must be visible to trigger
+      }
+    );
+
+    const currentContainer = containerRef.current;
+    if (currentContainer) {
+      observer.observe(currentContainer);
+    }
+
+    return () => {
+      if (currentContainer) {
+        observer.unobserve(currentContainer);
+      }
+    };
+  }, [post.id, onVisibilityChange]);
 
   const togglePlay = () => {
-    if (isPlaying) {
-      onPause(post.id);
-    } else {
-      onPlay(post.id);
-    }
+    onVisibilityChange(post.id, !isPlaying);
   };
 
   const handleToggleMute = (e: React.MouseEvent) => {
@@ -129,7 +147,7 @@ export function VideoPost({ post, isMuted, onToggleMute, isPlaying, onPlay, onPa
                 <Heart className="h-7 w-7" />
             </Button>
             <span className="text-sm font-bold">
-              {post.likes > 0 ? post.likes : <span className="hidden md:inline">Be the first to like!</span>}
+              {post.likes > 0 ? post.likes : <span className="hidden md:inline"></span>}
             </span>
         </div>
         <div className="flex flex-col items-center gap-1 text-white">

@@ -53,13 +53,15 @@ export default function HomePage() {
     [posts]
   );
   
-  const handlePlay = useCallback((id: string) => {
-    setPlayingVideoId(id);
-  }, []);
-
-  const handlePause = useCallback((id: string) => {
-    if (playingVideoId === id) {
-      setPlayingVideoId(null);
+  // This will be called by the IntersectionObserver in the VideoPost component
+  const handleVisibilityChange = useCallback((id: string, isVisible: boolean) => {
+    if (isVisible) {
+      setPlayingVideoId(id);
+    } else {
+      // Only pause if this specific video is the one that was playing
+      if (playingVideoId === id) {
+        setPlayingVideoId(null);
+      }
     }
   }, [playingVideoId]);
 
@@ -83,13 +85,6 @@ export default function HomePage() {
     fetchMatches();
   }, []);
   
-  // Set the first video to autoplay when the component mounts
-  useEffect(() => {
-    if (videoPosts.length > 0 && playingVideoId === null) {
-        setPlayingVideoId(videoPosts[0].id);
-    }
-  }, [videoPosts, playingVideoId]);
-
   const handlePost = async (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null }) => {
     try {
         await addPost(data);
@@ -171,8 +166,7 @@ export default function HomePage() {
                         isMuted={isMuted}
                         onToggleMute={() => setIsMuted(prev => !prev)}
                         isPlaying={playingVideoId === post.id}
-                        onPlay={handlePlay}
-                        onPause={handlePause}
+                        onVisibilityChange={handleVisibilityChange}
                       />
                     </div>
                   ))}
