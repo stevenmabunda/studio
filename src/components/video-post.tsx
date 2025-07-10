@@ -1,46 +1,52 @@
 
 'use client';
 
-import { PostType } from '@/lib/data';
+import type { PostType } from '@/lib/data';
 import Link from 'next/link';
 import { useRef, useState, useEffect } from 'react';
 import { Button } from './ui/button';
-import { Heart, MessageCircle, Repeat, Volume2, VolumeX } from 'lucide-react';
+import { Heart, MessageCircle, Repeat, Share2, Volume2, VolumeX, Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { useRouter } from 'next/navigation';
 
 interface VideoPostProps {
   post: PostType;
   isMuted: boolean;
   onToggleMute: () => void;
-  isActive: boolean;
 }
 
-export function VideoPost({ post, isMuted, onToggleMute, isActive }: VideoPostProps) {
+export function VideoPost({ post, isMuted, onToggleMute }: VideoPostProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const router = useRouter();
 
   const videoUrl = post.media?.[0]?.url;
 
   useEffect(() => {
     const videoElement = videoRef.current;
-    if (!videoElement) return;
+    const containerElement = containerRef.current;
+    if (!videoElement || !containerElement) return;
 
-    if (isActive) {
-      // Autoplay when the slide is active
-      videoElement.play().then(() => {
-        setIsPlaying(true);
-      }).catch(error => {
-        console.error("Autoplay failed:", error);
-        // Autoplay was prevented. Show a play button or handle it.
-        setIsPlaying(false);
-      });
-    } else {
-      // Pause when the slide is not active
-      videoElement.pause();
-      setIsPlaying(false);
-    }
-  }, [isActive]);
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          videoElement.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+        } else {
+          videoElement.pause();
+          setIsPlaying(false);
+        }
+      },
+      { threshold: 0.5 } // Play when at least 50% of the video is visible
+    );
+
+    observer.observe(containerElement);
+
+    return () => {
+      observer.unobserve(containerElement);
+    };
+  }, [videoUrl]);
 
   const togglePlay = () => {
     const videoElement = videoRef.current;
@@ -60,21 +66,36 @@ export function VideoPost({ post, isMuted, onToggleMute, isActive }: VideoPostPr
     onToggleMute();
   };
 
+  const navigateToPost = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    router.push(`/post/${post.id}`);
+  }
+
   if (!videoUrl || post.media?.[0]?.type !== 'video') {
     return null;
   }
 
   return (
-    <div className="relative h-full w-full bg-black flex items-center justify-center snap-center" onClick={togglePlay}>
+    <div
+      ref={containerRef}
+      className="relative h-full w-full bg-black flex items-center justify-center cursor-pointer"
+      onClick={togglePlay}
+    >
       <video
         ref={videoRef}
         src={videoUrl}
         loop
         muted={isMuted}
         playsInline
-        className="h-full w-auto max-w-full object-contain"
+        className="max-h-full max-w-full object-contain"
       />
       
+      {!isPlaying && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/40 pointer-events-none">
+          <Play className="h-20 w-20 text-white/70" />
+        </div>
+      )}
+
       <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
 
       <Button
@@ -85,8 +106,8 @@ export function VideoPost({ post, isMuted, onToggleMute, isActive }: VideoPostPr
       >
         {isMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
       </Button>
-
-      <div className="absolute bottom-6 px-4 left-0 right-16 z-10 text-white pointer-events-none">
+      
+      <div className="absolute bottom-6 px-4 left-0 right-20 z-10 text-white pointer-events-none">
         <div className="flex items-center gap-3">
             <Link href={`/profile/${post.authorId}`} onClick={(e) => e.stopPropagation()} className="pointer-events-auto">
                 <Avatar className="h-10 w-10 border-2 border-white">
@@ -109,22 +130,27 @@ export function VideoPost({ post, isMuted, onToggleMute, isActive }: VideoPostPr
 
       <div className="absolute bottom-6 right-4 z-10 flex flex-col gap-4">
         <div className="flex flex-col items-center gap-1 text-white">
-            <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-black/30 hover:bg-black/50 text-white hover:text-white">
+            <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-black/30 hover:bg-black/50 text-white hover:text-white pointer-events-auto" onClick={(e) => e.stopPropagation() /* TODO: wire up like action */}>
                 <Heart className="h-7 w-7" />
             </Button>
             <span className="text-sm font-bold">{post.likes}</span>
         </div>
         <div className="flex flex-col items-center gap-1 text-white">
-            <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-black/30 hover:bg-black/50 text-white hover:text-white">
+            <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-black/30 hover:bg-black/50 text-white hover:text-white pointer-events-auto" onClick={navigateToPost}>
                 <MessageCircle className="h-7 w-7" />
             </Button>
             <span className="text-sm font-bold">{post.comments}</span>
         </div>
         <div className="flex flex-col items-center gap-1 text-white">
-            <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-black/30 hover:bg-black/50 text-white hover:text-white">
+            <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-black/30 hover:bg-black/50 text-white hover:text-white pointer-events-auto" onClick={(e) => e.stopPropagation() /* TODO: wire up repost action */}>
                 <Repeat className="h-7 w-7" />
             </Button>
             <span className="text-sm font-bold">{post.reposts}</span>
+        </div>
+        <div className="flex flex-col items-center gap-1 text-white">
+            <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-black/30 hover:bg-black/50 text-white hover:text-white pointer-events-auto" onClick={(e) => e.stopPropagation() /* TODO: wire up share action */}>
+                <Share2 className="h-7 w-7" />
+            </Button>
         </div>
       </div>
     </div>
