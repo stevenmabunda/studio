@@ -14,50 +14,32 @@ interface VideoPostProps {
   post: PostType;
   isMuted: boolean;
   onToggleMute: () => void;
+  isPlaying: boolean;
+  onPlay: (id: string) => void;
+  onPause: (id: string) => void;
 }
 
-export function VideoPost({ post, isMuted, onToggleMute }: VideoPostProps) {
+export function VideoPost({ post, isMuted, onToggleMute, isPlaying, onPlay, onPause }: VideoPostProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
   const router = useRouter();
 
   const videoUrl = post.media?.[0]?.url;
 
   useEffect(() => {
     const videoElement = videoRef.current;
-    const containerElement = containerRef.current;
-    if (!videoElement || !containerElement) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          videoElement.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
-        } else {
-          videoElement.pause();
-          setIsPlaying(false);
-        }
-      },
-      { threshold: 0.5 } // Play when at least 50% of the video is visible
-    );
-
-    observer.observe(containerElement);
-
-    return () => {
-      observer.unobserve(containerElement);
-    };
-  }, [videoUrl]);
+    if (isPlaying) {
+      videoElement?.play().catch(() => onPause(post.id));
+    } else {
+      videoElement?.pause();
+    }
+  }, [isPlaying, onPause, post.id]);
 
   const togglePlay = () => {
-    const videoElement = videoRef.current;
-    if (!videoElement) return;
-
-    if (videoElement.paused) {
-      videoElement.play();
-      setIsPlaying(true);
+    if (isPlaying) {
+      onPause(post.id);
     } else {
-      videoElement.pause();
-      setIsPlaying(false);
+      onPlay(post.id);
     }
   };
 
@@ -65,7 +47,7 @@ export function VideoPost({ post, isMuted, onToggleMute }: VideoPostProps) {
     e.stopPropagation();
     onToggleMute();
   };
-
+  
   const navigateToPost = (e: React.MouseEvent) => {
     e.stopPropagation();
     router.push(`/post/${post.id}`);
@@ -78,7 +60,7 @@ export function VideoPost({ post, isMuted, onToggleMute }: VideoPostProps) {
   return (
     <div
       ref={containerRef}
-      className="relative h-full w-full bg-black flex items-center justify-center cursor-pointer"
+      className="relative h-full w-full bg-black flex items-center justify-center cursor-pointer snap-start"
       onClick={togglePlay}
     >
       <video
@@ -108,23 +90,27 @@ export function VideoPost({ post, isMuted, onToggleMute }: VideoPostProps) {
       </Button>
       
       <div className="absolute bottom-6 px-4 left-0 right-20 z-10 text-white pointer-events-none">
-        <div className="flex items-center gap-3">
-            <Link href={`/profile/${post.authorId}`} onClick={(e) => e.stopPropagation()} className="pointer-events-auto">
-                <Avatar className="h-10 w-10 border-2 border-white">
-                    <AvatarImage src={post.authorAvatar} data-ai-hint="user avatar" />
-                    <AvatarFallback>{post.authorName.charAt(0)}</AvatarFallback>
-                </Avatar>
+        <div className="flex items-end gap-3">
+          <Link
+            href={`/profile/${post.authorId}`}
+            onClick={(e) => e.stopPropagation()}
+            className="pointer-events-auto hidden md:block"
+          >
+            <Avatar className="h-10 w-10 border-2 border-white">
+              <AvatarImage src={post.authorAvatar} data-ai-hint="user avatar" />
+              <AvatarFallback>{post.authorName.charAt(0)}</AvatarFallback>
+            </Avatar>
+          </Link>
+          <div>
+            <Link
+              href={`/profile/${post.authorId}`}
+              onClick={(e) => e.stopPropagation()}
+              className="inline-block group pointer-events-auto hidden md:inline-block"
+            >
+              <p className="font-bold text-lg group-hover:underline">@{post.authorHandle}</p>
             </Link>
-            <div>
-                <Link
-                    href={`/profile/${post.authorId}`}
-                    onClick={(e) => e.stopPropagation()}
-                    className="inline-block group pointer-events-auto"
-                >
-                    <p className="font-bold text-lg group-hover:underline">@{post.authorHandle}</p>
-                </Link>
-                <p className="text-sm whitespace-pre-wrap">{post.content}</p>
-            </div>
+            <p className="text-sm whitespace-pre-wrap">{post.content}</p>
+          </div>
         </div>
       </div>
 
