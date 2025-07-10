@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useRouter } from 'next/navigation';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase/config';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import Link from 'next/link';
 import { AuthFormError } from './auth-form-error';
 import { doc, setDoc } from 'firebase/firestore';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { MailCheck } from 'lucide-react';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.'}),
@@ -25,6 +27,7 @@ export function SignupForm() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -38,6 +41,8 @@ export function SignupForm() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
     setError(null);
+    setSuccess(false);
+
     if (!auth || !db) {
       setError('Authentication service is not available. Please try again later.');
       console.error('Firebase auth or db is not initialized.');
@@ -47,6 +52,9 @@ export function SignupForm() {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
       const user = userCredential.user;
+
+      // Send verification email
+      await sendEmailVerification(user);
 
       await updateProfile(user, {
         displayName: values.name,
@@ -69,8 +77,8 @@ export function SignupForm() {
         followingCount: 0,
       });
       
-      router.push('/');
-      router.refresh();
+      setSuccess(true);
+      
     } catch (err: any) {
       if (err.code === 'auth/email-already-in-use') {
         setError('An account with this email already exists.');
@@ -81,6 +89,23 @@ export function SignupForm() {
     } finally {
       setLoading(false);
     }
+  }
+  
+  if (success) {
+    return (
+        <div className="space-y-4">
+            <Alert variant="default" className="border-green-500/50 text-green-700 dark:text-green-400 [&>svg]:text-green-700 dark:[&>svg]:text-green-400">
+                <MailCheck className="h-4 w-4" />
+                <AlertTitle>Check your email!</AlertTitle>
+                <AlertDescription>
+                   We've sent a verification link to your email address. Please click the link to continue.
+                </AlertDescription>
+            </Alert>
+             <Button onClick={() => router.push('/login')} className="w-full">
+                Back to Sign In
+            </Button>
+        </div>
+    )
   }
 
   return (
