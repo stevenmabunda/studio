@@ -9,6 +9,8 @@ import { Heart, MessageCircle, Repeat, Share2, Volume2, VolumeX, Play } from 'lu
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { useRouter } from 'next/navigation';
+import { usePosts } from '@/contexts/post-context';
+
 
 interface VideoPostProps {
   post: PostType;
@@ -22,6 +24,10 @@ export function VideoPost({ post, isMuted, onToggleMute, isPlaying, onVisibility
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const { likePost } = usePosts();
+
+  const [likeCount, setLikeCount] = useState(post.likes);
+  const [isLiked, setIsLiked] = useState(false); // In a real app, this would come from user data
 
   const videoUrl = post.media?.[0]?.url;
 
@@ -30,6 +36,7 @@ export function VideoPost({ post, isMuted, onToggleMute, isPlaying, onVisibility
     if (videoElement) {
         if (isPlaying) {
             videoElement.play().catch(error => {
+                // Autoplay was prevented.
                 console.error("Video play failed:", error);
             });
         } else {
@@ -41,13 +48,12 @@ export function VideoPost({ post, isMuted, onToggleMute, isPlaying, onVisibility
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
-        // isIntersecting is true when the element is at least 50% visible
         onVisibilityChange(post.id, entry.isIntersecting);
       },
       {
-        root: null, // observes intersections relative to the viewport
+        root: null, 
         rootMargin: '0px',
-        threshold: 0.5, // 50% of the item must be visible to trigger
+        threshold: 0.5, // 50% of the item must be visible
       }
     );
 
@@ -76,6 +82,16 @@ export function VideoPost({ post, isMuted, onToggleMute, isPlaying, onVisibility
     e.stopPropagation();
     router.push(`/post/${post.id}`);
   }
+
+  const handleLike = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newLikedState = !isLiked;
+    const newLikeCount = newLikedState ? likeCount + 1 : likeCount - 1;
+    
+    setIsLiked(newLikedState);
+    setLikeCount(newLikeCount);
+    likePost(post.id, !newLikedState); // Pass the *previous* liked state
+  };
 
   if (!videoUrl || post.media?.[0]?.type !== 'video') {
     return null;
@@ -114,8 +130,8 @@ export function VideoPost({ post, isMuted, onToggleMute, isPlaying, onVisibility
       </Button>
       
       <div className={cn(
-        "absolute bottom-6 px-4 left-0 right-20 z-10 text-white pointer-events-none transition-opacity duration-300",
-        isPlaying ? "opacity-0" : "opacity-100"
+        "absolute bottom-6 px-4 left-0 right-20 z-10 text-white pointer-events-auto transition-opacity duration-300",
+        isPlaying ? "opacity-0 pointer-events-none" : "opacity-100"
       )}>
         <div className="flex items-start gap-3">
           <Link
@@ -132,9 +148,9 @@ export function VideoPost({ post, isMuted, onToggleMute, isPlaying, onVisibility
             <Link
               href={`/profile/${post.authorId}`}
               onClick={(e) => e.stopPropagation()}
-              className="inline-block group pointer-events-auto hidden md:inline-block"
+              className="inline-block group pointer-events-auto"
             >
-              <p className="font-bold text-lg group-hover:underline">@{post.authorHandle}</p>
+              <p className="font-bold text-lg group-hover:underline hidden md:inline-block">@{post.authorHandle}</p>
             </Link>
             <p className="text-sm whitespace-pre-wrap">{post.content}</p>
           </div>
@@ -143,11 +159,11 @@ export function VideoPost({ post, isMuted, onToggleMute, isPlaying, onVisibility
 
       <div className="absolute bottom-6 right-4 z-10 flex flex-col gap-4">
         <div className="flex flex-col items-center gap-1 text-white">
-            <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-black/30 hover:bg-black/50 text-white hover:text-white pointer-events-auto" onClick={(e) => e.stopPropagation() /* TODO: wire up like action */}>
-                <Heart className="h-7 w-7" />
+            <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-black/30 hover:bg-black/50 text-white hover:text-white pointer-events-auto" onClick={handleLike}>
+                <Heart className={cn("h-7 w-7", isLiked && "fill-current text-red-500")} />
             </Button>
             <span className="text-sm font-bold">
-              {post.likes > 0 ? post.likes : <span className="hidden md:inline"></span>}
+              {likeCount > 0 ? likeCount : <span className="hidden md:inline"></span>}
             </span>
         </div>
         <div className="flex flex-col items-center gap-1 text-white">
