@@ -24,7 +24,7 @@ const EMOJIS = [
     '😀', '😂', '😍', '🤔', '😭', '🙏', '❤️', '🔥', '👍', '⚽️', '🥅', '🏆', '🎉', '👏', '🚀', '💯'
 ];
 
-export function CreatePost({ onPost }: { onPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null }) => Promise<void> }) {
+export function CreatePost({ onPost, communityId }: { onPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null, communityId?: string }) => Promise<void>, communityId?: string }) {
   const { user } = useAuth();
   const [text, setText] = useState("");
   const [media, setMedia] = useState<Media[]>([]);
@@ -108,7 +108,7 @@ export function CreatePost({ onPost }: { onPost: (data: { text: string; media: M
     }
 
     try {
-        await onPost({ text, media, poll: pollData, location });
+        await onPost({ text, media, poll: pollData, location, communityId });
         
         // Clean up object URLs after successful post
         media.forEach(m => URL.revokeObjectURL(m.previewUrl));

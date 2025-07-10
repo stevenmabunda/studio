@@ -1,9 +1,12 @@
 'use server';
 
 import { db, storage } from '@/lib/firebase/config';
-import { collection, addDoc, serverTimestamp, getDocs, query, orderBy, type Timestamp, doc, runTransaction, increment, collectionGroup } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDocs, query, orderBy, type Timestamp, doc, runTransaction, increment, collectionGroup, getDoc, where, setDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { z } from 'zod';
+import type { PostType } from '@/lib/data';
+import { formatTimestamp } from '@/lib/utils';
+
 
 const CreateCommunitySchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters.').max(50, 'Name must be 50 characters or less.'),
@@ -146,4 +149,51 @@ export async function toggleCommunityMembership(
     console.error("Error toggling community membership:", error);
     return { success: false };
   }
+}
+
+export async function getCommunityDetails(communityId: string): Promise<Community | null> {
+    if (!db) return null;
+    const communityRef = doc(db, 'communities', communityId);
+    const docSnap = await getDoc(communityRef);
+
+    if (docSnap.exists()) {
+        const data = docSnap.data();
+        return {
+            id: docSnap.id,
+            name: data.name,
+            description: data.description,
+            bannerUrl: data.bannerUrl,
+            memberCount: data.memberCount,
+        } as Community;
+    } else {
+        return null;
+    }
+}
+
+export async function getCommunityPosts(communityId: string): Promise<PostType[]> {
+    if (!db) return [];
+    
+    const postsRef = collection(db, 'posts');
+    const q = query(postsRef, where('communityId', '==', communityId), orderBy('createdAt', 'desc'));
+    
+    const querySnapshot = await getDocs(q);
+    
+    return querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        const createdAt = (data.createdAt as Timestamp)?.toDate();
+        return {
+            id: doc.id,
+            authorId: data.authorId,
+            authorName: data.authorName,
+            authorHandle: data.authorHandle,
+            authorAvatar: data.authorAvatar,
+            content: data.content,
+            comments: data.comments,
+            reposts: data.reposts,
+            likes: data.likes,
+            media: data.media,
+            poll: data.poll,
+            timestamp: createdAt ? formatTimestamp(createdAt) : 'now',
+        } as PostType;
+    });
 }

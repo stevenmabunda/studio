@@ -14,7 +14,7 @@ import { extractPostTopics } from '@/ai/flows/extract-post-topics';
 
 type PostContextType = {
   posts: PostType[];
-  addPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null }) => Promise<void>;
+  addPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null, communityId?: string }) => Promise<void>;
   editPost: (postId: string, data: { text:string }) => Promise<void>;
   deletePost: (postId: string) => Promise<void>;
   addVote: (postId: string, choiceIndex: number) => Promise<void>;
@@ -150,11 +150,12 @@ export function PostProvider({ children }: { children: ReactNode }) {
                     location: data.location,
                     media: data.media,
                     poll: data.poll,
+                    communityId: data.communityId,
                     timestamp: createdAt ? formatTimestamp(createdAt) : 'now',
                 } as PostType;
             })
-            // Filter out bot posts from the main feed
-            .filter(post => post.authorId !== 'bholo-bot');
+            // Filter out bot posts and community posts from the main feed
+            .filter(post => post.authorId !== 'bholo-bot' && !post.communityId);
     
             setPosts(postsData);
 
@@ -176,7 +177,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
     fetchPostsAndBookmarks();
   }, [user]);
 
-  const addPost = async ({ text, media, poll, location }: { text: string; media: Media[]; poll?: PostType['poll'], location?: string | null }) => {
+  const addPost = async ({ text, media, poll, location, communityId }: { text: string; media: Media[]; poll?: PostType['poll'], location?: string | null, communityId?: string }) => {
     if (!user || !db || !storage) {
         throw new Error("Cannot add post: user not logged in or Firebase not configured.");
     }
@@ -187,15 +188,8 @@ export function PostProvider({ children }: { children: ReactNode }) {
             const fileName = `${user.uid}-${Date.now()}-${m.file.name}`;
             const storagePath = `posts/${user.uid}/${fileName}`;
             const storageRef = ref(storage, storagePath);
-
-            console.log(`Attempting to upload file: ${fileName} to ${storagePath}`);
             const snapshot = await uploadBytes(storageRef, m.file);
-            console.log(`Upload complete for file: ${fileName}`);
-
-            console.log(`Attempting to get download URL for file: ${fileName}`);
             const downloadURL = await getDownloadURL(snapshot.ref);
-            console.log(`Download URL obtained for file: ${fileName}`);
-
             mediaUrls.push({ url: downloadURL, type: m.type, hint: 'user uploaded content' });
         }
 
@@ -219,6 +213,9 @@ export function PostProvider({ children }: { children: ReactNode }) {
         if (location) {
             postData.location = location;
         }
+        if (communityId) {
+            postData.communityId = communityId;
+        }
         
         const docRef = await addDoc(collection(db, "posts"), postData);
         
@@ -237,9 +234,13 @@ export function PostProvider({ children }: { children: ReactNode }) {
             media: mediaUrls,
             poll: postData.poll,
             location: postData.location,
+            communityId: postData.communityId,
         };
-
-        setPosts((prevPosts) => [newPostForState, ...prevPosts]);
+        
+        // Only add to the global feed if it's not a community post
+        if (!communityId) {
+            setPosts((prevPosts) => [newPostForState, ...prevPosts]);
+        }
         
         if (text) {
             extractPostTopics({ content: text })

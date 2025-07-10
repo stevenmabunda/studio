@@ -11,6 +11,7 @@ export type PostType = {
   likes: number;
   views?: number;
   location?: string;
+  communityId?: string;
   media?: Array<{
     url: string;
     type: 'image' | 'video';

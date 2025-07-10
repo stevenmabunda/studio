@@ -10,6 +10,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
 import { JoinCommunityButton } from "@/components/join-community-button";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 function CommunityCardSkeleton() {
     return (
@@ -95,29 +97,33 @@ export default function CommunitiesPage() {
         ) : communities.length > 0 ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {communities.map((community) => (
-                <Card key={community.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                <div className="relative h-28 w-full">
-                    <Image
-                    src={community.bannerUrl}
-                    alt={`${community.name} banner`}
-                    layout="fill"
-                    objectFit="cover"
-                    data-ai-hint="stadium crowd"
-                    />
-                </div>
-                <CardContent className="p-4">
-                    <h2 className="text-lg font-bold truncate">{community.name}</h2>
-                    <div className="flex items-center text-sm text-muted-foreground mt-1">
-                    <Users className="h-4 w-4 mr-1" />
-                    <span>{community.memberCount.toLocaleString()} {community.memberCount === 1 ? 'member' : 'members'}</span>
-                    </div>
-                     <JoinCommunityButton
-                        communityId={community.id}
-                        isMember={joinedCommunityIds.has(community.id)}
-                        onToggleMembership={handleMembershipChange}
-                     />
-                </CardContent>
+              <Link key={community.id} href={`/communities/${community.id}`} className="block">
+                <Card className="overflow-hidden h-full hover:shadow-lg transition-shadow duration-300 flex flex-col">
+                  <div className="relative h-28 w-full">
+                      <Image
+                      src={community.bannerUrl}
+                      alt={`${community.name} banner`}
+                      layout="fill"
+                      objectFit="cover"
+                      data-ai-hint="stadium crowd"
+                      />
+                  </div>
+                  <CardContent className="p-4 flex flex-col flex-grow">
+                      <h2 className="text-lg font-bold truncate">{community.name}</h2>
+                      <div className="flex items-center text-sm text-muted-foreground mt-1">
+                      <Users className="h-4 w-4 mr-1" />
+                      <span>{community.memberCount.toLocaleString()} {community.memberCount === 1 ? 'member' : 'members'}</span>
+                      </div>
+                      <div className="mt-auto pt-4">
+                        <JoinCommunityButton
+                            communityId={community.id}
+                            isMember={joinedCommunityIds.has(community.id)}
+                            onToggleMembership={handleMembershipChange}
+                        />
+                      </div>
+                  </CardContent>
                 </Card>
+              </Link>
             ))}
             </div>
         ) : (
