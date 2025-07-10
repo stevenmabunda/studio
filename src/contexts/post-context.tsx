@@ -184,11 +184,17 @@ export function PostProvider({ children }: { children: ReactNode }) {
         const mediaUrls = [];
         for (const m of media) {
             const fileName = `${user.uid}-${Date.now()}-${m.file.name}`;
-            const storageRef = ref(storage, `posts/${user.uid}/${fileName}`);
-            
+            const storagePath = `posts/${user.uid}/${fileName}`;
+            const storageRef = ref(storage, storagePath);
+
+            console.log(`Attempting to upload file: ${fileName} to ${storagePath}`);
             const snapshot = await uploadBytes(storageRef, m.file);
+            console.log(`Upload complete for file: ${fileName}`);
+
+            console.log(`Attempting to get download URL for file: ${fileName}`);
             const downloadURL = await getDownloadURL(snapshot.ref);
-            
+            console.log(`Download URL obtained for file: ${fileName}`);
+
             mediaUrls.push({ url: downloadURL, type: m.type, hint: 'user uploaded content' });
         }
 

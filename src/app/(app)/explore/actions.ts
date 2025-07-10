@@ -9,6 +9,8 @@ import { db } from '@/lib/firebase/config';
 import { collection, query, where, getDocs, Timestamp, orderBy } from 'firebase/firestore';
 
 export async function getTrendingTopics(
+  // @ts-ignore - next doesn't like passing objects with optional props through server actions
+
   input: { numberOfTopics?: number } 
 ): Promise<GenerateTrendingTopicsOutput> {
   if (!db) {
@@ -73,5 +75,21 @@ export async function getTrendingTopics(
   }
 
   // 6. Generate headlines from these topics
-  return await generateTrendingTopics({ topics: topicsToGenerate });
+  const maxRetries = 3;
+  const retryDelayMs = 1000; // 1 second
+  let lastError: any = null;
+
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await generateTrendingTopics({ topics: topicsToGenerate });
+    } catch (error) {
+      lastError = error;
+      console.error(`Attempt ${i + 1} failed to generate trending topics:`, error);
+      if (i < maxRetries - 1) {
+        await new Promise(resolve => setTimeout(resolve, retryDelayMs));
+      }
+    }
+  }
+
+  throw new Error(`Failed to generate trending topics after ${maxRetries} retries: ${lastError}`);
 }

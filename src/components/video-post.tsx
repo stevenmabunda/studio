@@ -7,7 +7,6 @@ import { useRef, useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Heart, MessageCircle, Repeat, Share2, Volume2, VolumeX, Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { useRouter } from 'next/navigation';
 import { usePosts } from '@/contexts/post-context';
 
@@ -129,31 +128,16 @@ export function VideoPost({ post, isMuted, onToggleMute, isPlaying, onVisibility
         {isMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
       </Button>
       
-      <div className={cn(
-        "absolute bottom-6 px-4 left-0 right-20 z-10 text-white pointer-events-auto transition-opacity duration-300",
-        isPlaying ? "opacity-0 pointer-events-none" : "opacity-100"
-      )}>
-        <div className="flex items-start gap-3">
+      <div className="absolute bottom-6 px-4 left-0 right-20 z-10 text-white pointer-events-auto">
+        <div className="min-w-0">
           <Link
             href={`/profile/${post.authorId}`}
             onClick={(e) => e.stopPropagation()}
-            className="pointer-events-auto hidden md:block flex-shrink-0"
+            className="inline-block group pointer-events-auto"
           >
-            <Avatar className="h-10 w-10 border-2 border-white">
-              <AvatarImage src={post.authorAvatar} data-ai-hint="user avatar" />
-              <AvatarFallback>{post.authorName.charAt(0)}</AvatarFallback>
-            </Avatar>
+            <p className="font-bold text-lg group-hover:underline">@{post.authorHandle}</p>
           </Link>
-          <div className="min-w-0">
-            <Link
-              href={`/profile/${post.authorId}`}
-              onClick={(e) => e.stopPropagation()}
-              className="inline-block group pointer-events-auto"
-            >
-              <p className="font-bold text-lg group-hover:underline hidden md:inline-block">@{post.authorHandle}</p>
-            </Link>
-            <p className="text-sm whitespace-pre-wrap">{post.content}</p>
-          </div>
+          <p className="text-sm whitespace-pre-wrap">{post.content}</p>
         </div>
       </div>
 
