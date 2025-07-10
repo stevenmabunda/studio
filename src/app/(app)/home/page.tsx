@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { Post } from '@/components/post';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { usePosts } from '@/contexts/post-context';
@@ -15,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { VideoPost } from '@/components/video-post';
+import useEmblaCarousel from 'embla-carousel-react';
 
 function MatchCardSkeleton() {
   return (
@@ -44,11 +45,37 @@ export default function HomePage() {
   const [liveMatches, setLiveMatches] = useState<MatchType[]>([]);
   const [upcomingMatches, setUpcomingMatches] = useState<MatchType[]>([]);
   const [matchesLoading, setMatchesLoading] = useState(true);
+  const [isMuted, setIsMuted] = useState(true);
+  const [activeVideoIndex, setActiveVideoIndex] = useState(0);
+
+  const [emblaRef, emblaApi] = useEmblaCarousel({
+    axis: 'y',
+    loop: true,
+  });
 
   const videoPosts = useMemo(
     () => posts.filter(post => post.media?.some(m => m.type === 'video')),
     [posts]
   );
+  
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
+    setActiveVideoIndex(emblaApi.selectedScrollSnap());
+  }, [emblaApi]);
+
+  useEffect(() => {
+    if (emblaApi) {
+      emblaApi.on('select', onSelect);
+      // Set initial index
+      onSelect();
+    }
+    return () => {
+      if (emblaApi) {
+        emblaApi.off('select', onSelect);
+      }
+    };
+  }, [emblaApi, onSelect]);
+
 
   useEffect(() => {
     const fetchMatches = async () => {
@@ -136,16 +163,21 @@ export default function HomePage() {
             <DiscoverHeadlines />
           </TabsContent>
            <TabsContent value="video" className="h-full bg-black">
-             <div className="h-[calc(100vh-160px)] md:h-[calc(100vh-110px)]">
+             <div className="h-[calc(100vh-160px)] md:h-[calc(100vh-110px)] embla" ref={emblaRef}>
               {postsLoading ? (
                 <div className="flex items-center justify-center h-full">
                   <PostSkeleton />
                 </div>
               ) : videoPosts.length > 0 ? (
-                <div className="h-full w-full snap-y snap-mandatory overflow-y-auto no-scrollbar">
-                  {videoPosts.map((post) => (
-                    <div key={post.id} className="h-full w-full flex-shrink-0 snap-center">
-                        <VideoPost post={post} />
+                <div className="h-full w-full embla__container">
+                  {videoPosts.map((post, index) => (
+                    <div key={post.id} className="h-full w-full embla__slide">
+                      <VideoPost 
+                        post={post}
+                        isMuted={isMuted}
+                        onToggleMute={() => setIsMuted(prev => !prev)}
+                        isActive={index === activeVideoIndex}
+                      />
                     </div>
                   ))}
                 </div>
