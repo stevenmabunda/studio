@@ -50,7 +50,7 @@ export default function HomePage() {
 
   const [emblaRef, emblaApi] = useEmblaCarousel({
     axis: 'y',
-    loop: true,
+    loop: false,
   });
 
   const videoPosts = useMemo(
