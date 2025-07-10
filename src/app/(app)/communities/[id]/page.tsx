@@ -15,6 +15,7 @@ import { PostSkeleton } from '@/components/post-skeleton';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Users } from 'lucide-react';
+import { CommunityMembersDialog } from '@/components/community-members-dialog';
 
 export default function CommunityPage() {
     const { user } = useAuth();
@@ -39,7 +40,13 @@ export default function CommunityPage() {
                 setCommunity(details);
                 // Now fetch posts
                 const communityPosts = await getCommunityPosts(communityId);
-                setPosts(communityPosts);
+                // Sort posts client-side
+                const sortedPosts = communityPosts.sort((a, b) => {
+                    const dateA = a.createdAt ? a.createdAt.toDate().getTime() : 0;
+                    const dateB = b.createdAt ? b.createdAt.toDate().getTime() : 0;
+                    return dateB - dateA;
+                });
+                setPosts(sortedPosts);
             } else {
                 toast({ variant: 'destructive', description: "Community not found." });
                 router.push('/communities');
@@ -60,13 +67,13 @@ export default function CommunityPage() {
     const handlePost = async (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null }) => {
         if (!communityId) return;
         try {
-            await addPost({ ...data, communityId });
-            toast({ description: "Your post has been published in the community!" });
-            // Refresh posts after adding a new one
-            setPostsLoading(true);
-            const newPosts = await getCommunityPosts(communityId);
-            setPosts(newPosts);
-            setPostsLoading(false);
+            const newPost = await addPost({ ...data, communityId });
+            if (newPost) {
+                setPosts(prevPosts => [newPost, ...prevPosts]);
+                toast({ description: "Your post has been published in the community!" });
+            } else {
+                 toast({ variant: 'destructive', description: "Something went wrong. Please try again." });
+            }
         } catch (error) {
             console.error("Failed to create community post:", error);
             toast({ variant: 'destructive', description: "Something went wrong. Please try again." });
@@ -123,10 +130,12 @@ export default function CommunityPage() {
             <div className="p-4 border-b">
                  <h2 className="text-2xl font-bold">{community.name}</h2>
                  <p className="text-muted-foreground mt-1">{community.description}</p>
-                 <div className="flex items-center text-sm text-muted-foreground mt-2">
-                    <Users className="h-4 w-4 mr-1" />
-                    <span>{community.memberCount.toLocaleString()} {community.memberCount === 1 ? 'member' : 'members'}</span>
-                 </div>
+                 <CommunityMembersDialog communityId={communityId}>
+                     <div className="flex items-center text-sm text-muted-foreground mt-2 cursor-pointer hover:underline">
+                        <Users className="h-4 w-4 mr-1" />
+                        <span>{community.memberCount.toLocaleString()} {community.memberCount === 1 ? 'member' : 'members'}</span>
+                     </div>
+                 </CommunityMembersDialog>
             </div>
 
             <CreatePost onPost={handlePost} communityId={communityId} />

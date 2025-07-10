@@ -14,7 +14,7 @@ import { extractPostTopics } from '@/ai/flows/extract-post-topics';
 
 type PostContextType = {
   posts: PostType[];
-  addPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null, communityId?: string }) => Promise<void>;
+  addPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null, communityId?: string }) => Promise<PostType | null>;
   editPost: (postId: string, data: { text:string }) => Promise<void>;
   deletePost: (postId: string) => Promise<void>;
   addVote: (postId: string, choiceIndex: number) => Promise<void>;
@@ -152,6 +152,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
                     poll: data.poll,
                     communityId: data.communityId,
                     timestamp: createdAt ? formatTimestamp(createdAt) : 'now',
+                    createdAt: data.createdAt as Timestamp
                 } as PostType;
             })
             // Filter out bot posts and community posts from the main feed
@@ -177,7 +178,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
     fetchPostsAndBookmarks();
   }, [user]);
 
-  const addPost = async ({ text, media, poll, location, communityId }: { text: string; media: Media[]; poll?: PostType['poll'], location?: string | null, communityId?: string }) => {
+  const addPost = async ({ text, media, poll, location, communityId }: { text: string; media: Media[]; poll?: PostType['poll'], location?: string | null, communityId?: string }): Promise<PostType | null> => {
     if (!user || !db || !storage) {
         throw new Error("Cannot add post: user not logged in or Firebase not configured.");
     }
@@ -235,6 +236,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
             poll: postData.poll,
             location: postData.location,
             communityId: postData.communityId,
+            createdAt: serverTimestamp() as unknown as Timestamp,
         };
         
         // Only add to the global feed if it's not a community post
@@ -258,6 +260,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
                     console.error("Background topic extraction failed:", error);
                 });
         }
+        return newPostForState;
     } catch (error) {
         console.error("Failed to create post:", error);
         // Re-throw the error to be caught by the calling component

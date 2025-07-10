@@ -1,3 +1,5 @@
+import { type Timestamp } from 'firebase/firestore';
+
 export type PostType = {
   id: string;
   authorId: string;
@@ -12,6 +14,7 @@ export type PostType = {
   views?: number;
   location?: string;
   communityId?: string;
+  createdAt?: Timestamp;
   media?: Array<{
     url: string;
     type: 'image' | 'video';

@@ -1,3 +1,4 @@
+
 'use server';
 
 import { db, storage } from '@/lib/firebase/config';
@@ -20,6 +21,13 @@ export type Community = {
   bannerUrl: string;
   memberCount: number;
 };
+
+export type CommunityMember = {
+    uid: string;
+    displayName: string;
+    handle: string;
+    photoURL: string;
+}
 
 export async function createCommunity(
   userId: string,
@@ -57,7 +65,7 @@ export async function createCommunity(
     });
     
     // Automatically add the creator to the members subcollection
-    const memberRef = doc(db, 'users', userId, 'joinedCommunities', communityDocRef.id);
+    const memberRef = doc(db, 'communities', communityDocRef.id, 'members', userId);
     await setDoc(memberRef, { joinedAt: serverTimestamp() });
 
 
@@ -104,9 +112,20 @@ export async function getJoinedCommunityIds(userId: string): Promise<string[]> {
   if (!db || !userId) {
     return [];
   }
-  const joinedCommunitiesRef = collection(db, 'users', userId, 'joinedCommunities');
-  const snapshot = await getDocs(joinedCommunitiesRef);
-  return snapshot.docs.map(doc => doc.id);
+  const q = query(collectionGroup(db, 'members'), where('__name__', '>', `communities/`));
+  const snapshot = await getDocs(q);
+  
+  const communityIds = new Set<string>();
+  snapshot.forEach(doc => {
+      if (doc.ref.path.endsWith(`/${userId}`)) {
+        const parts = doc.ref.path.split('/');
+        if (parts.length >= 2) {
+            communityIds.add(parts[1]);
+        }
+      }
+  });
+
+  return Array.from(communityIds);
 }
 
 
@@ -120,7 +139,7 @@ export async function toggleCommunityMembership(
   }
 
   const communityRef = doc(db, 'communities', communityId);
-  const userMembershipRef = doc(db, 'users', userId, 'joinedCommunities', communityId);
+  const memberRef = doc(db, 'communities', communityId, 'members', userId);
 
   try {
     let newMemberCount = 0;
@@ -136,12 +155,12 @@ export async function toggleCommunityMembership(
             // Leave community
             newMemberCount = Math.max(0, currentMemberCount - 1);
             transaction.update(communityRef, { memberCount: increment(-1) });
-            transaction.delete(userMembershipRef);
+            transaction.delete(memberRef);
         } else {
             // Join community
             newMemberCount = currentMemberCount + 1;
             transaction.update(communityRef, { memberCount: increment(1) });
-            transaction.set(userMembershipRef, { joinedAt: serverTimestamp() });
+            transaction.set(memberRef, { joinedAt: serverTimestamp() });
         }
     });
     return { success: true, newMemberCount };
@@ -174,13 +193,12 @@ export async function getCommunityPosts(communityId: string): Promise<PostType[]
     if (!db) return [];
     
     const postsRef = collection(db, 'posts');
-    const q = query(postsRef, where('communityId', '==', communityId), orderBy('createdAt', 'desc'));
+    const q = query(postsRef, where('communityId', '==', communityId));
     
     const querySnapshot = await getDocs(q);
     
     return querySnapshot.docs.map(doc => {
         const data = doc.data();
-        const createdAt = (data.createdAt as Timestamp)?.toDate();
         return {
             id: doc.id,
             authorId: data.authorId,
@@ -193,7 +211,37 @@ export async function getCommunityPosts(communityId: string): Promise<PostType[]
             likes: data.likes,
             media: data.media,
             poll: data.poll,
-            timestamp: createdAt ? formatTimestamp(createdAt) : 'now',
+            timestamp: 'now', // Placeholder, sorting happens on client
+            createdAt: data.createdAt as Timestamp,
         } as PostType;
     });
+}
+
+export async function getCommunityMembers(communityId: string): Promise<CommunityMember[]> {
+    if (!db) return [];
+
+    const membersRef = collection(db, 'communities', communityId, 'members');
+    const memberSnapshots = await getDocs(membersRef);
+
+    if (memberSnapshots.empty) {
+        return [];
+    }
+
+    const memberIds = memberSnapshots.docs.map(doc => doc.id);
+    
+    // Fetch user profiles for each member
+    const userPromises = memberIds.map(id => getDoc(doc(db, 'users', id)));
+    const userDocs = await Promise.all(userPromises);
+
+    return userDocs
+        .filter(doc => doc.exists())
+        .map(doc => {
+            const data = doc.data()!;
+            return {
+                uid: doc.id,
+                displayName: data.displayName || 'Unknown User',
+                handle: data.handle || 'user',
+                photoURL: data.photoURL || 'https://placehold.co/40x40.png',
+            };
+        });
 }
