@@ -28,36 +28,18 @@ export function VideoPost({ post, isMuted, onToggleMute, isPlaying, onPlay, onPa
 
   useEffect(() => {
     const videoElement = videoRef.current;
-    if (!videoElement) return;
-  
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          onPlay(post.id);
+    if (videoElement) {
+        if (isPlaying) {
+            videoElement.play().catch(error => {
+                console.error("Video play failed:", error);
+                // If autoplay fails, we should pause the video state
+                onPause(post.id);
+            });
         } else {
-          onPause(post.id);
+            videoElement.pause();
         }
-      },
-      { threshold: 0.5 } // Play when at least 50% of the video is visible
-    );
-  
-    observer.observe(videoElement);
-  
-    return () => {
-      if (videoElement) {
-        observer.unobserve(videoElement);
-      }
-    };
-  }, [post.id, onPlay, onPause]);
-
-  useEffect(() => {
-    const videoElement = videoRef.current;
-    if (isPlaying) {
-      videoElement?.play().catch(() => onPause(post.id));
-    } else {
-      videoElement?.pause();
     }
-  }, [isPlaying, onPause, post.id]);
+  }, [isPlaying, post.id, onPause]);
 
   const togglePlay = () => {
     if (isPlaying) {
