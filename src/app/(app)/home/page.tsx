@@ -14,6 +14,7 @@ import { getLiveMatches, getUpcomingMatches } from './actions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { VideoPost } from '@/components/video-post';
 
 function MatchCardSkeleton() {
   return (
@@ -134,17 +135,22 @@ export default function HomePage() {
           <TabsContent value="discover" className="h-full">
             <DiscoverHeadlines />
           </TabsContent>
-          <TabsContent value="video" className="h-full">
-             <div className="divide-y divide-border">
+           <TabsContent value="video" className="h-full bg-black">
+             <div className="h-[calc(100vh-160px)] md:h-[calc(100vh-110px)]">
               {postsLoading ? (
-                <>
+                <div className="flex items-center justify-center h-full">
                   <PostSkeleton />
-                  <PostSkeleton />
-                </>
+                </div>
               ) : videoPosts.length > 0 ? (
-                videoPosts.map((post) => <Post key={post.id} {...post} />)
+                <div className="h-full w-full snap-y snap-mandatory overflow-y-auto no-scrollbar">
+                  {videoPosts.map((post) => (
+                    <div key={post.id} className="h-full w-full flex-shrink-0 snap-center">
+                        <VideoPost post={post} />
+                    </div>
+                  ))}
+                </div>
               ) : (
-                <div className="p-8 text-center text-muted-foreground">
+                <div className="p-8 text-center text-muted-foreground h-full flex flex-col justify-center items-center">
                   <h2 className="text-xl font-bold">No videos yet</h2>
                   <p>When users post videos, they'll appear here.</p>
                 </div>
