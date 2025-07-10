@@ -14,7 +14,7 @@ export type PostType = {
   views?: number;
   location?: string;
   communityId?: string;
-  createdAt?: Timestamp;
+  createdAt?: string; // Changed to string to be serializable
   media?: Array<{
     url: string;
     type: 'image' | 'video';

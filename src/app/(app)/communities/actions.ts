@@ -211,13 +211,13 @@ export async function getCommunityPosts(communityId: string): Promise<PostType[]
     if (!db) return [];
     
     const postsRef = collection(db, 'posts');
-    // Remove orderBy to avoid needing a composite index. Sorting is handled client-side.
     const q = query(postsRef, where('communityId', '==', communityId));
     
     const querySnapshot = await getDocs(q);
     
     return querySnapshot.docs.map(doc => {
         const data = doc.data();
+        const createdAt = data.createdAt as Timestamp | undefined;
         return {
             id: doc.id,
             authorId: data.authorId,
@@ -231,7 +231,7 @@ export async function getCommunityPosts(communityId: string): Promise<PostType[]
             media: data.media,
             poll: data.poll,
             timestamp: 'now', // Placeholder, sorting happens on client
-            createdAt: data.createdAt as Timestamp,
+            createdAt: createdAt?.toDate().toISOString(), // Convert to ISO string
         } as PostType;
     });
 }

@@ -38,12 +38,10 @@ export default function CommunityPage() {
             const details = await getCommunityDetails(communityId);
             if (details) {
                 setCommunity(details);
-                // Now fetch posts
                 const communityPosts = await getCommunityPosts(communityId);
-                // Sort posts client-side
                 const sortedPosts = communityPosts.sort((a, b) => {
-                    const dateA = a.createdAt ? a.createdAt.toDate().getTime() : 0;
-                    const dateB = b.createdAt ? b.createdAt.toDate().getTime() : 0;
+                    const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                    const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
                     return dateB - dateA;
                 });
                 setPosts(sortedPosts);
