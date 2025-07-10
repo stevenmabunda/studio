@@ -16,7 +16,7 @@ const navItems = [
   { href: '/home', icon: Home, label: 'Home' },
   { href: '/explore', icon: Search, label: 'Explore' },
   { href: 'POST_ACTION', icon: Plus, label: 'Post' },
-  { href: '/communities', icon: Users, label: 'Communities' },
+  { href: '/tribes', icon: Users, label: 'Tribes' },
   { href: '/messages', icon: Hash, label: 'Messages', isHidden: true }, // Example for a hidden item
 ];
 

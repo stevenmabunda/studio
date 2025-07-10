@@ -14,8 +14,8 @@ import Link from 'next/link';
 import { PostSkeleton } from '@/components/post-skeleton';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { JoinCommunityButton } from '@/components/join-community-button';
-import { getJoinedCommunityIds, type Community } from '@/app/(app)/communities/actions';
+import { JoinTribeButton } from '@/components/join-tribe-button';
+import { getJoinedTribeIds, type Tribe } from '@/app/(app)/tribes/actions';
 import { useAuth } from '@/hooks/use-auth';
 import Image from 'next/image';
 
@@ -34,7 +34,7 @@ function UserResultSkeleton() {
     );
 }
 
-function CommunityResultSkeleton() {
+function TribeResultSkeleton() {
     return (
         <div className="flex items-center justify-between p-4">
             <div className="flex items-center gap-4">
@@ -59,11 +59,11 @@ export default function SearchPage() {
   const [results, setResults] = useState<SearchResults | null>(null);
   const [loading, setLoading] = useState(true);
   
-  const [joinedCommunityIds, setJoinedCommunityIds] = useState<Set<string>>(new Set());
+  const [joinedTribeIds, setJoinedTribeIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (user) {
-      getJoinedCommunityIds(user.uid).then(ids => setJoinedCommunityIds(new Set(ids)));
+      getJoinedTribeIds(user.uid).then(ids => setJoinedTribeIds(new Set(ids)));
     }
   }, [user]);
 
@@ -75,7 +75,7 @@ export default function SearchPage() {
         setResults(searchResults);
         setLoading(false);
       } else {
-        setResults({ users: [], communities: [], posts: [] });
+        setResults({ users: [], tribes: [], posts: [] });
         setLoading(false);
       }
     };
@@ -91,13 +91,13 @@ export default function SearchPage() {
     }
   };
 
-  const handleMembershipChange = (communityId: string, isMember: boolean) => {
-    setJoinedCommunityIds(prev => {
+  const handleMembershipChange = (tribeId: string, isMember: boolean) => {
+    setJoinedTribeIds(prev => {
       const newSet = new Set(prev);
       if (isMember) {
-        newSet.add(communityId);
+        newSet.add(tribeId);
       } else {
-        newSet.delete(communityId);
+        newSet.delete(tribeId);
       }
       return newSet;
     });
@@ -105,7 +105,7 @@ export default function SearchPage() {
 
   const hasResults = useMemo(() => {
     if (!results) return false;
-    return results.users.length > 0 || results.communities.length > 0 || results.posts.length > 0;
+    return results.users.length > 0 || results.tribes.length > 0 || results.posts.length > 0;
   }, [results]);
 
   return (
@@ -131,14 +131,14 @@ export default function SearchPage() {
           <TabsTrigger value="top" className="flex-1 rounded-none py-3 text-sm font-semibold text-muted-foreground data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none">Top</TabsTrigger>
           <TabsTrigger value="users" className="flex-1 rounded-none py-3 text-sm font-semibold text-muted-foreground data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none">Users</TabsTrigger>
           <TabsTrigger value="posts" className="flex-1 rounded-none py-3 text-sm font-semibold text-muted-foreground data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none">Posts</TabsTrigger>
-          <TabsTrigger value="communities" className="flex-1 rounded-none py-3 text-sm font-semibold text-muted-foreground data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none">Communities</TabsTrigger>
+          <TabsTrigger value="tribes" className="flex-1 rounded-none py-3 text-sm font-semibold text-muted-foreground data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none">Tribes</TabsTrigger>
         </TabsList>
         <main className="flex-1">
           {loading ? (
              <div className="divide-y divide-border">
                 <UserResultSkeleton />
                 <PostSkeleton />
-                <CommunityResultSkeleton />
+                <TribeResultSkeleton />
              </div>
           ) : !hasResults ? (
              <div className="p-8 text-center text-muted-foreground">
@@ -197,23 +197,23 @@ export default function SearchPage() {
                         {results?.posts.map(post => <Post key={post.id} {...post} />)}
                     </div>
                 </TabsContent>
-                <TabsContent value="communities">
+                <TabsContent value="tribes">
                      <div className="divide-y divide-border">
-                        {results?.communities.map(community => (
-                             <div key={community.id} className="p-4 hover:bg-accent/50">
+                        {results?.tribes.map(tribe => (
+                             <div key={tribe.id} className="p-4 hover:bg-accent/50">
                                 <div className="flex items-start justify-between gap-4">
-                                    <Link href={`/communities/${community.id}`} className="flex items-start gap-4 flex-1">
-                                        <Image src={community.bannerUrl} alt={community.name} width={64} height={64} className="rounded-lg object-cover h-16 w-16" />
+                                    <Link href={`/tribes/${tribe.id}`} className="flex items-start gap-4 flex-1">
+                                        <Image src={tribe.bannerUrl} alt={tribe.name} width={64} height={64} className="rounded-lg object-cover h-16 w-16" />
                                         <div className="flex-1">
-                                            <h3 className="font-bold hover:underline">{community.name}</h3>
-                                            <p className="text-sm text-muted-foreground line-clamp-2">{community.description}</p>
-                                            <p className="text-xs text-muted-foreground mt-1">{community.memberCount} members</p>
+                                            <h3 className="font-bold hover:underline">{tribe.name}</h3>
+                                            <p className="text-sm text-muted-foreground line-clamp-2">{tribe.description}</p>
+                                            <p className="text-xs text-muted-foreground mt-1">{tribe.memberCount} members</p>
                                         </div>
                                     </Link>
                                     <div className="w-28 flex-shrink-0">
-                                        <JoinCommunityButton
-                                            communityId={community.id}
-                                            isMember={joinedCommunityIds.has(community.id)}
+                                        <JoinTribeButton
+                                            tribeId={tribe.id}
+                                            isMember={joinedTribeIds.has(tribe.id)}
                                             onToggleMembership={handleMembershipChange}
                                         />
                                     </div>

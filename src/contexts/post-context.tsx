@@ -14,7 +14,7 @@ import { extractPostTopics } from '@/ai/flows/extract-post-topics';
 
 type PostContextType = {
   posts: PostType[];
-  addPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null, communityId?: string }) => Promise<PostType | null>;
+  addPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null, tribeId?: string }) => Promise<PostType | null>;
   editPost: (postId: string, data: { text:string }) => Promise<void>;
   deletePost: (postId: string) => Promise<void>;
   addVote: (postId: string, choiceIndex: number) => Promise<void>;
@@ -150,13 +150,13 @@ export function PostProvider({ children }: { children: ReactNode }) {
                     location: data.location,
                     media: data.media,
                     poll: data.poll,
-                    communityId: data.communityId,
+                    tribeId: data.tribeId,
                     timestamp: createdAt ? formatTimestamp(createdAt) : 'now',
                     createdAt: data.createdAt as Timestamp
                 } as PostType;
             })
-            // Filter out bot posts and community posts from the main feed
-            .filter(post => post.authorId !== 'bholo-bot' && !post.communityId);
+            // Filter out bot posts and tribe posts from the main feed
+            .filter(post => post.authorId !== 'bholo-bot' && !post.tribeId);
     
             setPosts(postsData);
 
@@ -178,7 +178,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
     fetchPostsAndBookmarks();
   }, [user]);
 
-  const addPost = async ({ text, media, poll, location, communityId }: { text: string; media: Media[]; poll?: PostType['poll'], location?: string | null, communityId?: string }): Promise<PostType | null> => {
+  const addPost = async ({ text, media, poll, location, tribeId }: { text: string; media: Media[]; poll?: PostType['poll'], location?: string | null, tribeId?: string }): Promise<PostType | null> => {
     if (!user || !db || !storage) {
         throw new Error("Cannot add post: user not logged in or Firebase not configured.");
     }
@@ -214,8 +214,8 @@ export function PostProvider({ children }: { children: ReactNode }) {
         if (location) {
             postData.location = location;
         }
-        if (communityId) {
-            postData.communityId = communityId;
+        if (tribeId) {
+            postData.tribeId = tribeId;
         }
         
         const docRef = await addDoc(collection(db, "posts"), postData);
@@ -235,12 +235,12 @@ export function PostProvider({ children }: { children: ReactNode }) {
             media: mediaUrls,
             poll: postData.poll,
             location: postData.location,
-            communityId: postData.communityId,
+            tribeId: postData.tribeId,
             createdAt: serverTimestamp() as unknown as Timestamp,
         };
         
-        // Only add to the global feed if it's not a community post
-        if (!communityId) {
+        // Only add to the global feed if it's not a tribe post
+        if (!tribeId) {
             setPosts((prevPosts) => [newPostForState, ...prevPosts]);
         }
         

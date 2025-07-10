@@ -36,7 +36,7 @@ import type { PostType } from '@/lib/data';
 const navItems = [
   { href: '/home', label: 'Home', icon: Home },
   { href: '/explore', label: 'Explore', icon: Hash },
-  { href: '/communities', label: 'Communities', icon: Users },
+  { href: '/tribes', label: 'Tribes', icon: Users },
   { href: '/notifications', label: 'Notifications', icon: Bell },
   { href: '/messages', label: 'Messages', icon: MessageSquare },
   { href: '/bookmarks', label: 'Bookmarks', icon: Bookmark },
@@ -93,12 +93,12 @@ export function SidebarNav() {
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton
                 asChild
-                isActive={pathname === item.href || (item.href === '/home' && pathname === '/')}
+                isActive={pathname.startsWith(item.href) && (item.href !== '/' || pathname === '/')}
                 className="text-lg h-14"
               >
                 <Link href={item.href}>
                   <item.icon className="h-7 w-7" />
-                  <span className={pathname === item.href ? 'font-bold' : 'font-normal'}>{item.label}</span>
+                  <span className={pathname.startsWith(item.href) ? 'font-bold' : 'font-normal'}>{item.label}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

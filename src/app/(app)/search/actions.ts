@@ -3,14 +3,14 @@
 
 import { db } from '@/lib/firebase/config';
 import { collection, query, where, getDocs, limit, orderBy, type Timestamp } from 'firebase/firestore';
-import type { Community } from '@/app/(app)/communities/actions';
+import type { Tribe } from '@/app/(app)/tribes/actions';
 import type { PostType } from '@/lib/data';
 import type { ProfileData } from '@/app/(app)/profile/actions';
 import { formatTimestamp } from '@/lib/utils';
 
 export type SearchResults = {
   users: ProfileData[];
-  communities: Community[];
+  tribes: Tribe[];
   posts: PostType[];
 };
 
@@ -19,7 +19,7 @@ export type SearchResults = {
 // For a real-world app, a dedicated search service like Algolia or Elasticsearch is recommended.
 export async function searchEverything(searchText: string): Promise<SearchResults> {
   if (!db || !searchText) {
-    return { users: [], communities: [], posts: [] };
+    return { users: [], tribes: [], posts: [] };
   }
 
   const normalizedQuery = searchText.toLowerCase();
@@ -41,9 +41,9 @@ export async function searchEverything(searchText: string): Promise<SearchResult
         limit(5)
       );
 
-    // Search Communities by name (case-sensitive "starts with")
-    const communitiesQuery = query(
-      collection(db, 'communities'),
+    // Search Tribes by name (case-sensitive "starts with")
+    const tribesQuery = query(
+      collection(db, 'tribes'),
       where('name', '>=', searchText),
       where('name', '<=', searchText + '\uf8ff'),
       limit(5)
@@ -55,10 +55,10 @@ export async function searchEverything(searchText: string): Promise<SearchResult
     const postsQuery = query(collection(db, 'posts'), orderBy('createdAt', 'desc'), limit(50));
     
     // Execute all queries in parallel
-    const [userByNameSnap, userByHandleSnap, communitySnap, postsSnap] = await Promise.all([
+    const [userByNameSnap, userByHandleSnap, tribeSnap, postsSnap] = await Promise.all([
       getDocs(usersByNameQuery),
       getDocs(usersByHandleQuery),
-      getDocs(communitiesQuery),
+      getDocs(tribesQuery),
       getDocs(postsQuery)
     ]);
 
@@ -103,13 +103,13 @@ export async function searchEverything(searchText: string): Promise<SearchResult
     });
 
 
-    const communities = communitySnap.docs.map(doc => ({
+    const tribes = tribeSnap.docs.map(doc => ({
         id: doc.id,
         name: doc.data().name,
         description: doc.data().description,
         bannerUrl: doc.data().bannerUrl,
         memberCount: doc.data().memberCount || 0,
-    } as Community));
+    } as Tribe));
 
     // Filter posts in-memory
     const posts = postsSnap.docs.map(doc => {
@@ -134,11 +134,11 @@ export async function searchEverything(searchText: string): Promise<SearchResult
 
     return {
       users: Array.from(usersMap.values()),
-      communities,
+      tribes,
       posts,
     };
   } catch (error) {
     console.error("Error during search:", error);
-    return { users: [], communities: [], posts: [] };
+    return { users: [], tribes: [], posts: [] };
   }
 }

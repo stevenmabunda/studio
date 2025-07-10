@@ -13,7 +13,7 @@ export type PostType = {
   likes: number;
   views?: number;
   location?: string;
-  communityId?: string;
+  tribeId?: string;
   createdAt?: string; // Changed to string to be serializable
   media?: Array<{
     url: string;
