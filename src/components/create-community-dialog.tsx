@@ -24,12 +24,14 @@ interface CreateCommunityDialogProps {
   children: React.ReactNode;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
+  onCommunityCreated?: () => void;
 }
 
 export function CreateCommunityDialog({
   children,
   isOpen,
   onOpenChange,
+  onCommunityCreated,
 }: CreateCommunityDialogProps) {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -65,6 +67,7 @@ export function CreateCommunityDialog({
       if (result.success) {
         toast({ description: 'Community created successfully!' });
         onOpenChange(false);
+        onCommunityCreated?.(); // Callback to refresh the list
         // Reset form state
         setProfilePicFile(null);
         setProfilePicPreview(null);
