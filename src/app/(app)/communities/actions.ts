@@ -120,15 +120,18 @@ export async function getJoinedCommunityIds(userId: string): Promise<string[]> {
   if (!db || !userId) {
     return [];
   }
-  const q = query(collectionGroup(db, 'members'), where('__name__', '>', `communities/`));
-  const snapshot = await getDocs(q);
+  // Query the entire 'members' collection group.
+  const membersQuery = query(collectionGroup(db, 'members'));
+  const snapshot = await getDocs(membersQuery);
   
   const communityIds = new Set<string>();
   snapshot.forEach(doc => {
-      if (doc.ref.path.endsWith(`/${userId}`)) {
-        const parts = doc.ref.path.split('/');
-        if (parts.length >= 2) {
-            communityIds.add(parts[1]);
+      // The document ID of a member doc is the userId.
+      if (doc.id === userId) {
+        // The parent of a member doc is the community doc.
+        const communityId = doc.ref.parent.parent?.id;
+        if (communityId) {
+            communityIds.add(communityId);
         }
       }
   });
@@ -208,6 +211,7 @@ export async function getCommunityPosts(communityId: string): Promise<PostType[]
     if (!db) return [];
     
     const postsRef = collection(db, 'posts');
+    // Remove orderBy to avoid needing a composite index. Sorting is handled client-side.
     const q = query(postsRef, where('communityId', '==', communityId));
     
     const querySnapshot = await getDocs(q);
