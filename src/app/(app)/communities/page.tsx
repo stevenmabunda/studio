@@ -1,13 +1,15 @@
 'use client';
 
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { PlusCircle, Users } from "lucide-react";
 import Image from "next/image";
 import { CreateCommunityDialog } from "@/components/create-community-dialog";
 import { useState, useEffect } from "react";
-import { getCommunities, type Community } from "./actions";
+import { getCommunities, type Community, getJoinedCommunityIds } from "./actions";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/hooks/use-auth";
+import { JoinCommunityButton } from "@/components/join-community-button";
+import { Button } from "@/components/ui/button";
 
 function CommunityCardSkeleton() {
     return (
@@ -23,26 +25,53 @@ function CommunityCardSkeleton() {
 }
 
 export default function CommunitiesPage() {
+  const { user } = useAuth();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [communities, setCommunities] = useState<Community[]>([]);
+  const [joinedCommunityIds, setJoinedCommunityIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchCommunities = async () => {
-        setLoading(true);
-        const fetchedCommunities = await getCommunities();
-        setCommunities(fetchedCommunities);
-        setLoading(false);
+  const fetchCommunities = async () => {
+    setLoading(true);
+    try {
+      const fetchedCommunities = await getCommunities();
+      setCommunities(fetchedCommunities);
+      if (user) {
+        const ids = await getJoinedCommunityIds(user.uid);
+        setJoinedCommunityIds(new Set(ids));
+      }
+    } catch (error) {
+      console.error("Failed to fetch communities data", error);
+    } finally {
+      setLoading(false);
     }
-    fetchCommunities();
-  }, []);
+  }
 
-  // When a community is created, we can re-fetch the list.
-  const onCommunityCreated = async () => {
-     setLoading(true);
-     const fetchedCommunities = await getCommunities();
-     setCommunities(fetchedCommunities);
-     setLoading(false);
+  useEffect(() => {
+    fetchCommunities();
+  }, [user]);
+
+  const onCommunityCreated = () => {
+     fetchCommunities();
+  }
+  
+  const handleMembershipChange = (communityId: string, isMember: boolean) => {
+    setJoinedCommunityIds(prev => {
+      const newSet = new Set(prev);
+      if (isMember) {
+        newSet.add(communityId);
+      } else {
+        newSet.delete(communityId);
+      }
+      return newSet;
+    });
+
+    setCommunities(prev => prev.map(c => {
+        if (c.id === communityId) {
+            return { ...c, memberCount: isMember ? c.memberCount + 1 : c.memberCount - 1 };
+        }
+        return c;
+    }));
   }
 
   return (
@@ -82,7 +111,11 @@ export default function CommunitiesPage() {
                     <Users className="h-4 w-4 mr-1" />
                     <span>{community.memberCount.toLocaleString()} {community.memberCount === 1 ? 'member' : 'members'}</span>
                     </div>
-                    <Button className="w-full mt-4">Join Community</Button>
+                     <JoinCommunityButton
+                        communityId={community.id}
+                        isMember={joinedCommunityIds.has(community.id)}
+                        onToggleMembership={handleMembershipChange}
+                     />
                 </CardContent>
                 </Card>
             ))}
