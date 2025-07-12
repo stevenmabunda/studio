@@ -7,7 +7,7 @@ import type { PostType } from '@/lib/data';
 import type { Media } from '@/components/create-post';
 import { useAuth } from '@/hooks/use-auth';
 import { db, storage } from '@/lib/firebase/config';
-import { collection, addDoc, serverTimestamp, getDocs, query, type Timestamp, doc, updateDoc, runTransaction, deleteDoc, orderBy, getDoc, setDoc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDocs, query, type Timestamp, doc, updateDoc, runTransaction, deleteDoc, orderBy, getDoc, setDoc, limit } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { formatTimestamp } from '@/lib/utils';
 import { extractPostTopics } from '@/ai/flows/extract-post-topics';
@@ -64,55 +64,60 @@ const seedPostsData = [
 ];
 
 async function seedDatabaseIfEmpty() {
-    if (!db) return;
-    const seedFlagRef = doc(db, 'posts', '--seed-post-1--');
-    const seedFlagDoc = await getDoc(seedFlagRef);
+    if (!db) return false;
+    
+    const postsCollectionRef = collection(db, 'posts');
+    const q = query(postsCollectionRef, limit(1));
+    const snapshot = await getDocs(q);
 
-    // If the first seed post doesn't exist, we seed the database.
-    if (!seedFlagDoc.exists()) {
-        console.log("No seed data found, populating database...");
-        const seedAuthor = {
-            uid: 'bholo-bot',
-            displayName: 'BHOLO Bot',
-            handle: 'bholobot',
-            photoURL: 'https://placehold.co/128x128.png',
+    // If there are any posts, don't seed.
+    if (!snapshot.empty) {
+        console.log("Database already contains posts, skipping seed.");
+        return false;
+    }
+
+    console.log("No posts found, populating database with seed data...");
+    const seedAuthor = {
+        uid: 'bholo-bot',
+        displayName: 'BHOLO Bot',
+        handle: 'bholobot',
+        photoURL: 'https://placehold.co/128x128.png',
+    };
+
+    for (const seed of seedPostsData) {
+        // Create a new document reference with an auto-generated ID
+        const postRef = doc(collection(db, 'posts')); 
+        const postData = {
+            authorId: seedAuthor.uid,
+            authorName: seedAuthor.displayName,
+            authorHandle: seedAuthor.handle,
+            authorAvatar: seedAuthor.photoURL,
+            content: seed.content,
+            createdAt: serverTimestamp(),
+            comments: seed.comments,
+            reposts: seed.reposts,
+            likes: seed.likes,
+            views: seed.views,
+            media: [],
         };
 
-        for (const seed of seedPostsData) {
-            const postRef = doc(db, 'posts', seed.id);
-            const postData = {
-                authorId: seedAuthor.uid,
-                authorName: seedAuthor.displayName,
-                authorHandle: seedAuthor.handle,
-                authorAvatar: seedAuthor.photoURL,
-                content: seed.content,
-                createdAt: serverTimestamp(),
-                comments: seed.comments,
-                reposts: seed.reposts,
-                likes: seed.likes,
-                views: seed.views,
-                media: [],
-            };
+        await setDoc(postRef, postData);
 
-            await setDoc(postRef, postData);
-
-            try {
-                const { topics } = await extractPostTopics({ content: seed.content });
-                const topicsCollectionRef = collection(db, 'topics');
-                for (const topic of topics) {
-                    await addDoc(topicsCollectionRef, {
-                        topic: topic.toLowerCase(),
-                        createdAt: serverTimestamp(),
-                    });
-                }
-            } catch (error) {
-                console.error("Failed to extract topics for seed post:", error);
+        try {
+            const { topics } = await extractPostTopics({ content: seed.content });
+            const topicsCollectionRef = collection(db, 'topics');
+            for (const topic of topics) {
+                await addDoc(topicsCollectionRef, {
+                    topic: topic.toLowerCase(),
+                    createdAt: serverTimestamp(),
+                });
             }
+        } catch (error) {
+            console.error("Failed to extract topics for seed post:", error);
         }
-        console.log("Database seeding complete.");
-        return true; // Indicate that seeding happened
     }
-    return false; // Indicate no seeding happened
+    console.log("Database seeding complete.");
+    return true; // Indicate that seeding happened
 }
 
 export function PostProvider({ children }: { children: ReactNode }) {
@@ -121,17 +126,16 @@ export function PostProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [bookmarkedPostIds, setBookmarkedPostIds] = useState<Set<string>>(new Set());
 
-  const fetchPostsAndBookmarks = async (forceRefetch = false) => {
+  const fetchPostsAndBookmarks = async () => {
+      if (!db) {
+          setLoading(false);
+          return;
+      }
       setLoading(true);
       try {
           // If we seeded, we must re-fetch the posts.
           const didSeed = await seedDatabaseIfEmpty();
 
-          if (posts.length > 0 && !forceRefetch && !didSeed) {
-              setLoading(false);
-              return;
-          }
-          
           const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
           const querySnapshot = await getDocs(q);
   
@@ -177,9 +181,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    if (db) {
-        fetchPostsAndBookmarks();
-    }
+    fetchPostsAndBookmarks();
   }, [user]);
 
   const addPost = async ({ text, media, poll, location, tribeId }: { text: string; media: Media[]; poll?: PostType['poll'], location?: string | null, tribeId?: string }): Promise<PostType | null> => {
@@ -325,7 +327,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error("Failed to update vote in Firestore:", error);
       // Re-fetch posts to ensure UI consistency if transaction fails
-      fetchPostsAndBookmarks(true);
+      fetchPostsAndBookmarks();
     }
   };
 
@@ -494,5 +496,3 @@ export function usePosts() {
   }
   return context;
 }
-
-    
