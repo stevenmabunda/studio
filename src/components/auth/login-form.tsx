@@ -53,7 +53,9 @@ export function LoginForm() {
       router.refresh();
     } catch (err: any) {
       if (err.code === 'auth/invalid-credential' || err.code === 'auth/api-key-not-valid') {
-        setError('Invalid login credentials. Please check your email, password, and Firebase configuration.');
+        setError('Invalid login credentials. Please check your email and password.');
+      } else if (err.code === 'auth/invalid-api-key') {
+         setError('Firebase API Key is not valid. Please check your configuration in `src/lib/firebase/clientConfig.ts`.');
       } else {
         setError('An unexpected error occurred. Please try again.');
       }
