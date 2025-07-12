@@ -10,22 +10,21 @@ let auth: Auth;
 let db: Firestore;
 let storage: FirebaseStorage;
 
-// This ensures we initialize Firebase only once.
-if (getApps().length === 0) {
-  if (firebaseConfig.apiKey) {
-    app = initializeApp(firebaseConfig);
+try {
+    if (getApps().length) {
+        app = getApp();
+    } else {
+        app = initializeApp(firebaseConfig);
+    }
+    
     auth = getAuth(app);
     db = getFirestore(app);
     storage = getStorage(app);
-  } else {
-    console.warn("Firebase config is missing, services will not be available.");
-  }
-} else {
-  app = getApp();
-  auth = getAuth(app);
-  db = getFirestore(app);
-  storage = getStorage(app);
+
+} catch (error) {
+    console.error("Firebase initialization error", error);
+    // You might want to throw the error or handle it in a way that
+    // the application knows that Firebase services are not available.
 }
 
-// @ts-ignore
 export { app, auth, db, storage };
