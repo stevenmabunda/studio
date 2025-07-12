@@ -10,13 +10,17 @@ let auth: Auth;
 let db: Firestore;
 let storage: FirebaseStorage;
 
-// Initialize Firebase
-if (firebaseConfig.apiKey && !getApps().length) {
-  app = initializeApp(firebaseConfig);
-  auth = getAuth(app);
-  db = getFirestore(app);
-  storage = getStorage(app);
-} else if (getApps().length) {
+// This ensures we initialize Firebase only once.
+if (getApps().length === 0) {
+  if (firebaseConfig.apiKey) {
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
+    storage = getStorage(app);
+  } else {
+    console.warn("Firebase config is missing, services will not be available.");
+  }
+} else {
   app = getApp();
   auth = getAuth(app);
   db = getFirestore(app);
