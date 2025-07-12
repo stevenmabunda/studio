@@ -13,27 +13,26 @@ const firebaseConfig: FirebaseOptions = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-let app: FirebaseApp;
+// Initialize Firebase
+const app: FirebaseApp = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+
 let auth: Auth;
 let db: Firestore;
 let storage: FirebaseStorage;
 
-// This check prevents the app from crashing on the server if the environment
-// variables are not set. It's crucial for the Next.js build process.
-if (firebaseConfig.apiKey && firebaseConfig.projectId) {
-    if (!getApps().length) {
-        app = initializeApp(firebaseConfig);
-    } else {
-        app = getApp();
-    }
-    
-    auth = getAuth(app); 
-    db = getFirestore(app, "bholo");
-    storage = getStorage(app);
-} else {
-    // If the keys are not present, we log a warning.
-    // Auth features will not work, but the app will not crash.
-    console.warn("Firebase config not found. Auth features will be disabled.")
+// This check prevents the "Firebase App not initialized" error during server-side rendering.
+try {
+  auth = getAuth(app);
+  db = getFirestore(app);
+  storage = getStorage(app);
+} catch (error) {
+  console.error("Firebase services could not be initialized.", error);
+  // Assign dummy objects or handle the error as appropriate for your app
+  // This part might need adjustment based on how your app should behave without Firebase
+  auth = {} as Auth;
+  db = {} as Firestore;
+  storage = {} as FirebaseStorage;
 }
+
 
 export { app, auth, db, storage };
