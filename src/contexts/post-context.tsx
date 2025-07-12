@@ -7,10 +7,11 @@ import type { PostType } from '@/lib/data';
 import type { Media } from '@/components/create-post';
 import { useAuth } from '@/hooks/use-auth';
 import { db, storage } from '@/lib/firebase/config';
-import { collection, addDoc, serverTimestamp, getDocs, query, type Timestamp, doc, updateDoc, runTransaction, deleteDoc, orderBy, getDoc, setDoc, limit } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDocs, query, type Timestamp, doc, updateDoc, runTransaction, deleteDoc, orderBy, getDoc, setDoc, writeBatch, limit } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { formatTimestamp } from '@/lib/utils';
 import { extractPostTopics } from '@/ai/flows/extract-post-topics';
+import { seedPosts } from '@/lib/seed-data';
 
 type PostContextType = {
   posts: PostType[];
@@ -28,6 +29,33 @@ type PostContextType = {
 
 const PostContext = createContext<PostContextType | undefined>(undefined);
 
+
+async function seedDatabaseIfEmpty() {
+    if (!db) return;
+    const postsRef = collection(db, 'posts');
+    const q = query(postsRef, limit(1));
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+        console.log("Database is empty, seeding posts...");
+        const batch = writeBatch(db);
+        seedPosts.forEach((post) => {
+            const docRef = doc(postsRef); // Create a new doc with a random ID
+            // We need to convert the plain object to what Firestore expects
+            const firestorePost = {
+                ...post,
+                createdAt: serverTimestamp() // Use server timestamp for creation
+            };
+            batch.set(docRef, firestorePost);
+        });
+        await batch.commit();
+        console.log("Database seeded successfully.");
+    } else {
+        console.log("Database already has posts, skipping seed.");
+    }
+}
+
+
 export function PostProvider({ children }: { children: ReactNode }) {
   const [posts, setPosts] = useState<PostType[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,6 +69,8 @@ export function PostProvider({ children }: { children: ReactNode }) {
       }
       setLoading(true);
       try {
+          await seedDatabaseIfEmpty();
+
           const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
           const querySnapshot = await getDocs(q);
   
