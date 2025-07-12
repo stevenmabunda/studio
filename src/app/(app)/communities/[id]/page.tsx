@@ -120,7 +120,7 @@ export default function CommunityPage() {
                 <Image
                     src={community.bannerUrl}
                     alt={`${community.name} banner`}
-                    layout="fill"
+                    fill
                     objectFit="cover"
                     data-ai-hint="stadium lights"
                 />

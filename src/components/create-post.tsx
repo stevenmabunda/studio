@@ -24,7 +24,7 @@ const EMOJIS = [
     '😀', '😂', '😍', '🤔', '😭', '🙏', '❤️', '🔥', '👍', '⚽️', '🥅', '🏆', '🎉', '👏', '🚀', '💯'
 ];
 
-export function CreatePost({ onPost, tribeId }: { onPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null, tribeId?: string }) => Promise<void>, tribeId?: string }) {
+export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }) => Promise<void>, tribeId?: string, communityId?: string }) {
   const { user } = useAuth();
   const [text, setText] = useState("");
   const [media, setMedia] = useState<Media[]>([]);
@@ -108,7 +108,7 @@ export function CreatePost({ onPost, tribeId }: { onPost: (data: { text: string;
     }
 
     try {
-        await onPost({ text, media, poll: pollData, location, tribeId });
+        await onPost({ text, media, poll: pollData, location, tribeId, communityId });
         
         // Clean up object URLs after successful post
         media.forEach(m => URL.revokeObjectURL(m.previewUrl));

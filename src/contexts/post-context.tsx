@@ -28,98 +28,6 @@ type PostContextType = {
 
 const PostContext = createContext<PostContextType | undefined>(undefined);
 
-const seedPostsData = [
-    {
-      id: '--seed-post-1--',
-      content: "What a season for Real Madrid! Winning La Liga and the Champions League is an incredible achievement. #HalaMadrid",
-      likes: 1200,
-      reposts: 345,
-      comments: 123,
-      views: 15000,
-    },
-    {
-      id: '--seed-post-2--',
-      content: "The transfer rumors are flying! Looks like Mbappé is finally heading to Real Madrid. This changes everything.",
-      likes: 890,
-      reposts: 210,
-      comments: 95,
-      views: 12300,
-    },
-    {
-      id: '--seed-post-3--',
-      content: "Is Messi the greatest of all time? After that World Cup win, it's hard to argue against it. #GOAT",
-      likes: 2500,
-      reposts: 800,
-      comments: 450,
-      views: 50000,
-    },
-    {
-      id: '--seed-post-4--',
-      content: "Can anyone stop Manchester City next season? Haaland is a goal machine.",
-      likes: 950,
-      reposts: 150,
-      comments: 78,
-      views: 18000,
-    },
-];
-
-async function seedDatabaseIfEmpty() {
-    if (!db) return false;
-    
-    const postsCollectionRef = collection(db, 'posts');
-    const q = query(postsCollectionRef, limit(1));
-    const snapshot = await getDocs(q);
-
-    // If there are any posts, don't seed.
-    if (!snapshot.empty) {
-        console.log("Database already contains posts, skipping seed.");
-        return false;
-    }
-
-    console.log("No posts found, populating database with seed data...");
-    const seedAuthor = {
-        uid: 'bholo-bot',
-        displayName: 'BHOLO Bot',
-        handle: 'bholobot',
-        photoURL: 'https://placehold.co/128x128.png',
-    };
-
-    for (const seed of seedPostsData) {
-        // Create a new document reference with an auto-generated ID
-        const postRef = doc(collection(db, 'posts')); 
-        const postData = {
-            authorId: seedAuthor.uid,
-            authorName: seedAuthor.displayName,
-            authorHandle: seedAuthor.handle,
-            authorAvatar: seedAuthor.photoURL,
-            content: seed.content,
-            createdAt: serverTimestamp(),
-            comments: seed.comments,
-            reposts: seed.reposts,
-            likes: seed.likes,
-            views: seed.views,
-            media: [],
-        };
-
-        await setDoc(postRef, postData);
-
-        try {
-            const { topics } = await extractPostTopics({ content: seed.content });
-            const topicsCollectionRef = collection(db, 'topics');
-            for (const topic of topics) {
-                await addDoc(topicsCollectionRef, {
-                    topic: topic.toLowerCase(),
-                    createdAt: serverTimestamp(),
-                });
-            }
-        } catch (error) {
-            console.error("Failed to extract topics for seed post:", error);
-        }
-    }
-    console.log("Database seeding complete.");
-    return true; // Indicate that seeding happened
-}
-
 export function PostProvider({ children }: { children: ReactNode }) {
   const [posts, setPosts] = useState<PostType[]>([]);
   const [loading, setLoading] = useState(true);
@@ -133,9 +41,6 @@ export function PostProvider({ children }: { children: ReactNode }) {
       }
       setLoading(true);
       try {
-          // If we seeded, we must re-fetch the posts.
-          const didSeed = await seedDatabaseIfEmpty();
-
           const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
           const querySnapshot = await getDocs(q);
   
@@ -157,11 +62,12 @@ export function PostProvider({ children }: { children: ReactNode }) {
                   media: data.media,
                   poll: data.poll,
                   tribeId: data.tribeId,
+                  communityId: data.communityId,
                   timestamp: createdAt ? formatTimestamp(createdAt) : 'now',
                   createdAt: data.createdAt as Timestamp
               } as PostType;
           })
-          .filter(post => !post.tribeId); // Filter out tribe posts from the main feed
+          .filter(post => !post.tribeId && !post.communityId); // Filter out tribe/community posts from the main feed
   
           setPosts(postsData);
 
@@ -184,7 +90,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
     fetchPostsAndBookmarks();
   }, [user]);
 
-  const addPost = async ({ text, media, poll, location, tribeId }: { text: string; media: Media[]; poll?: PostType['poll'], location?: string | null, tribeId?: string }): Promise<PostType | null> => {
+  const addPost = async ({ text, media, poll, location, tribeId, communityId }: { text: string; media: Media[]; poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }): Promise<PostType | null> => {
     if (!user || !db || !storage) {
         throw new Error("Cannot add post: user not logged in or Firebase not configured.");
     }
@@ -223,6 +129,9 @@ export function PostProvider({ children }: { children: ReactNode }) {
         if (tribeId) {
             postData.tribeId = tribeId;
         }
+        if (communityId) {
+            postData.communityId = communityId;
+        }
         
         const docRef = await addDoc(collection(db, "posts"), postData);
         
@@ -242,11 +151,12 @@ export function PostProvider({ children }: { children: ReactNode }) {
             poll: postData.poll,
             location: postData.location,
             tribeId: postData.tribeId,
+            communityId: postData.communityId,
             createdAt: serverTimestamp() as unknown as Timestamp,
         };
         
-        // Only add to the global feed if it's not a tribe post
-        if (!tribeId) {
+        // Only add to the global feed if it's not a tribe or community post
+        if (!tribeId && !communityId) {
             setPosts((prevPosts) => [newPostForState, ...prevPosts]);
         }
         
