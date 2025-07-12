@@ -110,7 +110,9 @@ async function seedDatabaseIfEmpty() {
             }
         }
         console.log("Database seeding complete.");
+        return true; // Indicate that seeding happened
     }
+    return false; // Indicate no seeding happened
 }
 
 export function PostProvider({ children }: { children: ReactNode }) {
@@ -119,63 +121,65 @@ export function PostProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [bookmarkedPostIds, setBookmarkedPostIds] = useState<Set<string>>(new Set());
 
+  const fetchPostsAndBookmarks = async (forceRefetch = false) => {
+      setLoading(true);
+      try {
+          // If we seeded, we must re-fetch the posts.
+          const didSeed = await seedDatabaseIfEmpty();
+
+          if (posts.length > 0 && !forceRefetch && !didSeed) {
+              setLoading(false);
+              return;
+          }
+          
+          const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
+          const querySnapshot = await getDocs(q);
+  
+          const postsData = querySnapshot.docs.map(doc => {
+              const data = doc.data();
+              const createdAt = (data.createdAt as Timestamp)?.toDate();
+              return {
+                  id: doc.id,
+                  authorId: data.authorId,
+                  authorName: data.authorName,
+                  authorHandle: data.authorHandle,
+                  authorAvatar: data.authorAvatar,
+                  content: data.content,
+                  comments: data.comments,
+                  reposts: data.reposts,
+                  likes: data.likes,
+                  views: data.views || 0,
+                  location: data.location,
+                  media: data.media,
+                  poll: data.poll,
+                  tribeId: data.tribeId,
+                  timestamp: createdAt ? formatTimestamp(createdAt) : 'now',
+                  createdAt: data.createdAt as Timestamp
+              } as PostType;
+          })
+          .filter(post => !post.tribeId); // Filter out tribe posts from the main feed
+  
+          setPosts(postsData);
+
+          if (user) {
+              const bookmarksRef = collection(db, 'users', user.uid, 'bookmarks');
+              const bookmarksSnapshot = await getDocs(bookmarksRef);
+              const bookmarkIds = new Set(bookmarksSnapshot.docs.map(doc => doc.id));
+              setBookmarkedPostIds(bookmarkIds);
+          } else {
+              setBookmarkedPostIds(new Set());
+          }
+      } catch (error) {
+          console.error("Error fetching data:", error);
+      } finally {
+          setLoading(false);
+      }
+  };
+
   useEffect(() => {
-    if (!db) {
-        setLoading(false);
-        return;
+    if (db) {
+        fetchPostsAndBookmarks();
     }
-
-    const fetchPostsAndBookmarks = async () => {
-        setLoading(true);
-        try {
-            await seedDatabaseIfEmpty();
-            
-            const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
-            const querySnapshot = await getDocs(q);
-    
-            const postsData = querySnapshot.docs.map(doc => {
-                const data = doc.data();
-                const createdAt = (data.createdAt as Timestamp)?.toDate();
-                return {
-                    id: doc.id,
-                    authorId: data.authorId,
-                    authorName: data.authorName,
-                    authorHandle: data.authorHandle,
-                    authorAvatar: data.authorAvatar,
-                    content: data.content,
-                    comments: data.comments,
-                    reposts: data.reposts,
-                    likes: data.likes,
-                    views: data.views || 0,
-                    location: data.location,
-                    media: data.media,
-                    poll: data.poll,
-                    tribeId: data.tribeId,
-                    timestamp: createdAt ? formatTimestamp(createdAt) : 'now',
-                    createdAt: data.createdAt as Timestamp
-                } as PostType;
-            })
-            // Filter out bot posts and tribe posts from the main feed
-            .filter(post => post.authorId !== 'bholo-bot' && !post.tribeId);
-    
-            setPosts(postsData);
-
-            if (user) {
-                const bookmarksRef = collection(db, 'users', user.uid, 'bookmarks');
-                const bookmarksSnapshot = await getDocs(bookmarksRef);
-                const bookmarkIds = new Set(bookmarksSnapshot.docs.map(doc => doc.id));
-                setBookmarkedPostIds(bookmarkIds);
-            } else {
-                setBookmarkedPostIds(new Set());
-            }
-        } catch (error) {
-            console.error("Error fetching data:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    fetchPostsAndBookmarks();
   }, [user]);
 
   const addPost = async ({ text, media, poll, location, tribeId }: { text: string; media: Media[]; poll?: PostType['poll'], location?: string | null, tribeId?: string }): Promise<PostType | null> => {
@@ -320,8 +324,8 @@ export function PostProvider({ children }: { children: ReactNode }) {
       });
     } catch (error) {
       console.error("Failed to update vote in Firestore:", error);
-      const fetchPosts = async () => { /* re-fetch logic from above */ };
-      fetchPosts();
+      // Re-fetch posts to ensure UI consistency if transaction fails
+      fetchPostsAndBookmarks(true);
     }
   };
 
@@ -490,3 +494,5 @@ export function usePosts() {
   }
   return context;
 }
+
+    
