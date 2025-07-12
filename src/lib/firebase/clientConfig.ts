@@ -1,14 +1,14 @@
-
 import type { FirebaseOptions } from 'firebase/app';
 
-// This is the only place where process.env should be accessed for Firebase config.
-// Next.js will automatically inline these values at build time.
+// IMPORTANT: Replace these placeholder values with your actual Firebase project credentials.
+// You can find these in your Firebase project settings.
+// https://console.firebase.google.com/u/0/project/_/settings/general/
 
 export const firebaseConfig: FirebaseOptions = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  apiKey: 'YOUR_API_KEY_HERE',
+  authDomain: 'YOUR_AUTH_DOMAIN_HERE',
+  projectId: 'YOUR_PROJECT_ID_HERE',
+  storageBucket: 'YOUR_STORAGE_BUCKET_HERE',
+  messagingSenderId: 'YOUR_MESSAGING_SENDER_ID_HERE',
+  appId: 'YOUR_APP_ID_HERE',
 };
