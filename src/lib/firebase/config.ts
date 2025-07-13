@@ -18,7 +18,7 @@ try {
     }
     
     auth = getAuth(app);
-    db = getFirestore(app);
+    db = getFirestore(app, "bholo");
     storage = getStorage(app);
 
 } catch (error) {
