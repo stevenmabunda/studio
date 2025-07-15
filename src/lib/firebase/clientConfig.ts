@@ -12,7 +12,7 @@ export const firebaseConfig: FirebaseOptions = {
   apiKey: "AIzaSyCGKzB16b4-1d3RxGpUceFXcuHLpsjNudE",
   authDomain: "goal-chatter.firebaseapp.com",
   projectId: "goal-chatter",
-  storageBucket: "goal-chatter.appspot.com",
+  storageBucket: "goal-chatter.firebasestorage.app",
   messagingSenderId: "507540885804",
-  appId: "1:507540885804:web:4bfa807be08d31ba589c89"
+  appId: "1:507540885804:web:647f6858ce067450589c89"
 };
