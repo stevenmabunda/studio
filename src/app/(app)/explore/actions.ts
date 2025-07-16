@@ -63,10 +63,10 @@ export async function getTrendingTopics(
     topicsToGenerate = popularTopics.slice(0, numberOfTopicsToGenerate);
   }
   
-  // 5. If no topics meet the threshold, use a fallback list.
+  // 5. If no topics meet the threshold, use a fallback list with current news.
   if (topicsToGenerate.length === 0) {
     topicsToGenerate = [
-      'messi retirement',
+      'Teboho Mokoena R100m PSV offer',
       'premier league winners',
       'champions league final',
       'mbappe transfer',
