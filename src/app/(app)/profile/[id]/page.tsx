@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Post } from "@/components/post";
 import Image from "next/image";
-import { MapPin, Link as LinkIcon, CalendarDays, Camera, Loader2, ArrowLeft, Heart, Globe } from "lucide-react";
+import { MapPin, Link as LinkIcon, CalendarDays, Camera, Loader2, ArrowLeft, Heart, Globe, RefreshCw } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { usePosts } from "@/contexts/post-context";
 import { PostSkeleton } from "@/components/post-skeleton";
@@ -14,7 +14,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { db, storage } from "@/lib/firebase/config";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm, Controller } from "react-hook-form";
@@ -23,7 +23,7 @@ import * as z from "zod";
 import { updateProfile } from "firebase/auth";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useParams, useRouter } from "next/navigation";
-import { getUserProfile, getIsFollowing, toggleFollow, type ProfileData, getLikedPosts } from "../actions";
+import { getUserProfile, getIsFollowing, toggleFollow, type ProfileData, getLikedPosts, updateUserPosts } from "../actions";
 import { FollowButton } from "@/components/follow-button";
 import type { PostType } from "@/lib/data";
 
@@ -263,6 +263,7 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
     const { user } = useAuth();
     const { toast } = useToast();
     const [isSaving, setIsSaving] = useState(false);
+    const [isSyncing, setIsSyncing] = useState(false);
 
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
     const [bannerFile, setBannerFile] = useState<File | null>(null);
@@ -316,6 +317,23 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
         return await getDownloadURL(storageRef);
     };
 
+    const handleSyncPosts = async () => {
+        if (!user) return;
+        setIsSyncing(true);
+        try {
+            const result = await updateUserPosts(user.uid);
+            if (result.success) {
+                toast({ title: "Success", description: `${result.updatedCount} posts have been updated with your new profile info!` });
+            } else {
+                 toast({ variant: 'destructive', title: "Error", description: result.error || "Could not sync posts." });
+            }
+        } catch (error) {
+            toast({ variant: 'destructive', title: "Error", description: "An unexpected error occurred while syncing." });
+        } finally {
+            setIsSyncing(false);
+        }
+    }
+
     const onSubmit = async (data: z.infer<typeof profileFormSchema>) => {
         if (!user || !db) return;
         setIsSaving(true);
@@ -346,7 +364,10 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
                 bannerUrl: newBannerUrl,
             }, { merge: true });
 
-            toast({ title: "Success", description: "Profile updated successfully!" });
+            // Automatically sync posts after profile update
+            await updateUserPosts(user.uid);
+
+            toast({ title: "Success", description: "Profile updated and posts synced!" });
             onProfileUpdate();
             onOpenChange(false);
         } catch (error) {
@@ -362,6 +383,9 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Edit profile</DialogTitle>
+                     <DialogDescription>
+                        Make changes to your profile here. Click save when you're done. Your posts will be automatically synced.
+                    </DialogDescription>
                 </DialogHeader>
 
                 <div className="relative h-32 w-full bg-muted sm:h-40">
@@ -402,6 +426,13 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
 
                     <Controller name="favouriteClub" control={form.control} render={({ field }) => <Input placeholder="Favourite Club" {...field} />} />
                     {form.formState.errors.favouriteClub && <p className="text-sm text-destructive">{form.formState.errors.favouriteClub.message}</p>}
+
+                    <div className="border-t pt-4">
+                        <Button type="button" variant="secondary" onClick={handleSyncPosts} disabled={isSyncing}>
+                            {isSyncing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+                             Sync My Posts
+                        </Button>
+                    </div>
 
                     <DialogFooter>
                         <DialogClose asChild>

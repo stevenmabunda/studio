@@ -15,6 +15,7 @@ import {
   type Timestamp,
   query,
   orderBy,
+  where,
 } from 'firebase/firestore';
 import type { PostType } from '@/lib/data';
 import { formatTimestamp } from '@/lib/utils';
@@ -235,5 +236,50 @@ export async function getLikedPosts(userId: string): Promise<PostType[]> {
   } catch (error) {
     console.error("Error fetching liked posts:", error);
     return [];
+  }
+}
+
+export async function updateUserPosts(userId: string): Promise<{success: boolean, updatedCount: number, error?: string}> {
+  if (!db || !userId) {
+    return { success: false, updatedCount: 0, error: 'Database not available or user not specified.' };
+  }
+
+  try {
+    // 1. Get the user's current profile data.
+    const userRef = doc(db, 'users', userId);
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+      return { success: false, updatedCount: 0, error: 'User profile not found.' };
+    }
+    const userData = userSnap.data();
+    const newAuthorName = userData.displayName;
+    const newAuthorAvatar = userData.photoURL;
+
+    // 2. Find all posts by this user.
+    const postsQuery = query(collection(db, 'posts'), where('authorId', '==', userId));
+    const postsSnapshot = await getDocs(postsQuery);
+    
+    if (postsSnapshot.empty) {
+      return { success: true, updatedCount: 0 };
+    }
+
+    // 3. Create a batch write to update all posts.
+    const batch = writeBatch(db);
+    postsSnapshot.forEach(postDoc => {
+      batch.update(postDoc.ref, {
+        authorName: newAuthorName,
+        authorAvatar: newAuthorAvatar,
+      });
+    });
+
+    // 4. Commit the batch.
+    await batch.commit();
+    
+    return { success: true, updatedCount: postsSnapshot.size };
+
+  } catch (error) {
+    console.error("Error updating user's posts:", error);
+    return { success: false, updatedCount: 0, error: 'An unexpected error occurred.' };
   }
 }
