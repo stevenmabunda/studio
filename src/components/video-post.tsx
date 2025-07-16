@@ -5,7 +5,7 @@ import type { PostType } from '@/lib/data';
 import Link from 'next/link';
 import { useRef, useState, useEffect } from 'react';
 import { Button } from './ui/button';
-import { Heart, MessageCircle, Repeat, Share2, Volume2, VolumeX, Link as LinkIcon, Copy } from 'lucide-react';
+import { Heart, MessageCircle, Repeat, Share2, Volume2, VolumeX, Link as LinkIcon, Copy, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { usePosts } from '@/contexts/post-context';
@@ -85,6 +85,7 @@ export function VideoPost({ post, isMuted, onToggleMute, isPlaying, onVisibility
   const { likePost, repostPost } = usePosts();
   const { toast } = useToast();
 
+  const [isFullScreen, setIsFullScreen] = useState(false);
   const [likeCount, setLikeCount] = useState(post.likes);
   const [isLiked, setIsLiked] = useState(false);
   const [repostCount, setRepostCount] = useState(post.reposts);
@@ -101,15 +102,15 @@ export function VideoPost({ post, isMuted, onToggleMute, isPlaying, onVisibility
   useEffect(() => {
     const videoElement = videoRef.current;
     if (videoElement) {
-        if (isPlaying) {
+        if (isPlaying && !isFullScreen) {
             videoElement.play().catch(error => {
                 console.error("Video play failed:", error);
             });
-        } else {
+        } else if (!isPlaying && !isFullScreen) {
             videoElement.pause();
         }
     }
-  }, [isPlaying]);
+  }, [isPlaying, isFullScreen]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -135,10 +136,19 @@ export function VideoPost({ post, isMuted, onToggleMute, isPlaying, onVisibility
     };
   }, [post.id, onVisibilityChange]);
 
-  const togglePlay = () => {
-    onVisibilityChange(post.id, !isPlaying);
+  const enterFullScreen = () => {
+    setIsFullScreen(true);
+    videoRef.current?.play();
   };
 
+  const exitFullScreen = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setIsFullScreen(false);
+    if (!isPlaying) {
+      videoRef.current?.pause();
+    }
+  };
+  
   const handleToggleMute = (e: React.MouseEvent) => {
     e.stopPropagation();
     onToggleMute();
@@ -200,125 +210,148 @@ export function VideoPost({ post, isMuted, onToggleMute, isPlaying, onVisibility
   }
 
   return (
-    <div
-      ref={containerRef}
-      className="relative h-full w-full bg-black flex items-center justify-center cursor-pointer"
-      onClick={togglePlay}
-    >
-      <video
-        ref={videoRef}
-        src={videoUrl}
-        loop
-        muted={isMuted}
-        playsInline
-        className="max-h-full max-w-full object-contain"
-      />
-
+    <>
       <div
-        className={cn(
-            "absolute inset-0 flex items-center justify-center bg-black/40 pointer-events-none transition-opacity",
-            isPlaying ? "opacity-0" : "opacity-100"
-        )}
+        ref={containerRef}
+        className="relative h-full w-full bg-black flex items-center justify-center cursor-pointer"
+        onClick={enterFullScreen}
       >
-      </div>
+        <video
+          ref={videoRef}
+          src={videoUrl}
+          loop
+          muted={isMuted}
+          playsInline
+          className="max-h-full max-w-full object-contain"
+        />
 
-      <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
 
-      <Button
-        variant="ghost"
-        size="icon"
-        className="absolute top-4 left-4 z-10 h-10 w-10 rounded-full bg-black/30 hover:bg-black/50 text-white hover:text-white"
-        onClick={handleToggleMute}
-      >
-        {isMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
-      </Button>
-      
-      <div className="absolute bottom-6 px-4 left-0 right-20 z-10 text-white pointer-events-auto">
-        <div className="min-w-0">
-          <Link
-            href={`/profile/${post.authorId}`}
-            onClick={(e) => e.stopPropagation()}
-            className="inline-block group pointer-events-auto"
-          >
-            <p className="font-bold text-lg group-hover:underline">@{post.authorHandle}</p>
-          </Link>
-          <p className="text-sm whitespace-pre-wrap">
-            {displayContent}
-            {isLongDescription && !isExpanded && (
-              <button onClick={(e) => { e.stopPropagation(); setIsExpanded(true); }} className="font-bold ml-1 text-white/90 hover:text-white">
-                more
-              </button>
-            )}
-          </p>
-        </div>
-      </div>
-
-      <div className="absolute bottom-6 right-4 z-10 flex flex-col gap-4">
-        <div className="flex flex-col items-center gap-1 text-white">
-            <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-black/30 hover:bg-black/50 text-white hover:text-white pointer-events-auto" onClick={handleLike}>
-                <Heart className={cn("h-7 w-7", isLiked && "fill-current text-red-500")} />
-            </Button>
-            <span className="text-sm font-bold">
-              {likeCount > 0 ? likeCount : <span className="hidden md:inline"></span>}
-            </span>
-        </div>
-        <div className="flex flex-col items-center gap-1 text-white">
-            <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-black/30 hover:bg-black/50 text-white hover:text-white pointer-events-auto" onClick={navigateToPost}>
-                <MessageCircle className="h-7 w-7" />
-            </Button>
-            <span className="text-sm font-bold">{post.comments}</span>
-        </div>
-        <div className="flex flex-col items-center gap-1 text-white">
-            <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-black/30 hover:bg-black/50 text-white hover:text-white pointer-events-auto" onClick={handleRepost}>
-                <Repeat className={cn("h-7 w-7", isReposted && "text-green-500")} />
-            </Button>
-            <span className="text-sm font-bold">{repostCount > 0 ? repostCount : ""}</span>
-        </div>
-        <div className="flex flex-col items-center gap-1 text-white">
-          <Sheet open={isShareSheetOpen} onOpenChange={setShareSheetOpen}>
-            <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-black/30 hover:bg-black/50 text-white hover:text-white pointer-events-auto" onClick={handleShareClick}>
-                    <Share2 className="h-7 w-7" />
-                </Button>
-            </SheetTrigger>
-            <SheetContent side="bottom" className="rounded-t-lg">
-              <SheetHeader>
-                <SheetTitle>Share Post</SheetTitle>
-              </SheetHeader>
-              <div className="grid grid-cols-4 gap-4 py-4">
-                 <a href={getShareUrl('twitter')} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center group">
-                    <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
-                        <TwitterIcon className="h-7 w-7" />
-                    </div>
-                    <span className="text-xs">Twitter</span>
-                </a>
-                <a href={getShareUrl('facebook')} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center group">
-                    <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
-                        <FacebookIcon className="h-7 w-7" />
-                    </div>
-                    <span className="text-xs">Facebook</span>
-                </a>
-                <a href={getShareUrl('whatsapp')} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center group">
-                    <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
-                        <WhatsAppIcon className="h-7 w-7" />
-                    </div>
-                    <span className="text-xs">WhatsApp</span>
-                </a>
-                 <button onClick={handleCopyLink} className="flex flex-col items-center gap-2 text-center group">
-                    <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
-                        <Copy className="h-7 w-7" />
-                    </div>
-                    <span className="text-xs">Copy Link</span>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute top-4 right-4 z-10 h-10 w-10 rounded-full bg-black/30 hover:bg-black/50 text-white hover:text-white"
+          onClick={handleToggleMute}
+        >
+          {isMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
+        </Button>
+        
+        <div className="absolute bottom-6 px-4 left-0 right-20 z-10 text-white pointer-events-auto">
+          <div className="min-w-0">
+            <Link
+              href={`/profile/${post.authorId}`}
+              onClick={(e) => e.stopPropagation()}
+              className="inline-block group pointer-events-auto"
+            >
+              <p className="font-bold text-lg group-hover:underline">@{post.authorHandle}</p>
+            </Link>
+            <p className="text-sm whitespace-pre-wrap">
+              {displayContent}
+              {isLongDescription && !isExpanded && (
+                <button onClick={(e) => { e.stopPropagation(); setIsExpanded(true); }} className="font-bold ml-1 text-white/90 hover:text-white">
+                  more
                 </button>
-              </div>
-            </SheetContent>
-          </Sheet>
+              )}
+            </p>
+          </div>
+        </div>
+
+        <div className="absolute bottom-6 right-4 z-10 flex flex-col gap-4">
+          <div className="flex flex-col items-center gap-1 text-white">
+              <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-black/30 hover:bg-black/50 text-white hover:text-white pointer-events-auto" onClick={handleLike}>
+                  <Heart className={cn("h-7 w-7", isLiked && "fill-current text-red-500")} />
+              </Button>
+              <span className="text-sm font-bold">
+                {likeCount > 0 ? likeCount : <span className="hidden md:inline"></span>}
+              </span>
+          </div>
+          <div className="flex flex-col items-center gap-1 text-white">
+              <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-black/30 hover:bg-black/50 text-white hover:text-white pointer-events-auto" onClick={navigateToPost}>
+                  <MessageCircle className="h-7 w-7" />
+              </Button>
+              <span className="text-sm font-bold">{post.comments}</span>
+          </div>
+          <div className="flex flex-col items-center gap-1 text-white">
+              <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-black/30 hover:bg-black/50 text-white hover:text-white pointer-events-auto" onClick={handleRepost}>
+                  <Repeat className={cn("h-7 w-7", isReposted && "text-green-500")} />
+              </Button>
+              <span className="text-sm font-bold">{repostCount > 0 ? repostCount : ""}</span>
+          </div>
+          <div className="flex flex-col items-center gap-1 text-white">
+            <Sheet open={isShareSheetOpen} onOpenChange={setShareSheetOpen}>
+              <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-black/30 hover:bg-black/50 text-white hover:text-white pointer-events-auto" onClick={handleShareClick}>
+                      <Share2 className="h-7 w-7" />
+                  </Button>
+              </SheetTrigger>
+              <SheetContent side="bottom" className="rounded-t-lg">
+                <SheetHeader>
+                  <SheetTitle>Share Post</SheetTitle>
+                </SheetHeader>
+                <div className="grid grid-cols-4 gap-4 py-4">
+                   <a href={getShareUrl('twitter')} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center group">
+                      <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
+                          <TwitterIcon className="h-7 w-7" />
+                      </div>
+                      <span className="text-xs">Twitter</span>
+                  </a>
+                  <a href={getShareUrl('facebook')} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center group">
+                      <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
+                          <FacebookIcon className="h-7 w-7" />
+                      </div>
+                      <span className="text-xs">Facebook</span>
+                  </a>
+                  <a href={getShareUrl('whatsapp')} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center group">
+                      <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
+                          <WhatsAppIcon className="h-7 w-7" />
+                      </div>
+                      <span className="text-xs">WhatsApp</span>
+                  </a>
+                   <button onClick={handleCopyLink} className="flex flex-col items-center gap-2 text-center group">
+                      <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
+                          <Copy className="h-7 w-7" />
+                      </div>
+                      <span className="text-xs">Copy Link</span>
+                  </button>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
       </div>
-    </div>
+
+      {isFullScreen && (
+        <div 
+          className="fixed inset-0 z-50 bg-black flex items-center justify-center"
+          onClick={() => videoRef.current?.paused ? videoRef.current?.play() : videoRef.current?.pause()}
+        >
+           <video
+            ref={videoRef}
+            src={videoUrl}
+            loop
+            muted={isMuted}
+            playsInline
+            autoPlay
+            className="max-h-full max-w-full object-contain"
+          />
+           <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-4 left-4 z-10 h-10 w-10 rounded-full bg-black/30 hover:bg-black/50 text-white hover:text-white"
+            onClick={exitFullScreen}
+          >
+            <ArrowLeft className="h-6 w-6" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-4 right-4 z-10 h-10 w-10 rounded-full bg-black/30 hover:bg-black/50 text-white hover:text-white"
+            onClick={handleToggleMute}
+          >
+            {isMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
+          </Button>
+        </div>
+      )}
+    </>
   );
 }
-
-    
-
-    
