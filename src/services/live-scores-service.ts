@@ -4,88 +4,87 @@
 
 import type { MatchType } from '@/lib/data';
 
-// This is the structure we expect from the MLB Stats API 'schedule' endpoint
-interface MlbApiGame {
-    gamePk: number;
-    gameDate: string;
-    status: {
-        abstractGameState: 'Live' | 'Final' | 'Preview';
-        detailedState: string;
+// This is the structure we expect from the Ergast F1 API
+interface F1RaceResult {
+    number: string;
+    position: string;
+    points: string;
+    Driver: {
+        driverId: string;
+        code: string;
+        givenName: string;
+        familyName: string;
     };
-    teams: {
-        away: {
-            score: number;
-            team: { id: number; name: string };
-            isWinner: boolean;
-        };
-        home: {
-            score: number;
-            team: { id: number; name: string };
-            isWinner: boolean;
-        };
+    Constructor: {
+        constructorId: string;
+        name: string;
     };
-    linescore?: {
-        currentInning?: number;
-        inningState?: 'Top' | 'Bottom' | 'Middle' | 'End';
-    };
-    venue: { name: string };
+    laps: string;
+    status: string;
 }
 
-interface MlbApiResponse {
-  dates: {
+interface F1Race {
+    season: string;
+    round: string;
+    raceName: string;
+    Circuit: {
+        circuitName: string;
+    };
     date: string;
-    games: MlbApiGame[];
-  }[];
+    Results: F1RaceResult[];
+}
+
+interface F1ApiResponse {
+    MRData: {
+        RaceTable: {
+            Races: F1Race[];
+        };
+    };
 }
 
 
 // A helper function to map the API response to our app's MatchType
-function mapApiDataToMatchType(apiData: MlbApiResponse): MatchType[] {
-  if (!apiData || !apiData.dates || apiData.dates.length === 0) {
-    return [];
-  }
-
-  const allGames = apiData.dates.flatMap(date => date.games);
-
-  return allGames.map(game => {
-    const isLive = game.status.abstractGameState === 'Live';
-    const isUpcoming = game.status.abstractGameState === 'Preview';
-
-    let timeOrStatus: string;
-    if (isLive && game.linescore?.currentInning) {
-        const inningState = game.linescore.inningState === 'Bottom' ? 'Bot' : 'Top';
-        timeOrStatus = `${inningState} ${game.linescore.currentInning}`;
-    } else if (isUpcoming) {
-        const gameDate = new Date(game.gameDate);
-        timeOrStatus = gameDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-    } else {
-        timeOrStatus = game.status.detailedState;
+function mapApiDataToMatchType(apiData: F1ApiResponse): MatchType[] {
+    if (!apiData.MRData?.RaceTable?.Races?.[0]?.Results) {
+        return [];
     }
     
-    return {
-      id: game.gamePk,
-      team1: {
-        name: game.teams.home.team.name,
-        // MLB API doesn't provide easy-to-access logos in this endpoint, so we use placeholders
-        logo: `https://www.mlbstatic.com/team-logos/${game.teams.home.team.id}.svg`,
-      },
-      team2: {
-        name: game.teams.away.team.name,
-        logo: `https://www.mlbstatic.com/team-logos/${game.teams.away.team.id}.svg`,
-      },
-      score: !isUpcoming ? `${game.teams.home.score} - ${game.teams.away.score}` : undefined,
-      time: timeOrStatus,
-      league: 'MLB', // The API is MLB-specific
-      isLive: isLive,
-      isUpcoming: isUpcoming,
-    };
-  });
+    // We'll treat each driver's result as a "match" for this test
+    const race = apiData.MRData.RaceTable.Races[0];
+    const results = race.Results;
+
+    // For "upcoming" we'll just show the top 5 from the results
+    const upcoming = results.slice(0, 5).map(result => ({
+        id: parseInt(result.position, 10),
+        team1: { name: result.Driver.givenName, logo: 'https://placehold.co/40x40.png' },
+        team2: { name: result.Driver.familyName, logo: 'https://placehold.co/40x40.png' },
+        time: `Pos: ${result.position}`,
+        league: race.raceName,
+        isLive: false,
+        isUpcoming: true,
+    }));
+    
+    // For "live" we'll show a sample matchup from the results
+    if (results.length >= 2) {
+        const liveMatch: MatchType = {
+            id: 999, // Static ID for the single live match
+            team1: { name: results[0].Driver.code, logo: 'https://placehold.co/40x40.png' },
+            team2: { name: results[1].Driver.code, logo: 'https://placehold.co/40x40.png' },
+            score: `${results[0].laps} Laps`,
+            time: 'Finished',
+            league: `${race.season} ${race.raceName}`,
+            isLive: true,
+            isUpcoming: false,
+        };
+        return [liveMatch, ...upcoming];
+    }
+
+    return upcoming;
 }
 
 // Reusable fetch function
-async function fetchFromApi(): Promise<MlbApiResponse> {
-  const today = new Date().toISOString().split('T')[0];
-  const url = `https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${today}`;
+async function fetchFromApi(): Promise<F1ApiResponse> {
+  const url = `https://ergast.com/api/f1/current/last/results.json`;
 
   try {
     const response = await fetch(url, {
@@ -95,14 +94,14 @@ async function fetchFromApi(): Promise<MlbApiResponse> {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error("API Error Response:", errorData);
+      const errorText = await response.text();
+      console.error("API Error Response:", errorText);
       throw new Error(`API request failed with status ${response.status}`);
     }
 
     return await response.json();
   } catch (error) {
-    console.error(`Failed to fetch from MLB API:`, error);
+    console.error(`Failed to fetch from Ergast F1 API:`, error);
     throw error; // Re-throw to be handled by the caller
   }
 }

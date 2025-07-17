@@ -51,7 +51,7 @@ export function UpcomingMatches() {
   return (
     <Card className="bg-secondary">
       <CardHeader className="p-4">
-        <CardTitle className="text-lg font-bold text-primary">Upcoming Matches</CardTitle>
+        <CardTitle className="text-lg font-bold text-primary">Upcoming Events</CardTitle>
       </CardHeader>
       <CardContent className="p-4 pt-0 space-y-4">
         <div>
@@ -94,7 +94,7 @@ export function UpcomingMatches() {
             ))
           ) : (
             <p className="text-xs text-muted-foreground p-2">
-              No upcoming matches.
+              No upcoming events.
             </p>
           )}
         </div>

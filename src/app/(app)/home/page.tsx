@@ -234,7 +234,7 @@ export default function HomePage() {
                   </div>
                 ) : (
                   <p className="text-muted-foreground text-center">
-                    No live matches right now.
+                    No live events right now.
                   </p>
                 )}
               </div>
@@ -279,7 +279,7 @@ export default function HomePage() {
                   </div>
                 ) : (
                   <p className="text-muted-foreground text-center">
-                    No upcoming matches found.
+                    No upcoming events found.
                   </p>
                 )}
               </div>
