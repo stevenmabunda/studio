@@ -325,7 +325,7 @@ export function Post(props: PostProps) {
                   ref={videoRef}
                   src={media[0].url}
                   controls
-                  className="w-full h-auto"
+                  className="w-full h-auto max-h-96 object-contain bg-black"
                   onClick={(e) => e.stopPropagation()}
                 />
               ) : singleImage ? (
