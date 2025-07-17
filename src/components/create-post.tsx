@@ -251,7 +251,7 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
             <div className="mt-3 rounded-2xl overflow-hidden border max-h-[50vh] overflow-y-auto">
                 {hasVideo ? (
                     <div className="relative">
-                        <video src={media[0].previewUrl} controls className="w-full h-auto max-h-96" />
+                        <video src={media[0].previewUrl} controls className="w-full h-auto max-h-96 object-contain" />
                         <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-8 w-8 rounded-full bg-black/50 hover:bg-black/75 text-white hover:text-white" onClick={() => removeMedia(0)}>
                             <X className="h-4 w-4" />
                         </Button>
