@@ -15,6 +15,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { PostHeader } from './post-header';
+import { Button } from './ui/button';
 
 type Comment = {
   id: string;
@@ -161,6 +162,8 @@ export function MediaViewerDialog({ isOpen, onOpenChange, media }: MediaViewerDi
                             />
                             <p className="mt-2 whitespace-pre-wrap text-sm">{linkify(post.content)}</p>
                         </div>
+                         <p className="p-4 text-sm text-muted-foreground">Replying to <span className="text-primary">@{post.authorHandle}</span></p>
+                        <CreateComment onComment={handleCreateComment} />
                         <div className="divide-y divide-border">
                             {comments.map((comment) => (
                                 <div key={comment.id} className="p-3 md:p-4">
@@ -185,7 +188,6 @@ export function MediaViewerDialog({ isOpen, onOpenChange, media }: MediaViewerDi
                             ))}
                         </div>
                     </ScrollArea>
-                    <CreateComment onComment={handleCreateComment} />
                 </>
             )}
         </div>

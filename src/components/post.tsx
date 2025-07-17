@@ -284,14 +284,6 @@ export function Post(props: PostProps) {
 
   const postUiContent = (
       <div className="flex space-x-3 p-3 md:p-4">
-        <div className="w-10">
-            <Link href={`/profile/${authorId}`} onClick={(e) => e.stopPropagation()}>
-                <Avatar>
-                <AvatarImage src={authorAvatar} alt={authorName} data-ai-hint="user avatar"/>
-                <AvatarFallback>{authorName.charAt(0)}</AvatarFallback>
-                </Avatar>
-            </Link>
-        </div>
         <div className="flex-1">
             <PostHeader
                 authorId={authorId}

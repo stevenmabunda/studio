@@ -27,10 +27,14 @@ export function PostHeader({ authorId, authorAvatar, authorName, authorHandle, t
                     </Avatar>
                 </Link>
                 <div className="flex flex-col min-w-0">
-                    <Link href={`/profile/${authorId}`} className="truncate font-bold hover:underline" onClick={(e) => e.stopPropagation()}>
-                        {authorName}
-                    </Link>
-                    <span className="truncate text-sm text-muted-foreground">@{authorHandle}</span>
+                    <div className="flex items-center gap-2">
+                         <Link href={`/profile/${authorId}`} className="truncate font-bold hover:underline" onClick={(e) => e.stopPropagation()}>
+                            {authorName}
+                        </Link>
+                        <span className="truncate text-sm text-muted-foreground">@{authorHandle}</span>
+                        <span className="text-muted-foreground">·</span>
+                        <span className="text-sm text-muted-foreground">{timestamp}</span>
+                    </div>
                 </div>
             </div>
             {!isAuthor && <FollowButton profileId={authorId} />}
