@@ -38,7 +38,6 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet";
 import { useRouter } from "next/navigation";
 import type { PostType } from "@/lib/data";
@@ -504,6 +503,7 @@ export function Post(props: PostProps) {
                     className="max-w-4xl h-[90vh] bg-transparent border-none shadow-none p-0"
                     onClick={e => e.stopPropagation()}
                 >
+                    <DialogTitle className="sr-only">Enlarged post image</DialogTitle>
                     {selectedImage && (
                         <div className="relative w-full h-full flex items-center justify-center">
                             <Image
