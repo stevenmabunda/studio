@@ -502,3 +502,5 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
         </Dialog>
     );
 }
+
+    
