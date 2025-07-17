@@ -27,6 +27,7 @@ import { getUserProfile, getIsFollowing, toggleFollow, type ProfileData, getLike
 import { FollowButton } from "@/components/follow-button";
 import type { PostType } from "@/lib/data";
 import { FollowListDialog } from "@/components/follow-list-dialog";
+import { MessageButton } from "@/components/message-button";
 
 
 const profileFormSchema = z.object({
@@ -156,7 +157,8 @@ export default function ProfilePage() {
                 Edit profile
               </Button>
             ) : (
-                <div className="mt-20 sm:mt-24">
+                <div className="mt-20 sm:mt-24 flex items-center gap-2">
+                    <MessageButton otherUserId={profile.uid} />
                     <FollowButton profileId={profile.uid} />
                 </div>
             )}
@@ -453,5 +455,3 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
         </Dialog>
     );
 }
-
-    
