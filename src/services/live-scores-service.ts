@@ -45,7 +45,14 @@ function mapApiDataToMatchType(fixtures: ApiFixture[]): MatchType[] {
                 return f.fixture.status.elapsed ? `${f.fixture.status.elapsed}'` : 'Live';
             }
             if (isUpcoming) {
-                return new Date(f.fixture.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+                 const date = new Date(f.fixture.date);
+                // Show date if it's not today
+                const today = new Date();
+                if (date.toDateString() !== today.toDateString()) {
+                    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                }
+                // Show time if it's today
+                return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
             }
             return f.fixture.status.short; // FT, AET, etc.
         }
@@ -106,9 +113,10 @@ export async function getLiveMatchesFromApi(): Promise<MatchType[]> {
 
 // Service function to get upcoming matches
 export async function getUpcomingMatchesFromApi(): Promise<MatchType[]> {
-    const today = new Date();
-    const dateString = today.toISOString().split('T')[0]; // Format as YYYY-MM-DD
-    const params = new URLSearchParams({ date: dateString, status: 'NS' }); // NS = Not Started
+    const params = new URLSearchParams({ 
+        status: 'NS', // Not Started
+        next: '20' // Get the next 20 fixtures
+    });
     const apiData = await fetchFromApi('fixtures', params);
     return mapApiDataToMatchType(apiData.response);
 }
