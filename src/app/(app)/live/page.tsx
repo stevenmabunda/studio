@@ -7,6 +7,7 @@ import type { MatchType } from '@/lib/data';
 import { useEffect, useState } from 'react';
 import { getLiveMatches, getUpcomingMatches } from '../home/actions';
 import { Skeleton } from '@/components/ui/skeleton';
+import Image from 'next/image';
 
 function MatchCardSkeleton() {
   return (
@@ -76,7 +77,7 @@ export default function LivePage() {
                       >
                         <CardHeader>
                           <div className="flex justify-between items-center">
-                            <CardTitle className="text-base">
+                            <CardTitle className="text-base truncate">
                               {match.league}
                             </CardTitle>
                             <Badge
@@ -88,16 +89,18 @@ export default function LivePage() {
                           </div>
                         </CardHeader>
                         <CardContent className="text-center">
-                          <div className="flex justify-around items-center">
-                            <span className="font-medium">
-                              {match.team1.name}
-                            </span>
+                           <div className="flex justify-around items-center">
+                             <div className="flex flex-col items-center gap-1 w-24">
+                                {match.team1.logo && <Image src={match.team1.logo} alt={match.team1.name} width={24} height={24} />}
+                                <span className="font-medium truncate">{match.team1.name}</span>
+                            </div>
                             <span className="text-2xl font-bold">
                               {match.score}
                             </span>
-                            <span className="font-medium">
-                              {match.team2.name}
-                            </span>
+                             <div className="flex flex-col items-center gap-1 w-24">
+                                {match.team2.logo && <Image src={match.team2.logo} alt={match.team2.name} width={24} height={24} />}
+                                <span className="font-medium truncate">{match.team2.name}</span>
+                            </div>
                           </div>
                           <p className="text-sm text-muted-foreground mt-2">
                             {match.time}
@@ -128,15 +131,21 @@ export default function LivePage() {
                         className="hover:bg-accent cursor-pointer"
                       >
                         <CardHeader>
-                          <CardTitle className="text-base">
+                          <CardTitle className="text-base truncate">
                             {match.league}
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="text-center">
                           <div className="flex justify-around items-center font-medium">
-                            <span>{match.team1.name}</span>
+                            <div className="flex flex-col items-center gap-1 w-24">
+                                {match.team1.logo && <Image src={match.team1.logo} alt={match.team1.name} width={24} height={24} />}
+                                <span className="truncate">{match.team1.name}</span>
+                            </div>
                             <span className="text-lg font-bold">VS</span>
-                            <span>{match.team2.name}</span>
+                             <div className="flex flex-col items-center gap-1 w-24">
+                                {match.team2.logo && <Image src={match.team2.logo} alt={match.team2.name} width={24} height={24} />}
+                                <span className="truncate">{match.team2.name}</span>
+                            </div>
                           </div>
                           <p className="text-sm text-muted-foreground mt-2">
                             {match.time}

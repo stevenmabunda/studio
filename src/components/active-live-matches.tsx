@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { getLiveMatches } from '@/app/(app)/home/actions';
 import type { MatchType } from '@/lib/data';
 import { Skeleton } from './ui/skeleton';
+import Image from 'next/image';
 
 function MatchSkeleton() {
   return (
@@ -63,10 +64,16 @@ export function ActiveLiveMatches() {
                   <span>{match.time}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2 font-bold">
-                    <span>{match.team1.name}</span>
+                  <div className="flex items-center gap-2 font-bold text-sm">
+                    <div className="flex items-center gap-1">
+                      {match.team1.logo && <Image src={match.team1.logo} alt={match.team1.name} width={16} height={16} />}
+                      <span>{match.team1.name}</span>
+                    </div>
                     <span>{match.score}</span>
-                    <span>{match.team2.name}</span>
+                     <div className="flex items-center gap-1">
+                      {match.team2.logo && <Image src={match.team2.logo} alt={match.team2.name} width={16} height={16} />}
+                      <span>{match.team2.name}</span>
+                    </div>
                   </div>
                   <Badge
                     variant="destructive"

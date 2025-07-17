@@ -6,6 +6,7 @@ import {
   type GenerateTrendingHashtagsOutput,
 } from '@/ai/flows/generate-trending-hashtags';
 import type { MatchType } from '@/lib/data';
+import { getLiveMatchesFromApi, getUpcomingMatchesFromApi } from '@/services/live-scores-service';
 
 export async function getTrendingHashtags(
   input: GenerateTrendingHashtagsInput
@@ -13,47 +14,22 @@ export async function getTrendingHashtags(
   return await generateTrendingHashtags(input);
 }
 
-// Mock data to replace API calls
-const mockLiveMatches: MatchType[] = [
-  {
-    id: 1,
-    team1: { name: 'Man City' },
-    team2: { name: 'Arsenal' },
-    score: '1 - 1',
-    time: "75'",
-    league: 'Premier League',
-    isLive: true,
-  },
-];
-
-const mockUpcomingMatches: MatchType[] = [
-  {
-    id: 2,
-    team1: { name: 'Real Madrid' },
-    team2: { name: 'FC Barcelona' },
-    time: '20:00',
-    league: 'La Liga',
-    isLive: false,
-  },
-   {
-    id: 3,
-    team1: { name: 'Juventus' },
-    team2: { name: 'AC Milan' },
-    time: '21:45',
-    league: 'Serie A',
-    isLive: false,
-  },
-];
-
 
 export async function getLiveMatches(): Promise<MatchType[]> {
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 500));
-  return mockLiveMatches;
+  try {
+    return await getLiveMatchesFromApi();
+  } catch (error) {
+    console.error("Failed to get live matches, returning empty array.", error);
+    // In a real app, you might want a more sophisticated error state.
+    return [];
+  }
 }
 
 export async function getUpcomingMatches(): Promise<MatchType[]> {
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 500));
-  return mockUpcomingMatches;
+  try {
+    return await getUpcomingMatchesFromApi();
+  } catch (error) {
+    console.error("Failed to get upcoming matches, returning empty array.", error);
+    return [];
+  }
 }

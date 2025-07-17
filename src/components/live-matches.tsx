@@ -10,6 +10,8 @@ import {
 } from '@/app/(app)/home/actions';
 import type { MatchType } from '@/lib/data';
 import { Skeleton } from './ui/skeleton';
+import Image from 'next/image';
+
 
 function MatchSkeleton() {
   return (
@@ -68,14 +70,20 @@ export function UpcomingMatches() {
                 className="space-y-2 p-2 rounded-lg hover:bg-accent/50 cursor-pointer"
               >
                 <div className="flex justify-between items-center text-xs text-muted-foreground">
-                  <span>{match.league}</span>
+                  <span className='truncate'>{match.league}</span>
                   <span>{match.time}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2 font-bold">
-                    <span>{match.team1.name}</span>
+                    <div className="flex items-center gap-1">
+                      {match.team1.logo && <Image src={match.team1.logo} alt={match.team1.name} width={16} height={16} />}
+                      <span className='truncate'>{match.team1.name}</span>
+                    </div>
                     <span>vs</span>
-                    <span>{match.team2.name}</span>
+                     <div className="flex items-center gap-1">
+                      {match.team2.logo && <Image src={match.team2.logo} alt={match.team2.name} width={16} height={16} />}
+                      <span className='truncate'>{match.team2.name}</span>
+                    </div>
                   </div>
                 </div>
                 <Button variant="outline" size="sm" className="h-7 text-xs">
