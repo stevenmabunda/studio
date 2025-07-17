@@ -14,6 +14,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogTrigger,
+  DialogClose,
 } from '@/components/ui/dialog';
 import {
   AlertDialog,
@@ -149,6 +151,9 @@ export function Post(props: PostProps) {
   const [editedContent, setEditedContent] = useState(content);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isShareSheetOpen, setShareSheetOpen] = useState(false);
+
+  const [isImageViewerOpen, setIsImageViewerOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   
   const isBookmarked = useMemo(() => bookmarkedPostIds.has(id), [bookmarkedPostIds, id]);
 
@@ -254,6 +259,12 @@ export function Post(props: PostProps) {
     }
   };
 
+  const openImageViewer = (e: React.MouseEvent, imageUrl: string) => {
+    e.stopPropagation();
+    setSelectedImage(imageUrl);
+    setIsImageViewerOpen(true);
+  };
+
   const imageCount = mediaExists && !isVideo ? media.length : 0;
   
   const singleImage = imageCount === 1;
@@ -329,7 +340,10 @@ export function Post(props: PostProps) {
                   onClick={(e) => e.stopPropagation()}
                 />
               ) : singleImage ? (
-                <div className="relative w-full max-h-[500px] bg-black">
+                <div 
+                    className="relative w-full max-h-[500px] bg-black cursor-pointer"
+                    onClick={(e) => openImageViewer(e, media[0].url)}
+                >
                     <Image
                         src={media[0].url}
                         alt={media[0].hint || `Post image 1`}
@@ -342,7 +356,11 @@ export function Post(props: PostProps) {
               ) : (
                 <div className={cn("grid h-full gap-0.5", gridClasses)}>
                   {media.map((item, index) => (
-                     <div key={index} className={cn("relative", imageCount === 3 && index === 0 && "row-span-2")}>
+                     <div 
+                        key={index} 
+                        className={cn("relative cursor-pointer", imageCount === 3 && index === 0 && "row-span-2")}
+                        onClick={(e) => openImageViewer(e, item.url)}
+                    >
                       <Image
                         src={item.url}
                         alt={item.hint || `Post image ${index + 1}`}
@@ -463,6 +481,27 @@ export function Post(props: PostProps) {
                   </DialogFooter>
               </DialogContent>
           </Dialog>
+           <Dialog open={isImageViewerOpen} onOpenChange={setIsImageViewerOpen}>
+                <DialogContent 
+                    className="max-w-4xl h-[90vh] bg-transparent border-none shadow-none p-0"
+                    onClick={e => e.stopPropagation()}
+                >
+                    {selectedImage && (
+                        <div className="relative w-full h-full flex items-center justify-center">
+                            <Image
+                                src={selectedImage}
+                                alt="Enlarged view"
+                                layout="fill"
+                                objectFit="contain"
+                                className="z-50"
+                            />
+                            <DialogClose asChild>
+                                <div className="fixed inset-0 bg-black/80 -z-10" />
+                            </DialogClose>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
       </div>
   );
 }
