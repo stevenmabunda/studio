@@ -29,14 +29,8 @@ import type { PostType } from "@/lib/data";
 import { FollowListDialog } from "@/components/follow-list-dialog";
 import { MessageButton } from "@/components/message-button";
 import { cn } from "@/lib/utils";
-import { MediaViewerDialog } from "@/components/media-viewer-dialog";
+import Link from 'next/link';
 
-type MediaItem = {
-    url: string;
-    type: 'image' | 'video';
-    hint?: string;
-    postId: string;
-}
 
 const profileFormSchema = z.object({
     displayName: z.string().min(2, "Name must be at least 2 characters."),
@@ -64,8 +58,6 @@ export default function ProfilePage() {
   
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   
-  const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
-
   const isMyProfile = currentUser?.uid === profileId;
   const hasFetchedLikedPosts = useRef(false);
   const hasFetchedMediaPosts = useRef(false);
@@ -150,9 +142,6 @@ export default function ProfilePage() {
   }
   
   const userPosts = posts.filter(post => post.authorId === profileId);
-  const allMediaItems: MediaItem[] = mediaPosts.flatMap(post => 
-    post.media?.map(mediaItem => ({ ...mediaItem, postId: post.id })) ?? []
-  );
 
   return (
     <div>
@@ -274,13 +263,13 @@ export default function ProfilePage() {
                         <Skeleton key={i} className="aspect-square w-full" />
                     ))}
                  </div>
-            ) : allMediaItems.length > 0 ? (
+            ) : mediaPosts.length > 0 ? (
                  <div className="grid grid-cols-3 gap-1">
-                    {allMediaItems.map((media, index) => (
-                        <div key={index} onClick={() => setSelectedMedia(media)} className="relative aspect-square w-full block group cursor-pointer">
+                    {mediaPosts.flatMap(post => post.media?.map((media, index) => (
+                        <Link key={`${post.id}-${index}`} href={`/post/${post.id}`} className="relative aspect-square w-full block group">
                             <Image
                                 src={media.url}
-                                alt={`Media from post ${media.postId}`}
+                                alt={`Media from post ${post.id}`}
                                 layout="fill"
                                 objectFit="cover"
                                 className="transition-opacity group-hover:opacity-80"
@@ -290,8 +279,8 @@ export default function ProfilePage() {
                                     <PlayCircle className="h-8 w-8 text-white drop-shadow-lg" />
                                 </div>
                             )}
-                        </div>
-                    ))}
+                        </Link>
+                    )) ?? [])}
                 </div>
             ) : (
                 <div className="p-8 text-center text-muted-foreground">
@@ -319,18 +308,6 @@ export default function ProfilePage() {
             </div>
         </TabsContent>
       </Tabs>
-
-      {selectedMedia && (
-        <MediaViewerDialog
-            isOpen={!!selectedMedia}
-            onOpenChange={(open) => {
-                if (!open) {
-                    setSelectedMedia(null);
-                }
-            }}
-            media={selectedMedia}
-        />
-      )}
     </div>
   );
 }

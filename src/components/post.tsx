@@ -48,7 +48,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { Textarea } from "./ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { FollowButton } from "./follow-button";
-import { PostHeader } from "./post-header";
 
 
 type PostProps = PostType & {
@@ -283,17 +282,25 @@ export function Post(props: PostProps) {
 
 
   const postUiContent = (
-      <div className="flex space-x-3 p-3 md:p-4">
-        <div className="flex-1">
-            <PostHeader
-                authorId={authorId}
-                authorName={authorName}
-                authorHandle={authorHandle}
-                authorAvatar={authorAvatar}
-                timestamp={timestamp}
-            />
-             {isAuthor && isStandalone && (
-                <div className="absolute top-4 right-4">
+    <div className="flex space-x-3 md:space-x-4 p-3 md:p-4">
+      <Link href={`/profile/${authorId}`} className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+        <Avatar>
+          <AvatarImage src={authorAvatar} alt={authorName} data-ai-hint="user avatar" />
+          <AvatarFallback>{authorName.charAt(0)}</AvatarFallback>
+        </Avatar>
+      </Link>
+      <div className="flex-1">
+        <div className="flex justify-between">
+          <div className="flex min-w-0 items-center gap-2">
+            <Link href={`/profile/${authorId}`} className="truncate font-bold hover:underline" onClick={(e) => e.stopPropagation()}>
+              {authorName}
+            </Link>
+            <span className="truncate text-sm text-muted-foreground">@{authorHandle}</span>
+            <span className="text-muted-foreground">·</span>
+            <span className="flex-shrink-0 text-sm text-muted-foreground">{timestamp}</span>
+          </div>
+           {isAuthor && isStandalone && (
+                <div className="flex-shrink-0">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-8 w-8 -mr-2 text-muted-foreground" onClick={(e) => e.stopPropagation()}>
@@ -313,128 +320,130 @@ export function Post(props: PostProps) {
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
-             )}
-          <p className="mt-2 whitespace-pre-wrap text-sm">
-            {linkify(displayText)}
-            {needsTruncation && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsExpanded(true);
-                }}
-                className="text-primary hover:underline ml-1"
-              >
-                ...more
-              </button>
-            )}
-          </p>
-          {poll && <Poll poll={poll} postId={id} />}
-          {mediaExists && (
-            <div className={cn("mt-3 rounded-2xl overflow-hidden border", imageCount > 1 && "aspect-video")}>
-              {isVideo ? (
-                <video
-                  ref={videoRef}
-                  src={media[0].url}
-                  controls
-                  className="w-full h-auto max-h-96 object-contain bg-black"
-                  onClick={(e) => e.stopPropagation()}
-                />
-              ) : singleImage ? (
-                <div 
-                    className="relative w-full max-h-[500px] bg-black cursor-pointer"
-                    onClick={(e) => openImageViewer(e, media[0].url)}
-                >
-                    <Image
-                        src={media[0].url}
-                        alt={media[0].hint || `Post image 1`}
-                        width={500}
-                        height={500}
-                        className="w-full h-auto max-h-[500px] object-contain"
-                        data-ai-hint={media[0].hint}
-                    />
-                </div>
-              ) : (
-                <div className={cn("grid h-full gap-0.5", gridClasses)}>
-                  {media.map((item, index) => (
-                     <div 
-                        key={index} 
-                        className={cn("relative cursor-pointer", imageCount === 3 && index === 0 && "row-span-2")}
-                        onClick={(e) => openImageViewer(e, item.url)}
-                    >
-                      <Image
-                        src={item.url}
-                        alt={item.hint || `Post image ${index + 1}`}
-                        fill
-                        className="object-cover"
-                        data-ai-hint={item.hint}
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+           )}
+           {!isAuthor && <FollowButton profileId={authorId} />}
+        </div>
+        <p className="mt-2 whitespace-pre-wrap text-sm">
+          {linkify(displayText)}
+          {needsTruncation && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsExpanded(true);
+              }}
+              className="text-primary hover:underline ml-1"
+            >
+              ...more
+            </button>
           )}
-          <div className="mt-4 flex items-center justify-between text-muted-foreground">
-            <div className="flex items-center -ml-3">
-                <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-primary">
-                    <MessageCircle className="h-5 w-5" />
-                    <span>{comments > 0 ? comments : ''}</span>
-                </Button>
-                <Button variant="ghost" size="sm" className={cn("flex items-center gap-2", isReposted ? 'text-green-500' : 'hover:text-green-500')} onClick={handleRepost}>
-                  <Repeat className="h-5 w-5" />
-                  <span>{repostCount > 0 ? repostCount : ''}</span>
-                </Button>
-                <Button variant="ghost" size="sm" className={cn("flex items-center gap-2", isLiked ? 'text-red-500' : 'hover:text-red-500')} onClick={handleLike}>
-                  <Heart className={cn("h-5 w-5", isLiked && 'fill-current')} />
-                  <span>{likeCount > 0 ? likeCount : ''}</span>
-                </Button>
-            </div>
-            <div className="flex items-center -mr-3">
-                <Button variant="ghost" size="icon" className={cn("hover:text-primary", isBookmarked && "text-primary")} onClick={handleBookmark}>
-                    <Bookmark className={cn("h-5 w-5", isBookmarked && 'fill-current')} />
-                </Button>
-                <Sheet open={isShareSheetOpen} onOpenChange={setShareSheetOpen}>
-                    <SheetTrigger asChild>
-                        <Button variant="ghost" size="icon" className="hover:text-primary" onClick={(e) => e.stopPropagation()}>
-                            <Share2 className="h-5 w-5" />
-                        </Button>
-                    </SheetTrigger>
-                    <SheetContent side="bottom" className="rounded-t-lg" onClick={(e) => e.stopPropagation()}>
-                        <SheetHeader>
-                            <SheetTitle>Share Post</SheetTitle>
-                        </SheetHeader>
-                        <div className="grid grid-cols-4 gap-4 py-4">
-                            <a href={getShareUrl('twitter')} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center group">
-                                <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
-                                    <TwitterIcon className="h-7 w-7" />
-                                </div>
-                                <span className="text-xs">Twitter</span>
-                            </a>
-                            <a href={getShareUrl('facebook')} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center group">
-                                <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
-                                    <FacebookIcon className="h-7 w-7" />
-                                </div>
-                                <span className="text-xs">Facebook</span>
-                            </a>
-                            <a href={getShareUrl('whatsapp')} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center group">
-                                <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
-                                    <WhatsAppIcon className="h-7 w-7" />
-                                </div>
-                                <span className="text-xs">WhatsApp</span>
-                            </a>
-                            <button onClick={handleCopyLink} className="flex flex-col items-center gap-2 text-center group">
-                                <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
-                                    <Copy className="h-7 w-7" />
-                                </div>
-                                <span className="text-xs">Copy Link</span>
-                            </button>
-                        </div>
-                    </SheetContent>
-                </Sheet>
-            </div>
+        </p>
+        {poll && <Poll poll={poll} postId={id} />}
+        {mediaExists && (
+          <div className={cn("mt-3 rounded-2xl overflow-hidden border", imageCount > 1 && "aspect-video")}>
+            {isVideo ? (
+              <video
+                ref={videoRef}
+                src={media[0].url}
+                controls
+                className="w-full h-auto max-h-96 object-contain bg-black"
+                onClick={(e) => e.stopPropagation()}
+              />
+            ) : singleImage ? (
+              <div 
+                  className="relative w-full max-h-[500px] bg-black cursor-pointer"
+                  onClick={(e) => openImageViewer(e, media[0].url)}
+              >
+                  <Image
+                      src={media[0].url}
+                      alt={media[0].hint || `Post image 1`}
+                      width={500}
+                      height={500}
+                      className="w-full h-auto max-h-[500px] object-contain"
+                      data-ai-hint={media[0].hint}
+                  />
+              </div>
+            ) : (
+              <div className={cn("grid h-full gap-0.5", gridClasses)}>
+                {media.map((item, index) => (
+                   <div 
+                      key={index} 
+                      className={cn("relative cursor-pointer", imageCount === 3 && index === 0 && "row-span-2")}
+                      onClick={(e) => openImageViewer(e, item.url)}
+                  >
+                    <Image
+                      src={item.url}
+                      alt={item.hint || `Post image ${index + 1}`}
+                      fill
+                      className="object-cover"
+                      data-ai-hint={item.hint}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+        <div className="mt-4 flex items-center justify-between text-muted-foreground">
+          <div className="flex items-center -ml-3">
+              <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-primary">
+                  <MessageCircle className="h-5 w-5" />
+                  <span>{comments > 0 ? comments : ''}</span>
+              </Button>
+              <Button variant="ghost" size="sm" className={cn("flex items-center gap-2", isReposted ? 'text-green-500' : 'hover:text-green-500')} onClick={handleRepost}>
+                <Repeat className="h-5 w-5" />
+                <span>{repostCount > 0 ? repostCount : ''}</span>
+              </Button>
+              <Button variant="ghost" size="sm" className={cn("flex items-center gap-2", isLiked ? 'text-red-500' : 'hover:text-red-500')} onClick={handleLike}>
+                <Heart className={cn("h-5 w-5", isLiked && 'fill-current')} />
+                <span>{likeCount > 0 ? likeCount : ''}</span>
+              </Button>
+          </div>
+          <div className="flex items-center -mr-3">
+              <Button variant="ghost" size="icon" className={cn("hover:text-primary", isBookmarked && "text-primary")} onClick={handleBookmark}>
+                  <Bookmark className={cn("h-5 w-5", isBookmarked && 'fill-current')} />
+              </Button>
+              <Sheet open={isShareSheetOpen} onOpenChange={setShareSheetOpen}>
+                  <SheetTrigger asChild>
+                      <Button variant="ghost" size="icon" className="hover:text-primary" onClick={(e) => e.stopPropagation()}>
+                          <Share2 className="h-5 w-5" />
+                      </Button>
+                  </SheetTrigger>
+                  <SheetContent side="bottom" className="rounded-t-lg" onClick={(e) => e.stopPropagation()}>
+                      <SheetHeader>
+                          <SheetTitle>Share Post</SheetTitle>
+                      </SheetHeader>
+                      <div className="grid grid-cols-4 gap-4 py-4">
+                          <a href={getShareUrl('twitter')} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center group">
+                              <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
+                                  <TwitterIcon className="h-7 w-7" />
+                              </div>
+                              <span className="text-xs">Twitter</span>
+                          </a>
+                          <a href={getShareUrl('facebook')} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center group">
+                              <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
+                                  <FacebookIcon className="h-7 w-7" />
+                              </div>
+                              <span className="text-xs">Facebook</span>
+                          </a>
+                          <a href={getShareUrl('whatsapp')} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center group">
+                              <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
+                                  <WhatsAppIcon className="h-7 w-7" />
+                              </div>
+                              <span className="text-xs">WhatsApp</span>
+                          </a>
+                          <button onClick={handleCopyLink} className="flex flex-col items-center gap-2 text-center group">
+                              <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
+                                  <Copy className="h-7 w-7" />
+                              </div>
+                              <span className="text-xs">Copy Link</span>
+                          </button>
+                      </div>
+                  </SheetContent>
+              </Sheet>
           </div>
         </div>
       </div>
+    </div>
   );
 
   const handlePostClick = () => {
