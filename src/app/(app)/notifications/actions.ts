@@ -12,7 +12,7 @@ export type NotificationType = {
   fromUserAvatar: string;
   postId?: string;
   postContentSnippet?: string;
-  createdAt: Timestamp;
+  createdAt: Date; // Changed to Date to be serializable
   read: boolean;
   formattedTimestamp: string;
 };
@@ -29,11 +29,18 @@ export async function getNotifications(userId: string): Promise<NotificationType
     const querySnapshot = await getDocs(q);
     const notifications = querySnapshot.docs.map(doc => {
       const data = doc.data();
-      const createdAt = (data.createdAt as Timestamp)?.toDate();
+      const createdAt = (data.createdAt as Timestamp)?.toDate() || new Date();
       return {
         id: doc.id,
-        ...data,
-        formattedTimestamp: createdAt ? formatTimestamp(createdAt) : 'now',
+        type: data.type,
+        fromUserId: data.fromUserId,
+        fromUserName: data.fromUserName,
+        fromUserAvatar: data.fromUserAvatar,
+        postId: data.postId,
+        postContentSnippet: data.postContentSnippet,
+        read: data.read,
+        createdAt: createdAt,
+        formattedTimestamp: formatTimestamp(createdAt),
       } as NotificationType;
     });
     return notifications;
