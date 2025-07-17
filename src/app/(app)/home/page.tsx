@@ -15,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { VideoPost } from '@/components/video-post';
+import { useTabContext } from '@/contexts/tab-context';
 
 function MatchCardSkeleton() {
   return (
@@ -40,6 +41,7 @@ function MatchCardSkeleton() {
 export default function HomePage() {
   const { posts, loading: postsLoading, addPost } = usePosts();
   const { toast } = useToast();
+  const { setActiveTab } = useTabContext();
 
   const [liveMatches, setLiveMatches] = useState<MatchType[]>([]);
   const [upcomingMatches, setUpcomingMatches] = useState<MatchType[]>([]);
@@ -97,7 +99,7 @@ export default function HomePage() {
 
   return (
     <div className="flex h-full min-h-screen flex-col">
-      <Tabs defaultValue="foryou" className="w-full flex flex-col flex-1">
+      <Tabs defaultValue="foryou" className="w-full flex flex-col flex-1" onValueChange={setActiveTab}>
         <header className="sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur-sm">
           <TabsList className="flex w-full overflow-x-auto bg-transparent p-0 no-scrollbar sm:grid sm:grid-cols-4">
             <TabsTrigger
