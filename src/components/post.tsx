@@ -329,13 +329,13 @@ export function Post(props: PostProps) {
                   onClick={(e) => e.stopPropagation()}
                 />
               ) : singleImage ? (
-                <div className="relative w-full max-h-[500px] flex items-center justify-center bg-black">
+                <div className="relative w-full max-h-[500px] bg-black">
                     <Image
                         src={media[0].url}
                         alt={media[0].hint || `Post image 1`}
                         width={500}
                         height={500}
-                        className="w-auto h-auto max-w-full max-h-[500px] object-contain"
+                        className="w-full h-auto max-h-[500px] object-contain"
                         data-ai-hint={media[0].hint}
                     />
                 </div>
