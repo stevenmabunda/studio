@@ -20,15 +20,15 @@ export function AuthSidebar() {
                 <ul className="space-y-3 text-lg text-foreground">
                     <li className="flex items-center gap-3">
                         <MessageCircle className="h-6 w-6 text-primary" />
-                        <span>Create and post about football</span>
+                        <span>Post about your favourite teams & players</span>
                     </li>
                     <li className="flex items-center gap-3">
                         <Users className="h-6 w-6 text-primary" />
-                        <span>Follow like-minded fans</span>
+                        <span>Follow and banter with like-minded or rival fans</span>
                     </li>
                     <li className="flex items-center gap-3">
                         <BarChart2 className="h-6 w-6 text-primary" />
-                        <span>React to live matches</span>
+                        <span>React to live scores and play-by-play action</span>
                     </li>
                 </ul>
 
