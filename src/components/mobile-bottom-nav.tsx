@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Plus, Search, Users, Hash } from 'lucide-react';
+import { Home, Plus, Search, Users, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import React, { useState, useEffect, useRef } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -17,7 +17,7 @@ const navItems = [
   { href: '/explore', icon: Search, label: 'Explore' },
   { href: 'POST_ACTION', icon: Plus, label: 'Post' },
   { href: '/tribes', icon: Users, label: 'Tribes' },
-  { href: '/messages', icon: Hash, label: 'Messages', isHidden: true }, // Example for a hidden item
+  { href: '/messages', icon: MessageSquare, label: 'Messages' },
 ];
 
 export function MobileBottomNav() {
@@ -91,7 +91,7 @@ export function MobileBottomNav() {
             );
           }
           
-          const isActive = pathname === item.href;
+          const isActive = pathname.startsWith(item.href);
           return (
             <Link key={item.href + item.label} href={item.href} className="flex-1 flex justify-center items-center h-full">
               <item.icon

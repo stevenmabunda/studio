@@ -93,7 +93,7 @@ export function SidebarNav() {
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton
                 asChild
-                isActive={pathname.startsWith(item.href) && (item.href !== '/' || pathname === '/')}
+                isActive={pathname.startsWith(item.href) && (item.href !== '/profile' || pathname === '/profile' || pathname.startsWith('/profile/'))}
                 className="text-lg h-14"
               >
                 <Link href={item.href}>
@@ -140,7 +140,7 @@ export function SidebarNav() {
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="w-64 mb-2" side="top" align="start">
-                        <DropdownMenuItem onSelect={() => router.push('/profile')}>
+                        <DropdownMenuItem onSelect={() => router.push(`/profile/${user.uid}`)}>
                             <User className="mr-2 h-4 w-4" />
                             <span>My Account</span>
                         </DropdownMenuItem>
