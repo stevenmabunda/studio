@@ -16,6 +16,7 @@ import {
   query,
   orderBy,
   where,
+  limit,
 } from 'firebase/firestore';
 import type { PostType } from '@/lib/data';
 import { formatTimestamp } from '@/lib/utils';
@@ -314,4 +315,28 @@ export async function getFollowing(profileId: string): Promise<ProfileData[]> {
   return getFollowList(profileId, 'following');
 }
 
+export async function getUsersToFollow(currentUserId: string): Promise<ProfileData[]> {
+    if (!db) return [];
+    
+    const usersRef = collection(db, 'users');
+    const q = query(usersRef, orderBy('followersCount', 'desc'), limit(4));
+    
+    const querySnapshot = await getDocs(q);
+    
+    const users = querySnapshot.docs
+      .map(doc => {
+        const data = doc.data();
+        return {
+          uid: doc.id,
+          displayName: data.displayName || 'User',
+          handle: data.handle || 'user',
+          photoURL: data.photoURL || 'https://placehold.co/40x40.png',
+          // These fields are not needed for the suggestion list but are part of the type
+          bannerUrl: '', bio: '', country: '', favouriteClub: '', joined: '', followersCount: 0, followingCount: 0, location: ''
+        } as ProfileData;
+      })
+      .filter(user => user.uid !== currentUserId); // Filter out the current user
+
+    return users.slice(0, 3); // Ensure we only return 3 users after filtering
+}
     
