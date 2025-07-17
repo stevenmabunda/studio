@@ -1,7 +1,7 @@
 'use client';
 
 import { Post } from '@/components/post';
-import { CreateComment } from '@/components/create-comment';
+import { CreateComment, type ReplyMedia } from '@/components/create-comment';
 import { useState, useEffect } from 'react';
 import type { PostType } from '@/lib/data';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -17,6 +17,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ArrowLeft } from 'lucide-react';
 import { PostSkeleton } from '@/components/post-skeleton';
 import { Button } from '@/components/ui/button';
+import Image from 'next/image';
+import { cn } from '@/lib/utils';
 
 
 type Comment = {
@@ -27,6 +29,11 @@ type Comment = {
   authorAvatar: string;
   content: string;
   createdAt: Timestamp;
+  media?: Array<{
+    url: string;
+    type: 'image' | 'video';
+    hint?: string;
+  }>;
 };
 
 export default function PostPage() {
@@ -93,10 +100,10 @@ export default function PostPage() {
     return () => unsubscribe();
   }, [postId]);
 
-  const handleCreateComment = async (text: string) => {
+  const handleCreateComment = async (data: { text: string, media: ReplyMedia[] }) => {
     if (!user || !postId) return;
     try {
-        await addComment(postId, text);
+        await addComment(postId, data);
     } catch (error) {
         console.error("Failed to add comment:", error);
     }
@@ -149,27 +156,51 @@ export default function PostPage() {
                     </div>
                 ))
             ) : comments.length > 0 ? (
-                 comments.map((comment) => (
-                    <div key={comment.id} className="p-3 md:p-4">
-                        <div className="flex space-x-3 md:space-x-4">
-                            <Avatar>
-                            <AvatarImage src={comment.authorAvatar} alt={comment.authorName} data-ai-hint="user avatar" />
-                            <AvatarFallback>{comment.authorName.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 text-sm">
-                                    <Link href="#" className="font-bold hover:underline" onClick={(e) => e.stopPropagation()}>
-                                        {comment.authorName}
-                                    </Link>
-                                    <span className="text-muted-foreground">@{comment.authorHandle}</span>
-                                    <span className="text-muted-foreground">·</span>
-                                    <span className="text-muted-foreground">{formatTimestamp(comment.createdAt.toDate())}</span>
+                 comments.map((comment) => {
+                    const hasMedia = comment.media && comment.media.length > 0;
+                    const isVideo = hasMedia && comment.media![0].type === 'video';
+                    return (
+                        <div key={comment.id} className="p-3 md:p-4">
+                            <div className="flex space-x-3 md:space-x-4">
+                                <Avatar>
+                                <AvatarImage src={comment.authorAvatar} alt={comment.authorName} data-ai-hint="user avatar" />
+                                <AvatarFallback>{comment.authorName.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-2 text-sm">
+                                        <Link href="#" className="font-bold hover:underline" onClick={(e) => e.stopPropagation()}>
+                                            {comment.authorName}
+                                        </Link>
+                                        <span className="text-muted-foreground">@{comment.authorHandle}</span>
+                                        <span className="text-muted-foreground">·</span>
+                                        <span className="text-muted-foreground">{formatTimestamp(comment.createdAt.toDate())}</span>
+                                    </div>
+                                    <p className="mt-2 whitespace-pre-wrap">{comment.content}</p>
+                                    {hasMedia && (
+                                      <div className={cn("mt-3 rounded-2xl overflow-hidden border max-h-[400px]")}>
+                                        {isVideo ? (
+                                          <video
+                                            src={comment.media![0].url}
+                                            controls
+                                            className="w-full h-auto max-h-96 object-contain bg-black"
+                                          />
+                                        ) : (
+                                          <Image
+                                            src={comment.media![0].url}
+                                            alt={`Comment image`}
+                                            width={500}
+                                            height={500}
+                                            className="w-full h-auto max-h-[400px] object-contain"
+                                            data-ai-hint={comment.media![0].hint}
+                                          />
+                                        )}
+                                      </div>
+                                    )}
                                 </div>
-                                <p className="mt-2 whitespace-pre-wrap">{comment.content}</p>
                             </div>
                         </div>
-                    </div>
-                ))
+                    )
+                 })
             ) : (
                  <div className="p-8 text-center text-muted-foreground">
                     <h2 className="text-xl font-bold">No comments yet</h2>

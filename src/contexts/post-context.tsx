@@ -12,6 +12,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { formatTimestamp } from '@/lib/utils';
 import { extractPostTopics } from '@/ai/flows/extract-post-topics';
 import { seedPosts } from '@/lib/seed-data';
+import type { ReplyMedia } from '@/components/create-comment';
 
 type PostContextType = {
   posts: PostType[];
@@ -19,7 +20,7 @@ type PostContextType = {
   editPost: (postId: string, data: { text:string }) => Promise<void>;
   deletePost: (postId: string) => Promise<void>;
   addVote: (postId: string, choiceIndex: number) => Promise<void>;
-  addComment: (postId: string, commentText: string) => Promise<void>;
+  addComment: (postId: string, data: { text: string; media: ReplyMedia[] }) => Promise<void>;
   likePost: (postId: string, isLiked: boolean) => Promise<void>;
   repostPost: (postId: string, isReposted: boolean) => Promise<void>;
   bookmarkPost: (postId: string, isBookmarked: boolean) => Promise<void>;
@@ -271,19 +272,31 @@ export function PostProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const addComment = async (postId: string, commentText: string) => {
-    if (!user || !db) {
+  const addComment = async (postId: string, data: { text: string; media: ReplyMedia[] }) => {
+    if (!user || !db || !storage) {
         throw new Error("User not authenticated or Firebase not initialized.");
     }
+    const { text, media } = data;
     const postRef = doc(db, 'posts', postId);
     const commentsCollectionRef = collection(postRef, 'comments');
+
+    const mediaUrls = [];
+    for (const m of media) {
+        const fileName = `${user.uid}-comment-${Date.now()}-${m.file.name}`;
+        const storagePath = `comments/${postId}/${fileName}`;
+        const storageRef = ref(storage, storagePath);
+        const snapshot = await uploadBytes(storageRef, m.file);
+        const downloadURL = await getDownloadURL(snapshot.ref);
+        mediaUrls.push({ url: downloadURL, type: m.type, hint: 'user uploaded reply' });
+    }
 
     const commentData = {
         authorId: user.uid,
         authorName: user.displayName || 'Anonymous User',
         authorHandle: user.email?.split('@')[0] || 'user',
         authorAvatar: user.photoURL || 'https://placehold.co/40x40.png',
-        content: commentText,
+        content: text,
+        media: mediaUrls,
         createdAt: serverTimestamp(),
     };
 
@@ -316,7 +329,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
                     fromUserName: user.displayName || 'User',
                     fromUserAvatar: user.photoURL || 'https://placehold.co/40x40.png',
                     postId: postId,
-                    postContentSnippet: commentText.substring(0, 50),
+                    postContentSnippet: text.substring(0, 50),
                     createdAt: serverTimestamp(),
                     read: false,
                 });
