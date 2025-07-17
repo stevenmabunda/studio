@@ -122,8 +122,11 @@ export async function updateTribe(
         try {
             const oldBannerStorageRef = ref(storage, oldBannerUrl);
             await deleteObject(oldBannerStorageRef);
-        } catch (storageError) {
-             console.warn("Could not delete old banner, it might not exist or there's a permissions issue:", storageError);
+        } catch (storageError: any) {
+            // It's okay if the old banner doesn't exist, log a warning but don't fail the operation.
+            if (storageError.code !== 'storage/object-not-found') {
+               console.warn("Could not delete old banner, it might not exist or there's a permissions issue:", storageError);
+            }
         }
       }
     }

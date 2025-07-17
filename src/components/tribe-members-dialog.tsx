@@ -40,29 +40,58 @@ export function TribeMembersDialog({ tribeId, isCreator, children }: TribeMember
   const [isOpen, setIsOpen] = useState(false);
   const [members, setMembers] = useState<TribeMember[]>([]);
   const [loading, setLoading] = useState(false);
+  const [tribeName, setTribeName] = useState('');
   const { toast } = useToast();
 
   useEffect(() => {
     if (isOpen) {
-      const fetchMembers = async () => {
+      const fetchMembersAndDetails = async () => {
         setLoading(true);
         try {
           const fetchedMembers = await getTribeMembers(tribeId);
           setMembers(fetchedMembers);
+          
+          // Fetch tribe name for the invite message
+          const tribeDetailsModule = await import('@/app/(app)/tribes/actions');
+          const details = await tribeDetailsModule.getTribeDetails(tribeId);
+          if (details) {
+            setTribeName(details.name);
+          }
         } catch (error) {
-          console.error("Failed to fetch tribe members:", error);
+          console.error("Failed to fetch tribe data:", error);
           toast({ variant: 'destructive', description: "Could not load members." });
         } finally {
           setLoading(false);
         }
       };
-      fetchMembers();
+      fetchMembersAndDetails();
     }
   }, [isOpen, tribeId, toast]);
 
-  const handleInvite = () => {
-    // Placeholder for invite functionality
-    toast({ description: "Invite functionality coming soon!" });
+  const handleInvite = async () => {
+    const inviteData = {
+      title: `Join my tribe on BHOLO!`,
+      text: `Come join the ${tribeName} tribe on BHOLO. It's the place for us to chat all things football!`,
+      url: `${window.location.origin}/tribes/${tribeId}`
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(inviteData);
+        toast({ description: "Invite sent!" });
+      } catch (error) {
+        // This can happen if the user cancels the share sheet
+        console.log("Share API was not successful.", error);
+      }
+    } else {
+      // Fallback for desktop browsers that don't support the Share API
+      try {
+        await navigator.clipboard.writeText(inviteData.url);
+        toast({ description: "Invite link copied to clipboard!" });
+      } catch (err) {
+        toast({ variant: 'destructive', description: "Could not copy invite link." });
+      }
+    }
   }
 
   return (
