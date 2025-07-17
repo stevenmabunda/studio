@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Post } from "@/components/post";
 import Image from "next/image";
-import Link from 'next/link';
 import { MapPin, Link as LinkIcon, CalendarDays, Camera, Loader2, ArrowLeft, Heart, Globe, RefreshCw, PlayCircle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { usePosts } from "@/contexts/post-context";
@@ -30,7 +29,14 @@ import type { PostType } from "@/lib/data";
 import { FollowListDialog } from "@/components/follow-list-dialog";
 import { MessageButton } from "@/components/message-button";
 import { cn } from "@/lib/utils";
+import { MediaViewerDialog } from "@/components/media-viewer-dialog";
 
+type MediaItem = {
+    url: string;
+    type: 'image' | 'video';
+    hint?: string;
+    postId: string;
+}
 
 const profileFormSchema = z.object({
     displayName: z.string().min(2, "Name must be at least 2 characters."),
@@ -58,6 +64,8 @@ export default function ProfilePage() {
   
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   
+  const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
+
   const isMyProfile = currentUser?.uid === profileId;
   const hasFetchedLikedPosts = useRef(false);
   const hasFetchedMediaPosts = useRef(false);
@@ -142,7 +150,7 @@ export default function ProfilePage() {
   }
   
   const userPosts = posts.filter(post => post.authorId === profileId);
-  const allMediaItems = mediaPosts.flatMap(post => 
+  const allMediaItems: MediaItem[] = mediaPosts.flatMap(post => 
     post.media?.map(mediaItem => ({ ...mediaItem, postId: post.id })) ?? []
   );
 
@@ -269,7 +277,7 @@ export default function ProfilePage() {
             ) : allMediaItems.length > 0 ? (
                  <div className="grid grid-cols-3 gap-1">
                     {allMediaItems.map((media, index) => (
-                        <Link key={index} href={`/post/${media.postId}`} className="relative aspect-square w-full block group">
+                        <div key={index} onClick={() => setSelectedMedia(media)} className="relative aspect-square w-full block group cursor-pointer">
                             <Image
                                 src={media.url}
                                 alt={`Media from post ${media.postId}`}
@@ -282,7 +290,7 @@ export default function ProfilePage() {
                                     <PlayCircle className="h-8 w-8 text-white drop-shadow-lg" />
                                 </div>
                             )}
-                        </Link>
+                        </div>
                     ))}
                 </div>
             ) : (
@@ -311,6 +319,18 @@ export default function ProfilePage() {
             </div>
         </TabsContent>
       </Tabs>
+
+      {selectedMedia && (
+        <MediaViewerDialog
+            isOpen={!!selectedMedia}
+            onOpenChange={(open) => {
+                if (!open) {
+                    setSelectedMedia(null);
+                }
+            }}
+            media={selectedMedia}
+        />
+      )}
     </div>
   );
 }
