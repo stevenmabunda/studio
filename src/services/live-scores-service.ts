@@ -4,85 +4,92 @@
 
 import type { MatchType } from '@/lib/data';
 
-// This is the structure we expect from the API-Football 'fixtures' endpoint
-interface ApiFootballResponse {
-  response: {
-    fixture: {
-      id: number;
-      status: {
-        long: string;
-        short: string;
-        elapsed: number;
-      };
-      date: string;
-    };
-    league: {
-      name: string;
+// This is the structure we expect from the MLB Stats API 'schedule' endpoint
+interface MlbApiGame {
+    gamePk: number;
+    gameDate: string;
+    status: {
+        abstractGameState: 'Live' | 'Final' | 'Preview';
+        detailedState: string;
     };
     teams: {
-      home: { name: string; logo: string; };
-      away: { name: string; logo: string; };
+        away: {
+            score: number;
+            team: { id: number; name: string };
+            isWinner: boolean;
+        };
+        home: {
+            score: number;
+            team: { id: number; name: string };
+            isWinner: boolean;
+        };
     };
-    goals: {
-      home: number | null;
-      away: number | null;
+    linescore?: {
+        currentInning?: number;
+        inningState?: 'Top' | 'Bottom' | 'Middle' | 'End';
     };
+    venue: { name: string };
+}
+
+interface MlbApiResponse {
+  dates: {
+    date: string;
+    games: MlbApiGame[];
   }[];
 }
 
 
 // A helper function to map the API response to our app's MatchType
-function mapApiDataToMatchType(apiData: ApiFootballResponse): MatchType[] {
-  if (!apiData || !apiData.response) {
+function mapApiDataToMatchType(apiData: MlbApiResponse): MatchType[] {
+  if (!apiData || !apiData.dates || apiData.dates.length === 0) {
     return [];
   }
 
-  return apiData.response.map(item => {
-    const fixture = item.fixture;
-    const isLive = ['1H', 'HT', '2H', 'ET', 'BT', 'P', 'SUSP', 'INT'].includes(fixture.status.short);
-    
-    let timeOrStatus: string;
-    if (isLive) {
-      timeOrStatus = fixture.status.elapsed ? `${fixture.status.elapsed}'` : fixture.status.short;
-    } else {
-      const date = new Date(fixture.date);
-      timeOrStatus = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-    }
+  const allGames = apiData.dates.flatMap(date => date.games);
 
+  return allGames.map(game => {
+    const isLive = game.status.abstractGameState === 'Live';
+    const isUpcoming = game.status.abstractGameState === 'Preview';
+
+    let timeOrStatus: string;
+    if (isLive && game.linescore?.currentInning) {
+        const inningState = game.linescore.inningState === 'Bottom' ? 'Bot' : 'Top';
+        timeOrStatus = `${inningState} ${game.linescore.currentInning}`;
+    } else if (isUpcoming) {
+        const gameDate = new Date(game.gameDate);
+        timeOrStatus = gameDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+    } else {
+        timeOrStatus = game.status.detailedState;
+    }
+    
     return {
-      id: fixture.id,
+      id: game.gamePk,
       team1: {
-        name: item.teams.home.name,
-        logo: item.teams.home.logo,
+        name: game.teams.home.team.name,
+        // MLB API doesn't provide easy-to-access logos in this endpoint, so we use placeholders
+        logo: `https://www.mlbstatic.com/team-logos/${game.teams.home.team.id}.svg`,
       },
       team2: {
-        name: item.teams.away.name,
-        logo: item.teams.away.logo,
+        name: game.teams.away.team.name,
+        logo: `https://www.mlbstatic.com/team-logos/${game.teams.away.team.id}.svg`,
       },
-      score: isLive ? `${item.goals.home ?? 0} - ${item.goals.away ?? 0}` : undefined,
+      score: !isUpcoming ? `${game.teams.home.score} - ${game.teams.away.score}` : undefined,
       time: timeOrStatus,
-      league: item.league.name,
+      league: 'MLB', // The API is MLB-specific
       isLive: isLive,
+      isUpcoming: isUpcoming,
     };
   });
 }
 
 // Reusable fetch function
-async function fetchFromApi(endpoint: string, params: URLSearchParams): Promise<ApiFootballResponse> {
-  const apiKey = process.env.FOOTBALL_API_KEY;
-  if (!apiKey) {
-    throw new Error('API key for football data is not configured.');
-  }
-  
-  const url = `https://v3.football.api-sports.io/${endpoint}?${params.toString()}`;
+async function fetchFromApi(): Promise<MlbApiResponse> {
+  const today = new Date().toISOString().split('T')[0];
+  const url = `https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${today}`;
 
   try {
     const response = await fetch(url, {
       method: 'GET',
-      headers: {
-        'x-rapidapi-host': 'v3.football.api-sports.io',
-        'x-rapidapi-key': apiKey,
-      },
       // Use Next.js revalidation to cache results for 60 seconds
       next: { revalidate: 60 } 
     });
@@ -95,39 +102,21 @@ async function fetchFromApi(endpoint: string, params: URLSearchParams): Promise<
 
     return await response.json();
   } catch (error) {
-    console.error(`Failed to fetch from ${endpoint}:`, error);
+    console.error(`Failed to fetch from MLB API:`, error);
     throw error; // Re-throw to be handled by the caller
   }
 }
 
 // Service function to get live matches
 export async function getLiveMatchesFromApi(): Promise<MatchType[]> {
-  const params = new URLSearchParams({ live: 'all' });
-  const apiData = await fetchFromApi('fixtures', params);
-  return mapApiDataToMatchType(apiData);
+  const apiData = await fetchFromApi();
+  const allMatches = mapApiDataToMatchType(apiData);
+  return allMatches.filter(match => match.isLive);
 }
 
 // Service function to get upcoming matches
 export async function getUpcomingMatchesFromApi(): Promise<MatchType[]> {
-  const today = new Date();
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-
-  const formatDate = (date: Date) => date.toISOString().split('T')[0];
-
-  const params = new URLSearchParams({
-    date: formatDate(today),
-  });
-  
-  const apiData = await fetchFromApi('fixtures', params);
-
-  // Filter out matches that are live or finished
-  const upcomingData = {
-    ...apiData,
-    response: apiData.response.filter(item => 
-      ['NS', 'TBD', 'PST'].includes(item.fixture.status.short)
-    ),
-  };
-
-  return mapApiDataToMatchType(upcomingData);
+  const apiData = await fetchFromApi();
+  const allMatches = mapApiDataToMatchType(apiData);
+  return allMatches.filter(match => match.isUpcoming);
 }

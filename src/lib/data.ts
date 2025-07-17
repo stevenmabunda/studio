@@ -34,4 +34,5 @@ export type MatchType = {
   time: string;
   league: string;
   isLive: boolean;
+  isUpcoming: boolean;
 };
