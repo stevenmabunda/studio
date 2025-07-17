@@ -6,22 +6,25 @@ import { useAuth } from '@/hooks/use-auth';
 import { SidebarNav } from '@/components/sidebar-nav';
 import { RightSidebar } from '@/components/right-sidebar';
 import { MobileTopBar } from '@/components/mobile-top-bar';
-import { useEffect } from 'react';
 import { MobileBottomNav } from '@/components/mobile-bottom-nav';
+import { PublicLayout } from '@/components/public-layout';
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
-  useEffect(() => {
-    if (!loading && !user) {
-      router.replace('/login');
-    }
-  }, [user, loading, router]);
+  if (loading) {
+    return null; // The global loader in AuthProvider handles this.
+  }
 
-  if (loading || !user) {
-    return null; // The global loader in AuthProvider handles loading, and we wait for redirect if no user.
+  // If the user is not logged in, show the public-facing layout.
+  if (!user) {
+    return (
+        <PublicLayout>
+            {children}
+        </PublicLayout>
+    );
   }
 
   // Hide the generic mobile top bar on pages that have their own custom header, like the post detail page.
