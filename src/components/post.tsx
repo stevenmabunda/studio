@@ -38,6 +38,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetTrigger,
 } from "@/components/ui/sheet";
 import { useRouter } from "next/navigation";
 import type { PostType } from "@/lib/data";
