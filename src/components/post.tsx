@@ -297,7 +297,7 @@ export function Post(props: PostProps) {
             <span className="text-muted-foreground">·</span>
             <span className="flex-shrink-0 text-sm text-muted-foreground">{timestamp}</span>
           </div>
-           {isAuthor && isStandalone && (
+           {isAuthor && (
                 <div className="flex-shrink-0">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
