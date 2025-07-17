@@ -155,6 +155,8 @@ export function Post(props: PostProps) {
   const [isImageViewerOpen, setIsImageViewerOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   
+  const [isExpanded, setIsExpanded] = useState(false);
+
   const isBookmarked = useMemo(() => bookmarkedPostIds.has(id), [bookmarkedPostIds, id]);
 
   const mediaExists = media && media.length > 0;
@@ -162,6 +164,9 @@ export function Post(props: PostProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const isAuthor = user && user.uid === authorId;
+  
+  const needsTruncation = !isStandalone && !isExpanded && content.length > 280;
+  const displayText = needsTruncation ? `${content.substring(0, 280)}` : content;
 
   useEffect(() => {
     const videoElement = videoRef.current;
@@ -327,7 +332,20 @@ export function Post(props: PostProps) {
                 )}
             </div>
           </div>
-          <p className="mt-2 whitespace-pre-wrap text-sm">{linkify(content)}</p>
+          <p className="mt-2 whitespace-pre-wrap text-sm">
+            {linkify(displayText)}
+            {needsTruncation && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsExpanded(true);
+                }}
+                className="text-primary hover:underline ml-1"
+              >
+                ...more
+              </button>
+            )}
+          </p>
           {poll && <Poll poll={poll} postId={id} />}
           {mediaExists && (
             <div className={cn("mt-3 rounded-2xl overflow-hidden border", imageCount > 1 && "aspect-video")}>
