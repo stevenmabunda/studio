@@ -5,6 +5,7 @@ import { WhoToFollow } from "./who-to-follow";
 import { Input } from "./ui/input";
 import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { LiveMatches } from "./live-matches";
 
 export function RightSidebar() {
   const router = useRouter();
@@ -28,6 +29,7 @@ export function RightSidebar() {
             onKeyDown={handleSearch}
         />
       </div>
+      <LiveMatches />
       <TrendingTopics />
       <WhoToFollow />
     </aside>

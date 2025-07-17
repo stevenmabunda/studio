@@ -12,6 +12,7 @@ import { CreatePost, type Media } from '@/components/create-post';
 import { useToast } from '@/hooks/use-toast';
 import { VideoPost } from '@/components/video-post';
 import { useTabContext } from '@/contexts/tab-context';
+import { LiveMatches } from '@/components/live-matches';
 
 export default function HomePage() {
   const { posts, loading: postsLoading, addPost } = usePosts();
@@ -52,7 +53,7 @@ export default function HomePage() {
     <div className="flex h-full min-h-screen flex-col">
       <Tabs defaultValue="foryou" className="w-full flex flex-col flex-1" onValueChange={setActiveTab}>
         <header className="sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur-sm">
-          <TabsList className="flex w-full overflow-x-auto bg-transparent p-0 no-scrollbar sm:grid sm:grid-cols-3">
+          <TabsList className="flex w-full overflow-x-auto bg-transparent p-0 no-scrollbar sm:grid sm:grid-cols-4">
             <TabsTrigger
               value="foryou"
               className="h-auto shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold data-[state=active]:border-primary data-[state=active]:shadow-none px-4"
@@ -64,6 +65,12 @@ export default function HomePage() {
               className="h-auto shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold data-[state=active]:border-primary data-[state=active]:shadow-none px-4"
             >
               Discover
+            </TabsTrigger>
+             <TabsTrigger
+              value="live"
+              className="h-auto shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold data-[state=active]:border-primary data-[state=active]:shadow-none px-4"
+            >
+              Live
             </TabsTrigger>
             <TabsTrigger
               value="video"
@@ -97,6 +104,9 @@ export default function HomePage() {
           </TabsContent>
           <TabsContent value="discover" className="h-full">
             <DiscoverFeed />
+          </TabsContent>
+           <TabsContent value="live" className="h-full">
+            <LiveMatches isPage />
           </TabsContent>
           <TabsContent value="video" className="h-full bg-black">
              <div className="h-[calc(100vh-160px)] md:h-[calc(100vh-110px)] overflow-y-auto snap-y snap-mandatory">
