@@ -50,12 +50,6 @@ export async function createTribe(
   let imageUrl = 'https://placehold.co/600x200.png';
 
   try {
-    if (profilePic && profilePic.size > 0) {
-      const tribePicRef = ref(storage, `tribes/${Date.now()}_${profilePic.name}`);
-      await uploadBytes(tribePicRef, profilePic);
-      imageUrl = await getDownloadURL(tribePicRef);
-    }
-
     const tribeDocRef = await addDoc(collection(db, 'tribes'), {
       name,
       description,
@@ -65,6 +59,13 @@ export async function createTribe(
       memberCount: 1, // Start with the creator as a member
     });
     
+    if (profilePic && profilePic.size > 0) {
+      const tribePicRef = ref(storage, `tribes/${tribeDocRef.id}/banner`);
+      await uploadBytes(tribePicRef, profilePic);
+      imageUrl = await getDownloadURL(tribePicRef);
+      await updateDoc(tribeDocRef, { bannerUrl: imageUrl });
+    }
+
     // Automatically add the creator to the members subcollection
     const memberRef = doc(db, 'tribes', tribeDocRef.id, 'members', userId);
     const userDoc = await getDoc(doc(db, 'users', userId));
@@ -113,22 +114,9 @@ export async function updateTribe(
     const updateData: { name: string; description: string; bannerUrl?: string } = { name, description };
     
     if (newBannerFile && newBannerFile.size > 0) {
-      const bannerRef = ref(storage, `tribes/banners/${tribeId}_${Date.now()}`);
+      const bannerRef = ref(storage, `tribes/${tribeId}/banner`);
       await uploadBytes(bannerRef, newBannerFile);
       updateData.bannerUrl = await getDownloadURL(bannerRef);
-      
-      const oldBannerUrl = tribeDoc.data().bannerUrl;
-      if (oldBannerUrl && oldBannerUrl.includes('firebasestorage.googleapis.com')) {
-        try {
-            const oldBannerStorageRef = ref(storage, oldBannerUrl);
-            await deleteObject(oldBannerStorageRef);
-        } catch (storageError: any) {
-            // It's okay if the old banner doesn't exist, log a warning but don't fail the operation.
-            if (storageError.code !== 'storage/object-not-found') {
-               console.warn("Could not delete old banner, it might not exist or there's a permissions issue:", storageError);
-            }
-        }
-      }
     }
 
     await updateDoc(tribeRef, updateData);
