@@ -3,7 +3,7 @@
 
 import { db } from '@/lib/firebase/config';
 import type { PostType } from '@/lib/data';
-import { collection, query, orderBy, getDocs, type Timestamp, limit } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, type Timestamp, where } from 'firebase/firestore';
 import { formatTimestamp } from '@/lib/utils';
 
 export async function getMostViewedPosts(): Promise<PostType[]> {
@@ -13,15 +13,22 @@ export async function getMostViewedPosts(): Promise<PostType[]> {
   }
   
   try {
+    // 1. Get the timestamp for 24 hours ago.
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+    // 2. Query for posts created in the last 24 hours.
+    // We can't combine this with orderBy('views') without a composite index.
     const postsRef = collection(db, 'posts');
-    const q = query(postsRef, orderBy('views', 'desc'), limit(10));
+    const q = query(postsRef, where('createdAt', '>=', twentyFourHoursAgo));
+    
     const querySnapshot = await getDocs(q);
 
     if (querySnapshot.empty) {
       return [];
     }
 
-    const posts = querySnapshot.docs.map(doc => {
+    // 3. Map documents to PostType objects.
+    let posts = querySnapshot.docs.map(doc => {
       const data = doc.data();
       const createdAt = (data.createdAt as Timestamp)?.toDate();
       return {
@@ -41,7 +48,11 @@ export async function getMostViewedPosts(): Promise<PostType[]> {
       } as PostType;
     });
     
-    return posts;
+    // 4. Sort the recent posts by views in descending order in code.
+    posts.sort((a, b) => (b.views || 0) - (a.views || 0));
+
+    // 5. Return the top 10.
+    return posts.slice(0, 10);
 
   } catch (error) {
     console.error("Error fetching most viewed posts:", error);
