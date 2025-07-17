@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -13,7 +12,7 @@ export function AuthSidebar() {
                 </Link>
             </div>
             <div className="space-y-4 mt-4">
-                <h2 className="text-3xl font-bold">Join the conversation</h2>
+                <h2 className="text-3xl font-bold">Kick It with other fans</h2>
                 <div className="space-y-2 flex flex-col items-start">
                     <Button asChild className="w-full max-w-[200px] text-lg h-12 rounded-full">
                         <Link href="/signup">Create account</Link>
