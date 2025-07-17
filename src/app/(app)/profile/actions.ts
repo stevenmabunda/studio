@@ -283,3 +283,35 @@ export async function updateUserPosts(userId: string): Promise<{success: boolean
     return { success: false, updatedCount: 0, error: 'An unexpected error occurred.' };
   }
 }
+
+async function getFollowList(
+  profileId: string,
+  type: 'followers' | 'following'
+): Promise<ProfileData[]> {
+  if (!db) return [];
+
+  const listRef = collection(db, 'users', profileId, type);
+  const listSnap = await getDocs(listRef);
+
+  if (listSnap.empty) {
+    return [];
+  }
+
+  const userIds = listSnap.docs.map((doc) => doc.id);
+
+  // Fetch user profiles for each ID
+  const userPromises = userIds.map((id) => getUserProfile(id));
+  const userProfiles = await Promise.all(userPromises);
+
+  return userProfiles.filter((p): p is ProfileData => p !== null);
+}
+
+export async function getFollowers(profileId: string): Promise<ProfileData[]> {
+  return getFollowList(profileId, 'followers');
+}
+
+export async function getFollowing(profileId: string): Promise<ProfileData[]> {
+  return getFollowList(profileId, 'following');
+}
+
+    

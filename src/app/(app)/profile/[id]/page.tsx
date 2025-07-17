@@ -26,6 +26,7 @@ import { useParams, useRouter } from "next/navigation";
 import { getUserProfile, getIsFollowing, toggleFollow, type ProfileData, getLikedPosts, updateUserPosts } from "../actions";
 import { FollowButton } from "@/components/follow-button";
 import type { PostType } from "@/lib/data";
+import { FollowListDialog } from "@/components/follow-list-dialog";
 
 
 const profileFormSchema = z.object({
@@ -190,14 +191,18 @@ export default function ProfilePage() {
           </div>
         </div>
         <div className="mt-4 flex flex-wrap gap-x-6 gap-y-1">
-          <div>
-            <span className="font-bold">{profile.followingCount}</span>
-            <span className="text-muted-foreground"> Following</span>
-          </div>
-          <div>
-            <span className="font-bold">{profile.followersCount}</span>
-            <span className="text-muted-foreground"> Followers</span>
-          </div>
+          <FollowListDialog profileId={profile.uid} type="following">
+            <div className="cursor-pointer hover:underline">
+              <span className="font-bold">{profile.followingCount}</span>
+              <span className="text-muted-foreground"> Following</span>
+            </div>
+          </FollowListDialog>
+          <FollowListDialog profileId={profile.uid} type="followers">
+            <div className="cursor-pointer hover:underline">
+              <span className="font-bold">{profile.followersCount}</span>
+              <span className="text-muted-foreground"> Followers</span>
+            </div>
+          </FollowListDialog>
         </div>
       </div>
       {isMyProfile && (
@@ -448,3 +453,5 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
         </Dialog>
     );
 }
+
+    
