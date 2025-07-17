@@ -7,6 +7,7 @@ import { getTrendingKeywords, type TrendingKeyword } from '@/app/(app)/explore/a
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from './ui/button';
 import { MoreHorizontal } from 'lucide-react';
+import Link from 'next/link';
 
 export function TrendingTopics() {
   const [topics, setTopics] = useState<TrendingKeyword[]>([]);
@@ -31,7 +32,7 @@ export function TrendingTopics() {
   return (
     <Card className="bg-secondary">
       <CardHeader className="p-4">
-        <CardTitle className="text-lg font-bold text-primary">Trends for you</CardTitle>
+        <CardTitle className="text-lg font-bold text-primary">Join the conversation</CardTitle>
       </CardHeader>
       <CardContent className="p-4 pt-0">
         <div className="space-y-4">
@@ -47,16 +48,18 @@ export function TrendingTopics() {
           ) : (
             <>
               {topics.map((item, index) => (
-                <div key={index} className="group cursor-pointer flex items-start justify-between">
-                  <div className="flex-1">
-                    <p className="text-sm text-muted-foreground">{item.category}</p>
-                    <p className="font-bold text-base group-hover:underline">{item.topic}</p>
-                    <p className="text-sm text-muted-foreground">{item.postCount}</p>
+                <Link href={`/search?q=${encodeURIComponent(item.topic)}`} key={index} className="group cursor-pointer block">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <p className="text-sm text-muted-foreground">{item.category}</p>
+                      <p className="font-bold text-base group-hover:underline">{item.topic}</p>
+                      <p className="text-sm text-muted-foreground">{item.postCount}</p>
+                    </div>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 -mr-2 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+                        <MoreHorizontal className="h-5 w-5" />
+                    </Button>
                   </div>
-                   <Button variant="ghost" size="icon" className="h-8 w-8 -mr-2 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
-                      <MoreHorizontal className="h-5 w-5" />
-                  </Button>
-                </div>
+                </Link>
               ))}
               <Button variant="link" className="p-0 text-primary text-sm">Show more</Button>
             </>
