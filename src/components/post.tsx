@@ -48,6 +48,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Textarea } from "./ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { FollowButton } from "./follow-button";
+import { PostHeader } from "./post-header";
 
 
 type PostProps = PostType & {
@@ -283,34 +284,24 @@ export function Post(props: PostProps) {
 
   const postUiContent = (
       <div className="flex space-x-3 p-3 md:p-4">
-        <Link href={`/profile/${authorId}`} onClick={(e) => e.stopPropagation()}>
-            <Avatar>
-            <AvatarImage src={authorAvatar} alt={authorName} data-ai-hint="user avatar"/>
-            <AvatarFallback>{authorName.charAt(0)}</AvatarFallback>
-            </Avatar>
-        </Link>
+        <div className="w-10">
+            <Link href={`/profile/${authorId}`} onClick={(e) => e.stopPropagation()}>
+                <Avatar>
+                <AvatarImage src={authorAvatar} alt={authorName} data-ai-hint="user avatar"/>
+                <AvatarFallback>{authorName.charAt(0)}</AvatarFallback>
+                </Avatar>
+            </Link>
+        </div>
         <div className="flex-1">
-          <div className="flex items-start justify-between">
-            <div className="flex min-w-0 flex-wrap items-center gap-x-2 text-sm">
-              <Link href={`/profile/${authorId}`} className="truncate font-bold hover:underline" onClick={(e) => e.stopPropagation()}>
-                {authorName}
-              </Link>
-              <span className="truncate text-muted-foreground">@{authorHandle}</span>
-              <span className="text-muted-foreground">·</span>
-              <span className="flex-shrink-0 text-muted-foreground">{timestamp}</span>
-              {location && (
-                <>
-                  <span className="text-muted-foreground hidden sm:inline">·</span>
-                  <span className="flex-shrink-0 text-muted-foreground flex items-center gap-1">
-                    <MapPin className="h-3 w-3" />
-                    {location}
-                  </span>
-                </>
-              )}
-            </div>
-            <div className="flex items-center -mt-1">
-                {!isAuthor && isStandalone && <FollowButton profileId={authorId} />}
-                {isAuthor && (
+            <PostHeader
+                authorId={authorId}
+                authorName={authorName}
+                authorHandle={authorHandle}
+                authorAvatar={authorAvatar}
+                timestamp={timestamp}
+            />
+             {isAuthor && isStandalone && (
+                <div className="absolute top-4 right-4">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-8 w-8 -mr-2 text-muted-foreground" onClick={(e) => e.stopPropagation()}>
@@ -329,9 +320,8 @@ export function Post(props: PostProps) {
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
-                )}
-            </div>
-          </div>
+                </div>
+             )}
           <p className="mt-2 whitespace-pre-wrap text-sm">
             {linkify(displayText)}
             {needsTruncation && (

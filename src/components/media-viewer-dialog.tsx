@@ -1,14 +1,11 @@
-
 'use client';
 
 import { Dialog, DialogContent, DialogClose, DialogTitle } from '@/components/ui/dialog';
-import { Post } from '@/components/post';
 import { CreateComment, type ReplyMedia } from '@/components/create-comment';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { PostSkeleton } from './post-skeleton';
 import { Skeleton } from './ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { formatTimestamp } from '@/lib/utils';
+import { formatTimestamp, linkify } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { usePosts } from '@/contexts/post-context';
 import { db } from '@/lib/firebase/config';
@@ -17,6 +14,7 @@ import type { PostType } from '@/lib/data';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { PostHeader } from './post-header';
 
 type Comment = {
   id: string;
@@ -42,6 +40,18 @@ interface MediaViewerDialogProps {
   media: MediaItem;
 }
 
+function CommentSkeleton() {
+    return (
+        <div className="flex space-x-3 md:space-x-4 p-3 md:p-4">
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-3/5" />
+                <Skeleton className="h-4 w-4/5" />
+            </div>
+        </div>
+    );
+}
+
 export function MediaViewerDialog({ isOpen, onOpenChange, media }: MediaViewerDialogProps) {
   const { user } = useAuth();
   const { addComment } = usePosts();
@@ -53,6 +63,9 @@ export function MediaViewerDialog({ isOpen, onOpenChange, media }: MediaViewerDi
     if (!isOpen || !db) return;
 
     setLoading(true);
+    setPost(null);
+    setComments([]);
+    
     const postRef = doc(db, 'posts', media.postId);
     
     const fetchPost = async () => {
@@ -102,7 +115,11 @@ export function MediaViewerDialog({ isOpen, onOpenChange, media }: MediaViewerDi
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent 
         className="max-w-none w-[90vw] h-[90vh] p-0 gap-0 grid grid-cols-1 md:grid-cols-[2fr,1fr]"
-        onInteractOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => {
+          if ((e.target as HTMLElement).hasAttribute('data-radix-collection-item')) {
+            e.preventDefault();
+          }
+        }}
       >
         <DialogTitle className="sr-only">Media Viewer</DialogTitle>
         <div className="relative flex items-center justify-center bg-black/90">
@@ -115,12 +132,35 @@ export function MediaViewerDialog({ isOpen, onOpenChange, media }: MediaViewerDi
         <div className="hidden md:flex flex-col bg-background h-full">
             {loading || !post ? (
                 <div className="p-4 space-y-4 border-b">
-                    <PostSkeleton />
+                   <div className="p-4">
+                        <div className="flex items-center gap-4">
+                            <Skeleton className="h-10 w-10 rounded-full" />
+                            <div className="space-y-2">
+                                <Skeleton className="h-4 w-24" />
+                                <Skeleton className="h-3 w-16" />
+                            </div>
+                        </div>
+                        <Skeleton className="h-4 w-full mt-4" />
+                        <Skeleton className="h-4 w-4/5 mt-2" />
+                   </div>
+                   <div className="divide-y divide-border">
+                        <CommentSkeleton />
+                        <CommentSkeleton />
+                   </div>
                 </div>
             ) : (
                 <>
                     <ScrollArea className="flex-1">
-                        <Post {...post} isStandalone />
+                        <div className="p-4 border-b">
+                            <PostHeader 
+                                authorAvatar={post.authorAvatar}
+                                authorId={post.authorId}
+                                authorName={post.authorName}
+                                authorHandle={post.authorHandle}
+                                timestamp={post.timestamp}
+                            />
+                            <p className="mt-2 whitespace-pre-wrap text-sm">{linkify(post.content)}</p>
+                        </div>
                         <div className="divide-y divide-border">
                             {comments.map((comment) => (
                                 <div key={comment.id} className="p-3 md:p-4">
@@ -131,7 +171,7 @@ export function MediaViewerDialog({ isOpen, onOpenChange, media }: MediaViewerDi
                                         </Avatar>
                                         <div className="flex-1">
                                             <div className="flex items-center gap-2 text-sm">
-                                                <Link href="#" className="font-bold hover:underline" onClick={(e) => e.stopPropagation()}>
+                                                <Link href={`/profile/${comment.authorId}`} className="font-bold hover:underline" onClick={(e) => e.stopPropagation()}>
                                                     {comment.authorName}
                                                 </Link>
                                                 <span className="text-muted-foreground">@{comment.authorHandle}</span>
