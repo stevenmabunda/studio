@@ -15,9 +15,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from './ui/scroll-area';
+import { Button } from './ui/button';
+import { UserPlus } from 'lucide-react';
 
 interface TribeMembersDialogProps {
   tribeId: string;
+  isCreator: boolean;
   children: React.ReactNode;
 }
 
@@ -33,7 +36,7 @@ function MemberSkeleton() {
     )
 }
 
-export function TribeMembersDialog({ tribeId, children }: TribeMembersDialogProps) {
+export function TribeMembersDialog({ tribeId, isCreator, children }: TribeMembersDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [members, setMembers] = useState<TribeMember[]>([]);
   const [loading, setLoading] = useState(false);
@@ -57,12 +60,25 @@ export function TribeMembersDialog({ tribeId, children }: TribeMembersDialogProp
     }
   }, [isOpen, tribeId, toast]);
 
+  const handleInvite = () => {
+    // Placeholder for invite functionality
+    toast({ description: "Invite functionality coming soon!" });
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Tribe Members</DialogTitle>
+          <div className="flex justify-between items-center">
+             <DialogTitle>Tribe Members</DialogTitle>
+             {isCreator && (
+                <Button size="sm" onClick={handleInvite}>
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Invite
+                </Button>
+             )}
+          </div>
         </DialogHeader>
         <ScrollArea className="max-h-[60vh] pr-6">
             <div className="space-y-4 py-4">

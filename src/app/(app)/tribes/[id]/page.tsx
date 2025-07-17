@@ -4,7 +4,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { getTribeDetails, getTribePosts, type Tribe } from '../actions';
+import { getTribeDetails, type Tribe } from '../actions';
 import type { PostType } from '@/lib/data';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
@@ -14,8 +14,9 @@ import { Post } from '@/components/post';
 import { PostSkeleton } from '@/components/post-skeleton';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Users } from 'lucide-react';
+import { ArrowLeft, Users, Settings } from 'lucide-react';
 import { TribeMembersDialog } from '@/components/tribe-members-dialog';
+import { EditTribeDialog } from '@/components/edit-tribe-dialog';
 
 export default function TribePage() {
     const { user } = useAuth();
@@ -29,6 +30,9 @@ export default function TribePage() {
     const [posts, setPosts] = useState<PostType[]>([]);
     const [loading, setLoading] = useState(true);
     const [postsLoading, setPostsLoading] = useState(true);
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
+    const isCreator = user?.uid === tribe?.creatorId;
 
     const fetchTribeData = useCallback(async () => {
         if (!tribeId) return;
@@ -108,19 +112,33 @@ export default function TribePage() {
 
     return (
         <div>
-            <header className="sticky top-0 z-10 flex items-center gap-4 border-b bg-background/80 p-2 backdrop-blur-sm">
-                <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => router.back()}>
-                    <ArrowLeft />
-                </Button>
-                <div>
-                    <h1 className="text-xl font-bold">{tribe.name}</h1>
+            <header className="sticky top-0 z-10 flex items-center justify-between border-b bg-background/80 p-2 backdrop-blur-sm">
+                <div className="flex items-center gap-4">
+                    <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => router.back()}>
+                        <ArrowLeft />
+                    </Button>
+                    <div>
+                        <h1 className="text-xl font-bold">{tribe.name}</h1>
+                    </div>
                 </div>
+                 {isCreator && (
+                     <EditTribeDialog
+                        tribe={tribe}
+                        isOpen={isEditDialogOpen}
+                        onOpenChange={setIsEditDialogOpen}
+                        onTribeUpdated={fetchTribeData}
+                    >
+                        <Button variant="outline" size="icon" className="h-9 w-9">
+                            <Settings className="h-5 w-5" />
+                        </Button>
+                    </EditTribeDialog>
+                )}
             </header>
             <div className="relative h-40 w-full bg-muted">
                 <Image
                     src={tribe.bannerUrl}
                     alt={`${tribe.name} banner`}
-                    layout="fill"
+                    fill
                     objectFit="cover"
                     data-ai-hint="stadium lights"
                 />
@@ -128,7 +146,7 @@ export default function TribePage() {
             <div className="p-4 border-b">
                  <h2 className="text-2xl font-bold">{tribe.name}</h2>
                  <p className="text-muted-foreground mt-1">{tribe.description}</p>
-                 <TribeMembersDialog tribeId={tribeId}>
+                 <TribeMembersDialog tribeId={tribeId} isCreator={isCreator}>
                      <div className="flex items-center text-sm text-muted-foreground mt-2 cursor-pointer hover:underline">
                         <Users className="h-4 w-4 mr-1" />
                         <span>{tribe.memberCount.toLocaleString()} {tribe.memberCount === 1 ? 'member' : 'members'}</span>

@@ -2,23 +2,24 @@
 'use server';
 
 import { db, storage } from '@/lib/firebase/config';
-import { collection, addDoc, serverTimestamp, getDocs, query, orderBy, type Timestamp, doc, runTransaction, increment, collectionGroup, getDoc, where, setDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { collection, addDoc, serverTimestamp, getDocs, query, orderBy, type Timestamp, doc, runTransaction, increment, collectionGroup, getDoc, where, setDoc, updateDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { z } from 'zod';
 import type { PostType } from '@/lib/data';
-import { formatTimestamp } from '@/lib/utils';
-
 
 const CreateTribeSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters.').max(50, 'Name must be 50 characters or less.'),
   description: z.string().min(10, 'Description must be at least 10 characters.').max(280, 'Description must be 280 characters or less.'),
 });
 
+const UpdateTribeSchema = CreateTribeSchema;
+
 export type Tribe = {
   id: string;
   name: string;
   description: string;
   bannerUrl: string;
+  creatorId: string;
   memberCount: number;
 };
 
@@ -84,6 +85,58 @@ export async function createTribe(
   }
 }
 
+export async function updateTribe(
+  tribeId: string,
+  userId: string,
+  formData: FormData
+): Promise<{ success: boolean; error?: string }> {
+  if (!db || !storage || !userId) {
+    return { success: false, error: 'Service not available.' };
+  }
+
+  const tribeRef = doc(db, 'tribes', tribeId);
+  const name = formData.get('name') as string;
+  const description = formData.get('description') as string;
+  const newBannerFile = formData.get('banner') as File | null;
+  
+  const validation = UpdateTribeSchema.safeParse({ name, description });
+  if (!validation.success) {
+    return { success: false, error: validation.error.errors.map(e => e.message).join(', ') };
+  }
+
+  try {
+    const tribeDoc = await getDoc(tribeRef);
+    if (!tribeDoc.exists() || tribeDoc.data().creatorId !== userId) {
+      return { success: false, error: "You don't have permission to edit this tribe." };
+    }
+    
+    const updateData: { name: string; description: string; bannerUrl?: string } = { name, description };
+    
+    if (newBannerFile && newBannerFile.size > 0) {
+      const bannerRef = ref(storage, `tribes/banners/${tribeId}_${Date.now()}`);
+      await uploadBytes(bannerRef, newBannerFile);
+      updateData.bannerUrl = await getDownloadURL(bannerRef);
+      
+      const oldBannerUrl = tribeDoc.data().bannerUrl;
+      if (oldBannerUrl && oldBannerUrl.includes('firebasestorage.googleapis.com')) {
+        try {
+            const oldBannerStorageRef = ref(storage, oldBannerUrl);
+            await deleteObject(oldBannerStorageRef);
+        } catch (storageError) {
+             console.warn("Could not delete old banner, it might not exist or there's a permissions issue:", storageError);
+        }
+      }
+    }
+
+    await updateDoc(tribeRef, updateData);
+    return { success: true };
+
+  } catch (error) {
+    console.error("Error updating tribe:", error);
+    return { success: false, error: 'Failed to update tribe.' };
+  }
+}
+
 export async function getTribes(): Promise<Tribe[]> {
     if (!db) {
         console.error("Firestore not initialized.");
@@ -106,6 +159,7 @@ export async function getTribes(): Promise<Tribe[]> {
                 name: data.name,
                 description: data.description,
                 bannerUrl: data.bannerUrl,
+                creatorId: data.creatorId,
                 memberCount: data.memberCount,
             } as Tribe;
         });
@@ -200,6 +254,7 @@ export async function getTribeDetails(tribeId: string): Promise<Tribe | null> {
             name: data.name,
             description: data.description,
             bannerUrl: data.bannerUrl,
+            creatorId: data.creatorId,
             memberCount: data.memberCount,
         } as Tribe;
     } else {
