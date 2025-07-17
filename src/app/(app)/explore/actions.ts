@@ -93,3 +93,68 @@ export async function getTrendingTopics(
 
   throw new Error(`Failed to generate trending topics after ${maxRetries} retries: ${lastError}`);
 }
+
+export type TrendingKeyword = {
+  topic: string;
+  category: string;
+  postCount: string;
+};
+
+// New function to get raw keywords without AI generation.
+export async function getTrendingKeywords(
+  input: { numberOfTopics?: number }
+): Promise<TrendingKeyword[]> {
+  if (!db) {
+    console.error("Firestore not initialized, returning empty topics.");
+    return [];
+  }
+
+  const numberOfTopicsToFetch = input.numberOfTopics || 5;
+
+  const topicsRef = collection(db, 'topics');
+  const querySnapshot = await getDocs(topicsRef);
+
+  const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const recentTopics = querySnapshot.docs
+    .map(doc => {
+      const data = doc.data();
+      if (data.createdAt && typeof data.createdAt.toDate === 'function') {
+        return {
+          topic: data.topic as string,
+          createdAt: (data.createdAt as Timestamp).toDate()
+        };
+      }
+      return null;
+    })
+    .filter((item): item is { topic: string, createdAt: Date } => {
+      if (!item) return false;
+      return item.createdAt >= oneWeekAgo;
+    })
+    .map(item => item.topic);
+
+  if (recentTopics.length === 0) {
+    return [
+      { topic: 'Kaizer Chiefs', category: 'Football', postCount: '12.1K posts' },
+      { topic: 'Orlando Pirates', category: 'Football', postCount: '10.8K posts' },
+      { topic: 'VAR', category: 'Football', postCount: '9.3K posts' },
+      { topic: 'AFCON', category: 'Football', postCount: '7.5K posts' },
+      { topic: '#TransferNews', category: 'Football', postCount: '5.2K posts' },
+    ];
+  }
+
+  const topicCounts = recentTopics.reduce((acc, topic) => {
+    acc[topic] = (acc[topic] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const popularTopics = Object.entries(topicCounts)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, numberOfTopicsToFetch)
+    .map(([topic, count]) => ({
+      topic: topic.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '), // Capitalize words
+      category: 'Football · Trending',
+      postCount: `${(count * 15).toLocaleString()} posts` // Make up a post count
+    }));
+
+  return popularTopics;
+}
