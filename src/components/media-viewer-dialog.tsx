@@ -1,7 +1,7 @@
 
 'use client';
 
-import { Dialog, DialogContent, DialogClose } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogClose, DialogTitle } from '@/components/ui/dialog';
 import { Post } from '@/components/post';
 import { CreateComment, type ReplyMedia } from '@/components/create-comment';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -104,6 +104,7 @@ export function MediaViewerDialog({ isOpen, onOpenChange, media }: MediaViewerDi
         className="max-w-none w-[90vw] h-[90vh] p-0 gap-0 grid grid-cols-1 md:grid-cols-[2fr,1fr]"
         onInteractOutside={(e) => e.preventDefault()}
       >
+        <DialogTitle className="sr-only">Media Viewer</DialogTitle>
         <div className="relative flex items-center justify-center bg-black/90">
             {media.type === 'video' ? (
                 <video src={media.url} controls autoPlay className="max-w-full max-h-full object-contain" />
