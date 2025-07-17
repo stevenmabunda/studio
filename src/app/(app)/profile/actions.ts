@@ -240,6 +240,58 @@ export async function getLikedPosts(userId: string): Promise<PostType[]> {
   }
 }
 
+export async function getMediaPosts(userId: string): Promise<PostType[]> {
+  if (!db || !userId) {
+    return [];
+  }
+
+  const postsRef = collection(db, 'posts');
+  // Query for posts by the user where the 'media' field exists and is not an empty array.
+  // Firestore doesn't support "is not empty" queries directly on arrays,
+  // so we query for `authorId` and filter in memory. This is acceptable for a reasonable number of posts.
+  const q = query(
+    postsRef, 
+    where('authorId', '==', userId),
+    orderBy('createdAt', 'desc')
+  );
+
+  try {
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+      return [];
+    }
+
+    const mediaPosts = querySnapshot.docs
+      .map(doc => {
+        const data = doc.data();
+        const createdAt = (data.createdAt as Timestamp)?.toDate();
+        return {
+          id: doc.id,
+          authorId: data.authorId,
+          authorName: data.authorName,
+          authorHandle: data.authorHandle,
+          authorAvatar: data.authorAvatar,
+          content: data.content,
+          comments: data.comments,
+          reposts: data.reposts,
+          likes: data.likes,
+          media: data.media,
+          poll: data.poll,
+          timestamp: createdAt ? formatTimestamp(createdAt) : 'now',
+        } as PostType;
+      })
+      .filter(post => post.media && post.media.length > 0); // Filter for posts that have media
+
+    return mediaPosts;
+
+  } catch (error) {
+    console.error("Error fetching media posts:", error);
+    return [];
+  }
+}
+
+
 export async function updateUserPosts(userId: string): Promise<{success: boolean, updatedCount: number, error?: string}> {
   if (!db || !userId) {
     return { success: false, updatedCount: 0, error: 'Database not available or user not specified.' };

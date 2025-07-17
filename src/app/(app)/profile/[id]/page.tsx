@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Post } from "@/components/post";
 import Image from "next/image";
-import { MapPin, Link as LinkIcon, CalendarDays, Camera, Loader2, ArrowLeft, Heart, Globe, RefreshCw } from "lucide-react";
+import { MapPin, Link as LinkIcon, CalendarDays, Camera, Loader2, ArrowLeft, Heart, Globe, RefreshCw, PlayCircle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { usePosts } from "@/contexts/post-context";
 import { PostSkeleton } from "@/components/post-skeleton";
@@ -23,11 +23,12 @@ import * as z from "zod";
 import { updateProfile } from "firebase/auth";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useParams, useRouter } from "next/navigation";
-import { getUserProfile, getIsFollowing, toggleFollow, type ProfileData, getLikedPosts, updateUserPosts } from "../actions";
+import { getUserProfile, getIsFollowing, toggleFollow, type ProfileData, getLikedPosts, updateUserPosts, getMediaPosts } from "../actions";
 import { FollowButton } from "@/components/follow-button";
 import type { PostType } from "@/lib/data";
 import { FollowListDialog } from "@/components/follow-list-dialog";
 import { MessageButton } from "@/components/message-button";
+import { cn } from "@/lib/utils";
 
 
 const profileFormSchema = z.object({
@@ -51,11 +52,14 @@ export default function ProfilePage() {
   const [profileLoading, setProfileLoading] = useState(true);
   const [likedPosts, setLikedPosts] = useState<PostType[]>([]);
   const [likedPostsLoading, setLikedPostsLoading] = useState(false);
+  const [mediaPosts, setMediaPosts] = useState<PostType[]>([]);
+  const [mediaPostsLoading, setMediaPostsLoading] = useState(false);
   
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   
   const isMyProfile = currentUser?.uid === profileId;
   const hasFetchedLikedPosts = useRef(false);
+  const hasFetchedMediaPosts = useRef(false);
 
   const fetchProfile = useCallback(async () => {
     if (!profileId) return;
@@ -78,16 +82,28 @@ export default function ProfilePage() {
 
   const handleTabChange = async (value: string) => {
     if (value === 'likes' && !hasFetchedLikedPosts.current) {
+        hasFetchedLikedPosts.current = true;
         setLikedPostsLoading(true);
         try {
             const fetchedLikedPosts = await getLikedPosts(profileId);
             setLikedPosts(fetchedLikedPosts);
-            hasFetchedLikedPosts.current = true;
         } catch (error) {
             console.error("Error fetching liked posts:", error);
             toast({ variant: 'destructive', title: "Error", description: "Could not fetch liked posts." });
         } finally {
             setLikedPostsLoading(false);
+        }
+    } else if (value === 'media' && !hasFetchedMediaPosts.current) {
+        hasFetchedMediaPosts.current = true;
+        setMediaPostsLoading(true);
+        try {
+            const fetchedMediaPosts = await getMediaPosts(profileId);
+            setMediaPosts(fetchedMediaPosts);
+        } catch (error) {
+            console.error("Error fetching media posts:", error);
+            toast({ variant: 'destructive', title: "Error", description: "Could not fetch media." });
+        } finally {
+            setMediaPostsLoading(false);
         }
     }
   }
@@ -125,6 +141,9 @@ export default function ProfilePage() {
   }
   
   const userPosts = posts.filter(post => post.authorId === profileId);
+  const allMediaItems = mediaPosts.flatMap(post => 
+    post.media?.map(mediaItem => ({ ...mediaItem, postId: post.id })) ?? []
+  );
 
   return (
     <div>
@@ -240,7 +259,37 @@ export default function ProfilePage() {
             <div className="p-8 text-center text-muted-foreground">No replies yet.</div>
         </TabsContent>
         <TabsContent value="media">
-            <div className="p-8 text-center text-muted-foreground">No media yet.</div>
+            {mediaPostsLoading ? (
+                 <div className="grid grid-cols-3 gap-1 p-1">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                        <Skeleton key={i} className="aspect-square w-full" />
+                    ))}
+                 </div>
+            ) : allMediaItems.length > 0 ? (
+                 <div className="grid grid-cols-3 gap-1">
+                    {allMediaItems.map((media, index) => (
+                        <Link key={index} href={`/post/${media.postId}`} className="relative aspect-square w-full block group">
+                            <Image
+                                src={media.url}
+                                alt={`Media from post ${media.postId}`}
+                                layout="fill"
+                                objectFit="cover"
+                                className="transition-opacity group-hover:opacity-80"
+                            />
+                             {media.type === 'video' && (
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <PlayCircle className="h-8 w-8 text-white drop-shadow-lg" />
+                                </div>
+                            )}
+                        </Link>
+                    ))}
+                </div>
+            ) : (
+                <div className="p-8 text-center text-muted-foreground">
+                    <h2 className="text-xl font-bold">No media yet</h2>
+                    <p>When {isMyProfile ? "you post" : `@${profile.handle} posts`} with images or videos, they'll appear here.</p>
+                </div>
+            )}
         </TabsContent>
         <TabsContent value="likes">
              <div className="divide-y divide-border">
