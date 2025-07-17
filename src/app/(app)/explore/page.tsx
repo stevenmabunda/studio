@@ -5,8 +5,6 @@ import { TrendingTopics } from "@/components/trending-topics";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { WhoToFollow } from "@/components/who-to-follow";
-import { ActiveLiveMatches } from "@/components/active-live-matches";
-import { UpcomingMatches } from "@/components/live-matches";
 import { SuggestedTribes } from "@/components/suggested-tribes";
 import { useRouter } from "next/navigation";
 
@@ -40,12 +38,6 @@ export default function ExplorePage() {
         </div>
         <div className="px-4">
           <SuggestedTribes />
-        </div>
-        <div className="px-4">
-          <ActiveLiveMatches />
-        </div>
-        <div className="px-4">
-          <UpcomingMatches />
         </div>
         <div className="px-4">
           <WhoToFollow />

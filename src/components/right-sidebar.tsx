@@ -4,8 +4,6 @@ import { TrendingTopics } from "@/components/trending-topics";
 import { WhoToFollow } from "./who-to-follow";
 import { Input } from "./ui/input";
 import { Search } from "lucide-react";
-import { ActiveLiveMatches } from "./active-live-matches";
-import { UpcomingMatches } from "./live-matches";
 import { useRouter } from "next/navigation";
 
 export function RightSidebar() {
@@ -30,9 +28,7 @@ export function RightSidebar() {
             onKeyDown={handleSearch}
         />
       </div>
-      <ActiveLiveMatches />
       <TrendingTopics />
-      <UpcomingMatches />
       <WhoToFollow />
     </aside>
   );
