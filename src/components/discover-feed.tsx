@@ -1,85 +1,145 @@
+
 'use client';
 
-import { Post } from '@/components/post';
-import type { PostType } from '@/lib/data';
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import React, { useMemo } from 'react';
-import { FollowButton } from './follow-button';
-import Link from 'next/link';
+import { Button } from "./ui/button";
+import Image from "next/image";
+import { useEffect, useState } from "react";
+import { getMostViewedPosts } from "@/app/(app)/discover/actions";
+import { Skeleton } from "./ui/skeleton";
+import type { PostType } from "@/lib/data";
+import { Eye, MessageCircle, Heart } from "lucide-react";
+import { useRouter } from "next/navigation";
 
-type Author = {
-    id: string;
-    name: string;
-    handle: string;
-    avatar: string;
+function HeadlineSkeleton() {
+    return (
+        <div className="group cursor-pointer p-4 hover:bg-accent flex items-start justify-between gap-4 border-t">
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-4 w-1/3" />
+            <Skeleton className="h-5 w-4/5" />
+            <Skeleton className="h-4 w-1/4" />
+          </div>
+          <Skeleton className="h-16 w-16 rounded-lg shrink-0" />
+        </div>
+    )
 }
 
-export function DiscoverFeed({ posts }: { posts: PostType[] }) {
-    const suggestedUsers = useMemo(() => {
-        const authors = new Map<string, Author>();
-        posts.forEach(post => {
-            if (!authors.has(post.authorHandle)) {
-                authors.set(post.authorHandle, {
-                    id: post.authorId,
-                    name: post.authorName,
-                    handle: post.authorHandle,
-                    avatar: post.authorAvatar
-                });
-            }
-        });
-        return Array.from(authors.values()).slice(0, 5); // Suggest up to 5 users
-    }, [posts]);
+export function DiscoverFeed() {
+  const [posts, setPosts] = useState<PostType[]>([]);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
-    if (posts.length === 0) {
-        return (
-            <div className="p-8 text-center text-muted-foreground">
-                <h2 className="text-xl font-bold">The Discover feed is quiet...</h2>
-                <p>Post something to see content here, or check back later!</p>
+  useEffect(() => {
+    const fetchPosts = async () => {
+        setLoading(true);
+        try {
+            const result = await getMostViewedPosts();
+            setPosts(result);
+        } catch (error) {
+            console.error("Failed to fetch discover posts:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+    fetchPosts();
+  }, []);
+
+  const [heroPost, ...otherPosts] = posts;
+
+  const handlePostClick = (postId: string) => {
+    router.push(`/post/${postId}`);
+  };
+
+  if (loading) {
+      return (
+        <div className="border-b">
+            {/* Hero Skeleton */}
+            <div className="relative w-full h-64 mb-2">
+                <Skeleton className="w-full h-full" />
+                <div className="absolute bottom-0 left-0 p-4 w-full bg-gradient-to-t from-black/70 to-transparent">
+                    <Skeleton className="h-8 w-3/4 mb-1" />
+                    <Skeleton className="h-4 w-1/2" />
+                </div>
             </div>
-        );
-    }
+            {/* List Skeleton */}
+            <HeadlineSkeleton />
+            <HeadlineSkeleton />
+            <HeadlineSkeleton />
+            <HeadlineSkeleton />
+        </div>
+      )
+  }
 
-    const postsFromSuggested = posts.filter(p => suggestedUsers.some(u => u.handle === p.authorHandle));
+  if (posts.length === 0) {
+      return (
+          <div className="p-8 text-center text-muted-foreground border-b">
+              <h2 className="text-xl font-bold">Nothing to discover yet</h2>
+              <p>Post something to see trending topics here.</p>
+          </div>
+      )
+  }
 
-    return (
-        <div>
-            {suggestedUsers.length > 0 && (
-                <Card className="m-4 bg-secondary">
-                    <CardHeader>
-                        <CardTitle className="text-lg font-bold">Suggested for you</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="flex flex-col gap-4">
-                            {suggestedUsers.map((user) => (
-                                <div key={user.handle} className="flex items-center justify-between gap-2">
-                                    <Link href={`/profile/${user.id}`} className="flex items-center gap-3">
-                                        <Avatar className="h-10 w-10">
-                                            <AvatarImage src={user.avatar} data-ai-hint="user avatar" />
-                                            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                                        </Avatar>
-                                        <div className="grid">
-                                            <p className="font-semibold leading-none hover:underline">{user.name}</p>
-                                            <p className="text-sm text-muted-foreground">@{user.handle}</p>
-                                        </div>
-                                    </Link>
-                                    <FollowButton profileId={user.id} />
-                                </div>
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
-
-            <div className="border-t">
-                {postsFromSuggested.length > 0 && <h2 className="p-4 text-lg font-bold">From accounts you might like</h2>}
-                <div className="divide-y divide-border">
-                    {postsFromSuggested.map((post) => (
-                        <Post key={post.id} {...post} />
-                    ))}
+  return (
+    <div className="border-b">
+      {/* Hero Section */}
+      {heroPost && (
+        <div 
+            className="relative w-full h-64 cursor-pointer group mb-2"
+            onClick={() => handlePostClick(heroPost.id)}
+        >
+            <Image
+                src={heroPost.media?.[0]?.url || 'https://placehold.co/600x300.png'}
+                alt={heroPost.content}
+                layout="fill"
+                objectFit="cover"
+                className="group-hover:opacity-90 transition-opacity"
+                data-ai-hint={heroPost.media?.[0]?.hint || 'stadium lights'}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+            <div className="absolute bottom-0 left-0 p-4 text-white">
+                <h2 className="text-2xl font-bold leading-tight mt-1 line-clamp-2">{heroPost.content}</h2>
+                <div className="flex items-center gap-4 text-sm mt-1">
+                    <div className="flex items-center gap-1">
+                        <Heart className="h-4 w-4" />
+                        <span>{heroPost.likes}</span>
+                    </div>
+                     <div className="flex items-center gap-1">
+                        <MessageCircle className="h-4 w-4" />
+                        <span>{heroPost.comments}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                        <Eye className="h-4 w-4" />
+                        <span>{heroPost.views} views</span>
+                    </div>
                 </div>
             </div>
         </div>
-    );
+      )}
+
+      {/* List of other headlines */}
+      {otherPosts.map((post) => (
+        <div key={post.id} 
+            className="group cursor-pointer p-4 hover:bg-accent flex items-start justify-between gap-4 border-t"
+            onClick={() => handlePostClick(post.id)}
+        >
+          <div className="flex-1">
+            <p className="text-sm text-muted-foreground">@{post.authorHandle}</p>
+            <p className="font-bold text-base group-hover:underline line-clamp-2">{post.content}</p>
+            <p className="text-sm text-muted-foreground mt-1">{post.views} views</p>
+          </div>
+          {post.media?.[0]?.url &&
+            <Image 
+                src={post.media[0].url} 
+                alt={post.content} 
+                width={64}
+                height={64}
+                className="w-16 h-16 rounded-lg object-cover" 
+                data-ai-hint={post.media[0].hint || 'football action'} />
+          }
+        </div>
+      ))}
+      <div className="p-4 hover:bg-accent cursor-pointer border-t">
+         <Button variant="link" className="p-0 text-primary text-sm">Show more</Button>
+      </div>
+    </div>
+  );
 }

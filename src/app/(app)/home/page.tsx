@@ -6,7 +6,7 @@ import { Post } from '@/components/post';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { usePosts } from '@/contexts/post-context';
 import { PostSkeleton } from '@/components/post-skeleton';
-import { DiscoverHeadlines } from '@/components/discover-headlines';
+import { DiscoverFeed } from '@/components/discover-feed';
 import type { PostType, MatchType } from '@/lib/data';
 import { CreatePost, type Media } from '@/components/create-post';
 import { useToast } from '@/hooks/use-toast';
@@ -149,7 +149,7 @@ export default function HomePage() {
             </div>
           </TabsContent>
           <TabsContent value="discover" className="h-full">
-            <DiscoverHeadlines />
+            <DiscoverFeed />
           </TabsContent>
           <TabsContent value="video" className="h-full bg-black">
              <div className="h-[calc(100vh-160px)] md:h-[calc(100vh-110px)] overflow-y-auto snap-y snap-mandatory">
