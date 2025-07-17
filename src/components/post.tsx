@@ -47,8 +47,6 @@ import { usePosts } from "@/contexts/post-context";
 import { useAuth } from "@/hooks/use-auth";
 import { Textarea } from "./ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { FollowButton } from "./follow-button";
-
 
 type PostProps = PostType & {
   isStandalone?: boolean;
@@ -321,7 +319,6 @@ export function Post(props: PostProps) {
                     </DropdownMenu>
                 </div>
            )}
-           {!isAuthor && <FollowButton profileId={authorId} />}
         </div>
         <p className="mt-2 whitespace-pre-wrap text-sm">
           {linkify(displayText)}
@@ -515,5 +512,3 @@ export function Post(props: PostProps) {
       </div>
   );
 }
-
-    

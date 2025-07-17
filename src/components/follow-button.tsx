@@ -1,38 +1,25 @@
 
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
-import { getIsFollowing, toggleFollow } from '@/app/(app)/profile/actions';
+import { toggleFollow } from '@/app/(app)/profile/actions';
 import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-export function FollowButton({ profileId, onFollowToggle }: { profileId: string, onFollowToggle?: (isFollowing: boolean) => void }) {
+interface FollowButtonProps {
+    profileId: string;
+    isFollowing: boolean;
+    isLoading?: boolean;
+    onToggleFollow: (isFollowing: boolean) => void;
+}
+
+export function FollowButton({ profileId, isFollowing, isLoading: isParentLoading = false, onToggleFollow }: FollowButtonProps) {
     const { user } = useAuth();
     const { toast } = useToast();
-    const [isFollowing, setIsFollowing] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-        if (user && profileId && user.uid !== profileId) {
-            setIsLoading(true);
-            getIsFollowing(user.uid, profileId)
-                .then(status => {
-                    setIsFollowing(status);
-                })
-                .catch((error) => {
-                    console.error("Failed to check follow status:", error);
-                    // Don't show a toast here to avoid being noisy on feed load.
-                })
-                .finally(() => {
-                    setIsLoading(false);
-                });
-        } else {
-            setIsLoading(false);
-        }
-    }, [user, profileId]);
-
+    const [isUpdating, setIsUpdating] = useState(false);
+    
     const handleFollow = async (e: React.MouseEvent) => {
         e.stopPropagation();
         e.preventDefault();
@@ -42,21 +29,21 @@ export function FollowButton({ profileId, onFollowToggle }: { profileId: string,
             return;
         }
 
-        setIsLoading(true);
+        setIsUpdating(true);
         const result = await toggleFollow(user.uid, profileId, isFollowing);
         if (result.success) {
-            const newFollowState = !isFollowing;
-            setIsFollowing(newFollowState);
-            onFollowToggle?.(newFollowState);
+            onToggleFollow(!isFollowing);
         } else {
              toast({ variant: 'destructive', description: "Something went wrong. Please try again." });
         }
-        setIsLoading(false);
+        setIsUpdating(false);
     };
 
     if (!user || user.uid === profileId) {
         return null;
     }
+
+    const isLoading = isParentLoading || isUpdating;
 
     return (
         <Button

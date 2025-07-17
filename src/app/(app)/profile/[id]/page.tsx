@@ -57,14 +57,17 @@ export default function ProfilePage() {
   const [mediaPostsLoading, setMediaPostsLoading] = useState(false);
   
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(true);
   
   const isMyProfile = currentUser?.uid === profileId;
   const hasFetchedLikedPosts = useRef(false);
   const hasFetchedMediaPosts = useRef(false);
 
-  const fetchProfile = useCallback(async () => {
+  const fetchProfileAndFollowStatus = useCallback(async () => {
     if (!profileId) return;
     setProfileLoading(true);
+    setFollowLoading(true);
     try {
         const fetchedProfile = await getUserProfile(profileId);
         if (fetchedProfile) {
@@ -73,13 +76,21 @@ export default function ProfilePage() {
            toast({ variant: 'destructive', title: "Error", description: "Profile not found." });
            router.push('/home'); // Redirect if profile doesn't exist
         }
+
+        if (currentUser && currentUser.uid !== profileId) {
+            const followStatus = await getIsFollowing(currentUser.uid, profileId);
+            setIsFollowing(followStatus);
+        }
+
     } catch (error) {
         console.error("Error fetching user profile:", error);
         toast({ variant: 'destructive', title: "Error", description: "Could not fetch profile." });
     } finally {
         setProfileLoading(false);
+        setFollowLoading(false);
     }
-  }, [profileId, toast, router]);
+  }, [profileId, toast, router, currentUser]);
+
 
   const handleTabChange = async (value: string) => {
     if (value === 'likes' && !hasFetchedLikedPosts.current) {
@@ -111,9 +122,9 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (!authLoading) {
-        fetchProfile();
+        fetchProfileAndFollowStatus();
     }
-  }, [authLoading, fetchProfile]);
+  }, [authLoading, fetchProfileAndFollowStatus]);
 
   if (authLoading || profileLoading || !profile || !currentUser) {
       return (
@@ -176,7 +187,12 @@ export default function ProfilePage() {
             ) : (
                 <div className="mt-20 sm:mt-24 flex items-center gap-2">
                     <MessageButton otherUserId={profile.uid} />
-                    <FollowButton profileId={profile.uid} />
+                    <FollowButton 
+                        profileId={profile.uid} 
+                        isFollowing={isFollowing}
+                        isLoading={followLoading}
+                        onToggleFollow={setIsFollowing}
+                    />
                 </div>
             )}
         </div>
@@ -229,7 +245,7 @@ export default function ProfilePage() {
             isOpen={isEditDialogOpen}
             onOpenChange={setIsEditDialogOpen}
             profile={profile}
-            onProfileUpdate={fetchProfile}
+            onProfileUpdate={fetchProfileAndFollowStatus}
         />
       )}
       <Tabs defaultValue="posts" className="w-full border-t" onValueChange={handleTabChange}>
@@ -502,5 +518,3 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
         </Dialog>
     );
 }
-
-    

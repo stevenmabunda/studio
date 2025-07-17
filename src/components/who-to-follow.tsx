@@ -8,7 +8,7 @@ import { FollowButton } from "./follow-button";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { getUsersToFollow, type ProfileData } from "@/app/(app)/profile/actions";
+import { getUsersToFollow, getIsFollowing, type ProfileData } from "@/app/(app)/profile/actions";
 import { Skeleton } from "./ui/skeleton";
 
 
@@ -30,19 +30,45 @@ function UserSkeleton() {
 export function WhoToFollow() {
   const { user } = useAuth();
   const [usersToFollow, setUsersToFollow] = useState<ProfileData[]>([]);
+  const [followedUserIds, setFollowedUserIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
         setLoading(true);
         getUsersToFollow(user.uid)
-            .then(setUsersToFollow)
+            .then(async (users) => {
+                setUsersToFollow(users);
+                if (users.length > 0) {
+                    const followChecks = users.map(u => getIsFollowing(user.uid, u.uid));
+                    const followStatuses = await Promise.all(followChecks);
+                    const newFollowedUserIds = new Set<string>();
+                    users.forEach((u, index) => {
+                        if (followStatuses[index]) {
+                            newFollowedUserIds.add(u.uid);
+                        }
+                    });
+                    setFollowedUserIds(newFollowedUserIds);
+                }
+            })
             .catch(err => console.error("Failed to fetch users to follow", err))
             .finally(() => setLoading(false));
     } else {
         setLoading(false);
     }
   }, [user]);
+
+  const handleFollowToggle = (profileId: string, isFollowing: boolean) => {
+      setFollowedUserIds(prev => {
+          const newSet = new Set(prev);
+          if (isFollowing) {
+              newSet.add(profileId);
+          } else {
+              newSet.delete(profileId);
+          }
+          return newSet;
+      })
+  }
 
   if (!user) {
     return null; // Don't show this component to guests
@@ -74,7 +100,11 @@ export function WhoToFollow() {
                     <p className="text-sm text-muted-foreground">@{userToFollow.handle}</p>
                     </div>
                 </Link>
-                <FollowButton profileId={userToFollow.uid} />
+                <FollowButton 
+                    profileId={userToFollow.uid}
+                    isFollowing={followedUserIds.has(userToFollow.uid)}
+                    onToggleFollow={(isFollowing) => handleFollowToggle(userToFollow.uid, isFollowing)}
+                />
                 </div>
             ))
           ) : (

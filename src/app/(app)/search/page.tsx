@@ -2,7 +2,7 @@
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { searchEverything, type SearchResults } from './actions';
 import { Input } from '@/components/ui/input';
 import { Search, ArrowLeft } from 'lucide-react';
@@ -18,6 +18,7 @@ import { JoinTribeButton } from '@/components/join-tribe-button';
 import { getJoinedTribeIds, type Tribe } from '@/app/(app)/tribes/actions';
 import { useAuth } from '@/hooks/use-auth';
 import Image from 'next/image';
+import { getIsFollowing, toggleFollow } from '@/app/(app)/profile/actions';
 
 function UserResultSkeleton() {
     return (
@@ -60,27 +61,46 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(true);
   
   const [joinedTribeIds, setJoinedTribeIds] = useState<Set<string>>(new Set());
+  const [followedUserIds, setFollowedUserIds] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
+  const fetchInitialData = useCallback(async () => {
     if (user) {
-      getJoinedTribeIds(user.uid).then(ids => setJoinedTribeIds(new Set(ids)));
+      setLoading(true);
+      const [tribeIds, searchResults] = await Promise.all([
+        getJoinedTribeIds(user.uid),
+        searchEverything(initialQuery)
+      ]);
+
+      setJoinedTribeIds(new Set(tribeIds));
+      setResults(searchResults);
+      
+      if (searchResults.users.length > 0) {
+        const followChecks = searchResults.users.map(u => getIsFollowing(user.uid, u.uid));
+        const followStatuses = await Promise.all(followChecks);
+        const newFollowedUserIds = new Set<string>();
+        searchResults.users.forEach((u, index) => {
+          if (followStatuses[index]) {
+            newFollowedUserIds.add(u.uid);
+          }
+        });
+        setFollowedUserIds(newFollowedUserIds);
+      }
+      
+      setLoading(false);
+    } else if (initialQuery.trim()) {
+      setLoading(true);
+      const searchResults = await searchEverything(initialQuery);
+      setResults(searchResults);
+      setLoading(false);
+    } else {
+      setResults({ users: [], tribes: [], posts: [] });
+      setLoading(false);
     }
-  }, [user]);
+  }, [user, initialQuery]);
 
   useEffect(() => {
-    const fetchResults = async () => {
-      if (initialQuery.trim()) {
-        setLoading(true);
-        const searchResults = await searchEverything(initialQuery);
-        setResults(searchResults);
-        setLoading(false);
-      } else {
-        setResults({ users: [], tribes: [], posts: [] });
-        setLoading(false);
-      }
-    };
-    fetchResults();
-  }, [initialQuery]);
+    fetchInitialData();
+  }, [fetchInitialData]);
 
   const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
@@ -90,6 +110,18 @@ export default function SearchPage() {
       }
     }
   };
+  
+  const handleFollowToggle = (profileId: string, isFollowing: boolean) => {
+      setFollowedUserIds(prev => {
+          const newSet = new Set(prev);
+          if (isFollowing) {
+              newSet.add(profileId);
+          } else {
+              newSet.delete(profileId);
+          }
+          return newSet;
+      })
+  }
 
   const handleMembershipChange = (tribeId: string, isMember: boolean) => {
     setJoinedTribeIds(prev => {
@@ -162,7 +194,11 @@ export default function SearchPage() {
                                         <p className="text-sm text-muted-foreground">@{p.handle}</p>
                                         </div>
                                     </Link>
-                                    <FollowButton profileId={p.uid} />
+                                    <FollowButton 
+                                      profileId={p.uid}
+                                      isFollowing={followedUserIds.has(p.uid)}
+                                      onToggleFollow={handleFollowToggle}
+                                    />
                                 </div>
                                 <p className="mt-2 text-sm">{p.bio}</p>
                             </div>
@@ -185,7 +221,11 @@ export default function SearchPage() {
                                         <p className="text-sm text-muted-foreground">@{p.handle}</p>
                                         </div>
                                     </Link>
-                                    <FollowButton profileId={p.uid} />
+                                     <FollowButton 
+                                      profileId={p.uid}
+                                      isFollowing={followedUserIds.has(p.uid)}
+                                      onToggleFollow={handleFollowToggle}
+                                    />
                                 </div>
                                 <p className="mt-2 text-sm ml-16">{p.bio}</p>
                             </div>

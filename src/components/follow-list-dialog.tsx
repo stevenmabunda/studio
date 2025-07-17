@@ -11,7 +11,7 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { ScrollArea } from './ui/scroll-area';
-import { getFollowers, getFollowing, type ProfileData } from '@/app/(app)/profile/actions';
+import { getFollowers, getFollowing, getIsFollowing, type ProfileData } from '@/app/(app)/profile/actions';
 import { Skeleton } from './ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import Link from 'next/link';
@@ -44,30 +44,57 @@ export function FollowListDialog({ profileId, type, children }: FollowListDialog
   const { user: currentUser } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [userList, setUserList] = useState<ProfileData[]>([]);
+  const [followedUserIds, setFollowedUserIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
   const title = type.charAt(0).toUpperCase() + type.slice(1);
 
   const fetchUsers = useCallback(async () => {
+    if (!currentUser) return;
     setLoading(true);
     try {
       const fetchFunction = type === 'followers' ? getFollowers : getFollowing;
       const users = await fetchFunction(profileId);
       setUserList(users);
+
+      if (users.length > 0) {
+        const followChecks = users.map(u => getIsFollowing(currentUser.uid, u.uid));
+        const followStatuses = await Promise.all(followChecks);
+        const newFollowedUserIds = new Set<string>();
+        users.forEach((u, index) => {
+          if (followStatuses[index]) {
+            newFollowedUserIds.add(u.uid);
+          }
+        });
+        setFollowedUserIds(newFollowedUserIds);
+      }
+
     } catch (error) {
       console.error(`Failed to fetch ${type}:`, error);
       toast({ variant: 'destructive', description: `Could not load ${type}.` });
     } finally {
       setLoading(false);
     }
-  }, [profileId, type, toast]);
+  }, [profileId, type, toast, currentUser]);
 
   useEffect(() => {
     if (isOpen) {
       fetchUsers();
     }
   }, [isOpen, fetchUsers]);
+
+   const handleFollowToggle = (profileId: string, isFollowing: boolean) => {
+      setFollowedUserIds(prev => {
+          const newSet = new Set(prev);
+          if (isFollowing) {
+              newSet.add(profileId);
+          } else {
+              newSet.delete(profileId);
+          }
+          return newSet;
+      })
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -96,7 +123,11 @@ export function FollowListDialog({ profileId, type, children }: FollowListDialog
                     </Link>
                   </DialogClose>
                   {currentUser?.uid !== user.uid && (
-                    <FollowButton profileId={user.uid} />
+                    <FollowButton 
+                        profileId={user.uid} 
+                        isFollowing={followedUserIds.has(user.uid)}
+                        onToggleFollow={(isFollowing) => handleFollowToggle(user.uid, isFollowing)}
+                    />
                   )}
                 </div>
               ))
@@ -111,5 +142,3 @@ export function FollowListDialog({ profileId, type, children }: FollowListDialog
     </Dialog>
   );
 }
-
-    
