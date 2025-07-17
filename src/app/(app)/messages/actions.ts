@@ -13,7 +13,8 @@ import {
     where,
     getDocs,
     orderBy,
-    limit
+    limit,
+    type Timestamp,
 } from 'firebase/firestore';
 import { getUserProfile, type ProfileData } from '@/app/(app)/profile/actions';
 
@@ -104,10 +105,10 @@ export async function sendMessage(conversationId: string, senderId: string, text
 export async function getConversations(userId: string): Promise<Conversation[]> {
     if (!db) return [];
 
+    // The query was causing an index error. Fetching first and then sorting in code.
     const conversationsQuery = query(
         collection(db, 'conversations'),
-        where('participantIds', 'array-contains', userId),
-        orderBy('lastMessage.timestamp', 'desc')
+        where('participantIds', 'array-contains', userId)
     );
 
     const snapshot = await getDocs(conversationsQuery);
@@ -143,7 +144,7 @@ export async function getConversations(userId: string): Promise<Conversation[]> 
                 participantIds: data.participantIds,
                 lastMessage: {
                     ...data.lastMessage,
-                    timestamp: data.lastMessage.timestamp.toDate(),
+                    timestamp: (data.lastMessage.timestamp as Timestamp).toDate(),
                 },
                 otherUser,
                 isRead,
@@ -151,7 +152,12 @@ export async function getConversations(userId: string): Promise<Conversation[]> 
         })
     );
     
-    return conversations.filter((c): c is Conversation => c !== null);
+    const validConversations = conversations.filter((c): c is Conversation => c !== null);
+
+    // Sort conversations by the last message timestamp, descending
+    validConversations.sort((a, b) => b.lastMessage.timestamp.getTime() - a.lastMessage.timestamp.getTime());
+    
+    return validConversations;
 }
 
 export async function getConversationDetails(conversationId: string): Promise<ConversationDetails | null> {
