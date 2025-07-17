@@ -4,91 +4,82 @@
 
 import type { MatchType } from '@/lib/data';
 
-// This is the structure we expect from the Ergast F1 API
-interface F1RaceResult {
-    number: string;
-    position: string;
-    points: string;
-    Driver: {
-        driverId: string;
-        code: string;
-        givenName: string;
-        familyName: string;
-    };
-    Constructor: {
-        constructorId: string;
-        name: string;
-    };
-    laps: string;
-    status: string;
-}
-
-interface F1Race {
-    season: string;
-    round: string;
-    raceName: string;
-    Circuit: {
-        circuitName: string;
-    };
-    date: string;
-    Results: F1RaceResult[];
-}
-
-interface F1ApiResponse {
-    MRData: {
-        RaceTable: {
-            Races: F1Race[];
+interface ApiFixture {
+    fixture: {
+        id: number;
+        status: {
+            short: string;
+            elapsed: number | null;
         };
+        date: string;
+    };
+    league: {
+        id: number;
+        name: string;
+        logo: string;
+    };
+    teams: {
+        home: { id: number; name: string; logo: string; };
+        away: { id: number; name: string; logo: string; };
+    };
+    goals: {
+        home: number | null;
+        away: number | null;
     };
 }
 
+interface ApiResponse {
+    response: ApiFixture[];
+}
 
 // A helper function to map the API response to our app's MatchType
-function mapApiDataToMatchType(apiData: F1ApiResponse): MatchType[] {
-    if (!apiData.MRData?.RaceTable?.Races?.[0]?.Results) {
-        return [];
-    }
+function mapApiDataToMatchType(fixtures: ApiFixture[]): MatchType[] {
+    if (!fixtures) return [];
     
-    // We'll treat each driver's result as a "match" for this test
-    const race = apiData.MRData.RaceTable.Races[0];
-    const results = race.Results;
+    return fixtures.map(f => {
+        const isLive = ['1H', 'HT', '2H', 'ET', 'P', 'LIVE'].includes(f.fixture.status.short);
+        const isUpcoming = f.fixture.status.short === 'NS'; // Not Started
+        
+        const formatTime = () => {
+            if (isLive) {
+                return f.fixture.status.elapsed ? `${f.fixture.status.elapsed}'` : 'Live';
+            }
+            if (isUpcoming) {
+                return new Date(f.fixture.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+            }
+            return f.fixture.status.short; // FT, AET, etc.
+        }
 
-    // For "upcoming" we'll just show the top 5 from the results
-    const upcoming = results.slice(0, 5).map(result => ({
-        id: parseInt(result.position, 10),
-        team1: { name: result.Driver.givenName, logo: 'https://placehold.co/40x40.png' },
-        team2: { name: result.Driver.familyName, logo: 'https://placehold.co/40x40.png' },
-        time: `Pos: ${result.position}`,
-        league: race.raceName,
-        isLive: false,
-        isUpcoming: true,
-    }));
-    
-    // For "live" we'll show a sample matchup from the results
-    if (results.length >= 2) {
-        const liveMatch: MatchType = {
-            id: 999, // Static ID for the single live match
-            team1: { name: results[0].Driver.code, logo: 'https://placehold.co/40x40.png' },
-            team2: { name: results[1].Driver.code, logo: 'https://placehold.co/40x40.png' },
-            score: `${results[0].laps} Laps`,
-            time: 'Finished',
-            league: `${race.season} ${race.raceName}`,
-            isLive: true,
-            isUpcoming: false,
-        };
-        return [liveMatch, ...upcoming];
-    }
-
-    return upcoming;
+        return {
+            id: f.fixture.id,
+            team1: { name: f.teams.home.name, logo: f.teams.home.logo },
+            team2: { name: f.teams.away.name, logo: f.teams.away.logo },
+            score: isLive ? `${f.goals.home || 0} - ${f.goals.away || 0}` : undefined,
+            time: formatTime(),
+            league: f.league.name,
+            isLive: isLive,
+            isUpcoming: isUpcoming,
+        }
+    });
 }
 
 // Reusable fetch function
-async function fetchFromApi(): Promise<F1ApiResponse> {
-  const url = `https://ergast.com/api/f1/current/last/results.json`;
+async function fetchFromApi(endpoint: string, params: URLSearchParams): Promise<ApiResponse> {
+  const url = `https://v3.football.api-sports.io/${endpoint}?${params.toString()}`;
+  const apiKey = process.env.FOOTBALL_API_KEY;
 
+  if (!apiKey) {
+      console.error("Football API key is missing. Please add it to your .env file.");
+      throw new Error("API key is not configured.");
+  }
+  
   try {
     const response = await fetch(url, {
       method: 'GET',
+      headers: {
+        'x-rapidapi-host': 'v3.football.api-sports.io',
+        'x-rapidapi-key': apiKey
+      },
       // Use Next.js revalidation to cache results for 60 seconds
       next: { revalidate: 60 } 
     });
@@ -101,21 +92,23 @@ async function fetchFromApi(): Promise<F1ApiResponse> {
 
     return await response.json();
   } catch (error) {
-    console.error(`Failed to fetch from Ergast F1 API:`, error);
+    console.error(`Failed to fetch from Football API:`, error);
     throw error; // Re-throw to be handled by the caller
   }
 }
 
 // Service function to get live matches
 export async function getLiveMatchesFromApi(): Promise<MatchType[]> {
-  const apiData = await fetchFromApi();
-  const allMatches = mapApiDataToMatchType(apiData);
-  return allMatches.filter(match => match.isLive);
+  const params = new URLSearchParams({ live: 'all' });
+  const apiData = await fetchFromApi('fixtures', params);
+  return mapApiDataToMatchType(apiData.response);
 }
 
 // Service function to get upcoming matches
 export async function getUpcomingMatchesFromApi(): Promise<MatchType[]> {
-  const apiData = await fetchFromApi();
-  const allMatches = mapApiDataToMatchType(apiData);
-  return allMatches.filter(match => match.isUpcoming);
+    const today = new Date();
+    const dateString = today.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+    const params = new URLSearchParams({ date: dateString, status: 'NS' }); // NS = Not Started
+    const apiData = await fetchFromApi('fixtures', params);
+    return mapApiDataToMatchType(apiData.response);
 }

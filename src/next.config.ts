@@ -27,13 +27,7 @@ const nextConfig: NextConfig = {
         hostname: 'media.api-sports.io',
         port: '',
         pathname: '/**',
-      },
-       {
-        protocol: 'https',
-        hostname: 'upload.wikimedia.org',
-        port: '',
-        pathname: '/**',
-      },
+      }
     ],
   },
 };
