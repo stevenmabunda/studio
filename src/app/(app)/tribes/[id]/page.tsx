@@ -4,7 +4,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { getTribeDetails, type Tribe } from '../actions';
+import { getTribeDetails, getTribePosts, type Tribe } from '../actions';
 import type { PostType } from '@/lib/data';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
