@@ -57,8 +57,16 @@ export async function getMostViewedPosts(): Promise<PostType[]> {
       return [];
     }
 
-    // 6. Randomly select one to be the hero from the top 5.
-    const heroCandidates = topPosts.slice(0, 5);
+    // 6. Randomly select one to be the hero from the top 5, ensuring it has an image.
+    const heroCandidates = topPosts
+      .slice(0, 5)
+      .filter(p => p.media && p.media.length > 0 && p.media.some(m => m.type === 'image'));
+
+    if (heroCandidates.length === 0) {
+        // No suitable hero post, return the top posts as a flat list.
+        return topPosts;
+    }
+
     const heroIndex = Math.floor(Math.random() * heroCandidates.length);
     const heroPost = heroCandidates[heroIndex];
 
@@ -72,4 +80,3 @@ export async function getMostViewedPosts(): Promise<PostType[]> {
     return [];
   }
 }
-
