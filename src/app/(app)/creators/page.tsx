@@ -79,7 +79,7 @@ const tiers = [
 export default function CreatorsPage() {
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
-      <main className="flex-1 p-4 sm:p-6 md:p-8">
+      <main className="flex-1 flex items-center justify-center p-4 sm:p-6 md:p-8">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">

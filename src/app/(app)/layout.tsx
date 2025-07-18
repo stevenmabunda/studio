@@ -29,6 +29,17 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
   // Hide the generic mobile top bar on pages that have their own custom header, like the post detail page.
   const isPostPage = pathname.startsWith('/post/');
+  const isCreatorPage = pathname === '/creators';
+
+  if (isCreatorPage) {
+    return (
+      <div className="flex w-full justify-center">
+        <main className="w-full">
+          {children}
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex w-full justify-center">
