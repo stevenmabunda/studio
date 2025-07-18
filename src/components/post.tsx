@@ -335,7 +335,7 @@ export function Post(props: PostProps) {
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
-           ) : user ? (
+           ) : user && isStandalone ? (
                 <div className="flex-shrink-0 -mr-2">
                      <FollowButton
                         profileId={authorId}
@@ -344,7 +344,30 @@ export function Post(props: PostProps) {
                         onToggleFollow={setIsFollowing}
                     />
                 </div>
-           ): null}
+           ) : (
+                isAuthor ? null : 
+                <div className="flex-shrink-0">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 -mr-2 text-muted-foreground" onClick={(e) => e.stopPropagation()}>
+                                <MoreHorizontal className="h-5 w-5" />
+                                <span className="sr-only">More options</span>
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                            <DropdownMenuItem>
+                                Not interested in this post
+                            </DropdownMenuItem>
+                             <DropdownMenuItem>
+                                Unfollow @{authorHandle}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                                Report post
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+           )}
         </div>
         <p className="mt-2 whitespace-pre-wrap text-sm">
           {linkify(displayText)}
