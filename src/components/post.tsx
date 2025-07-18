@@ -169,6 +169,8 @@ export function Post(props: PostProps) {
   const isAuthor = user && user.uid === authorId;
 
   useEffect(() => {
+    // This effect will run both on the main feed and standalone page.
+    // The follow button is only rendered on the standalone page, but the logic is harmless to run on both.
     if (user && user.uid !== authorId) {
         setFollowLoading(true);
         getIsFollowing(user.uid, authorId).then(status => {
