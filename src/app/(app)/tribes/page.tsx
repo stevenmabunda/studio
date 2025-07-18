@@ -104,8 +104,8 @@ export default function TribesPage() {
                       <Image
                       src={tribe.bannerUrl}
                       alt={`${tribe.name} banner`}
-                      layout="fill"
-                      objectFit="cover"
+                      fill
+                      className="object-cover"
                       data-ai-hint="stadium crowd"
                       />
                   </div>

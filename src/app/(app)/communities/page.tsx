@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -103,8 +104,8 @@ export default function CommunitiesPage() {
                       <Image
                       src={community.bannerUrl}
                       alt={`${community.name} banner`}
-                      layout="fill"
-                      objectFit="cover"
+                      fill
+                      className="object-cover"
                       data-ai-hint="stadium crowd"
                       />
                   </div>
