@@ -21,26 +21,29 @@ export default function HomePage() {
   const { setActiveTab } = useTabContext();
   
   const [showNotification, setShowNotification] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [hasScrolledFromTop, setHasScrolledFromTop] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
-        if (window.scrollY > 200 && newPosts.length > 0) {
-            setShowNotification(true);
-        } else {
-            setShowNotification(false);
-        }
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [newPosts.length]);
-
-  // If new posts arrive while at the top, don't show the button.
-  useEffect(() => {
-      if (newPosts.length > 0 && window.scrollY < 200) {
-          setShowNotification(false);
+      if (window.scrollY > 200) {
+        setHasScrolledFromTop(true);
+      } else {
+        // If user scrolls back to top, hide notification
+        setShowNotification(false);
+        setHasScrolledFromTop(false);
       }
-  }, [newPosts.length]);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Show notification only if there are new posts AND user has scrolled down
+  useEffect(() => {
+    if (newPosts.length > 0 && hasScrolledFromTop) {
+      setShowNotification(true);
+    }
+  }, [newPosts, hasScrolledFromTop]);
+
 
   const handleShowNewPosts = () => {
     showNewPosts();
@@ -80,7 +83,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex h-full min-h-screen flex-col" ref={scrollRef}>
+    <div className="flex h-full min-h-screen flex-col">
        <NewPostsNotification 
             show={showNotification}
             avatars={newPosts.map(p => p.authorAvatar)}
