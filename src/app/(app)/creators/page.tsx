@@ -3,8 +3,12 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Star, Gem } from "lucide-react";
+import { Check, Star, Gem, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
+import { applyForCreatorProgram } from "./actions";
+import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const tiers = [
   {
@@ -46,6 +50,48 @@ const tiers = [
 ];
 
 export default function CreatorsPage() {
+  const { toast } = useToast();
+  const [loadingTier, setLoadingTier] = useState<string | null>(null);
+  const [applicationSubmitted, setApplicationSubmitted] = useState(false);
+
+  const handleApply = async (tierName: string) => {
+    setLoadingTier(tierName);
+    try {
+      const result = await applyForCreatorProgram(tierName);
+      if ('mailto' in result) {
+        window.location.href = result.mailto;
+        setApplicationSubmitted(true);
+      } else {
+        toast({ variant: 'destructive', description: result.error });
+      }
+    } catch (error) {
+      toast({ variant: 'destructive', description: "An unexpected error occurred." });
+    } finally {
+      setLoadingTier(null);
+    }
+  };
+
+  if (applicationSubmitted) {
+    return (
+       <div className="flex flex-col min-h-screen bg-background text-foreground">
+         <main className="flex-1 flex items-center justify-center p-4 sm:p-6 md:p-8">
+            <div className="max-w-md mx-auto text-center space-y-4">
+                <Alert>
+                    <Check className="h-4 w-4" />
+                    <AlertTitle>Application Submitted!</AlertTitle>
+                    <AlertDescription>
+                        Thank you for applying. Your account will be reviewed and you will receive a confirmation within 24 hours.
+                    </AlertDescription>
+                </Alert>
+                <Button asChild>
+                    <a href="/home">Back to Home</a>
+                </Button>
+            </div>
+         </main>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
       <main className="flex-1 flex items-center justify-center p-4 sm:p-6 md:p-8">
@@ -96,8 +142,15 @@ export default function CreatorsPage() {
                       </ul>
                     </div>
                   </div>
-                   <Button className={cn(!tier.featured && "bg-foreground/80 hover:bg-foreground")}>
-                    Get Started
+                   <Button 
+                    onClick={() => handleApply(tier.name)}
+                    disabled={loadingTier !== null}
+                    className={cn(!tier.featured && "bg-foreground/80 hover:bg-foreground")}>
+                      {loadingTier === tier.name ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        'Get Started'
+                      )}
                   </Button>
                 </CardContent>
               </Card>
