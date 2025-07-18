@@ -5,7 +5,6 @@ import { WhoToFollow } from "./who-to-follow";
 import { Input } from "./ui/input";
 import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { LiveMatches } from "./live-matches";
 import { CreatorProgramPromo } from "./creator-program-promo";
 
 export function RightSidebar() {
@@ -31,7 +30,6 @@ export function RightSidebar() {
         />
       </div>
       <CreatorProgramPromo />
-      <LiveMatches />
       <TrendingTopics />
       <WhoToFollow />
     </aside>
