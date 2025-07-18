@@ -21,7 +21,7 @@ type PostContextType = {
   discoverPosts: PostType[];
   newForYouPosts: PostType[];
   showNewForYouPosts: () => void;
-  addPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }) => Promise<PostType | null>;
+  addPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }) => Promise<void>;
   editPost: (postId: string, data: { text:string }) => Promise<void>;
   deletePost: (postId: string) => Promise<void>;
   addVote: (postId: string, choiceIndex: number) => Promise<void>;
@@ -128,13 +128,12 @@ export function PostProvider({ children }: { children: ReactNode }) {
         snapshot.docChanges().forEach((change) => {
             if (change.type === "added") {
                 const postData = change.doc.data();
-                // Ensure post is not from the current user and not already in any list
-                const isOwnPost = user && postData.authorId === user.uid;
                 
-                // Check if the post already exists in either the main feed or the new posts notification
-                const postExists = forYouPosts.some(p => p.id === change.doc.id) || newForYouPosts.some(p => p.id === change.doc.id);
-
-                if (!isOwnPost && !postExists) {
+                const isOwnPost = user && postData.authorId === user.uid;
+                const postExistsInForYou = forYouPosts.some(p => p.id === change.doc.id);
+                const postExistsInNew = newForYouPosts.some(p => p.id === change.doc.id);
+                
+                if (!isOwnPost && !postExistsInForYou && !postExistsInNew) {
                     const createdAt = (postData.createdAt as Timestamp)?.toDate();
                     newPosts.push({
                         id: change.doc.id,
@@ -155,7 +154,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
 }, [forYouPosts, newForYouPosts, user]);
 
 
-  const addPost = async ({ text, media, poll, location, tribeId, communityId }: { text: string; media: Media[]; poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }): Promise<PostType | null> => {
+  const addPost = async ({ text, media, poll, location, tribeId, communityId }: { text: string; media: Media[]; poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }) => {
     if (!user || !db || !storage) {
         throw new Error("Cannot add post: user not logged in or Firebase not configured.");
     }
@@ -198,8 +197,19 @@ export function PostProvider({ children }: { children: ReactNode }) {
             postData.communityId = communityId;
         }
         
-        // The real-time listener will now be the single source of truth for adding posts.
         const docRef = await addDoc(collection(db, "posts"), postData);
+        
+        const newPost: PostType = {
+            ...postData,
+            id: docRef.id,
+            timestamp: 'now',
+            createdAt: new Date().toISOString(),
+        }
+        
+        // Add the post immediately to the feed for a good user experience
+        setForYouPosts(prev => [newPost, ...prev]);
+        setDiscoverPosts(prev => [newPost, ...prev]);
+
 
         if (text) {
             extractPostTopics({ content: text })
@@ -217,9 +227,6 @@ export function PostProvider({ children }: { children: ReactNode }) {
                     console.error("Background topic extraction failed:", error);
                 });
         }
-        
-        // Return null as we are relying on the listener to update state.
-        return null;
 
     } catch (error) {
         console.error("Failed to create post:", error);
