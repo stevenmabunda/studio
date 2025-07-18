@@ -14,7 +14,7 @@ import { VideoPost } from '@/components/video-post';
 import { useTabContext } from '@/contexts/tab-context';
 import { LiveMatches } from '@/components/live-matches';
 import { NewPostsNotification } from '@/components/new-posts-notification';
-import { getFollowingPosts } from './actions';
+import { getMostViewedPosts } from '../discover/actions';
 import { useAuth } from '@/hooks/use-auth';
 
 export default function HomePage() {
@@ -39,17 +39,11 @@ export default function HomePage() {
 
   // Fetch initial posts here instead of the context
   useEffect(() => {
-    if (user) {
-      setLoadingForYou(true);
-      getFollowingPosts(user.uid)
-        .then(setForYouPosts)
-        .finally(() => setLoadingForYou(false));
-    } else {
-        // For logged-out users, 'For You' can be empty or show discover posts
-        setForYouPosts([]);
-        setLoadingForYou(false);
-    }
-  }, [user, setLoadingForYou, setForYouPosts]);
+    setLoadingForYou(true);
+    getMostViewedPosts()
+      .then(setForYouPosts)
+      .finally(() => setLoadingForYou(false));
+  }, [setLoadingForYou, setForYouPosts]);
 
   useEffect(() => {
     const handleScroll = () => {
