@@ -133,14 +133,20 @@ export function PostProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!db) return;
 
-    const q = query(collection(db, "posts"), orderBy("createdAt", "desc"), limit(1));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    // Use a later timestamp to avoid fetching initial data again
+    const listenerQuery = query(
+        collection(db, "posts"), 
+        orderBy("createdAt", "desc"),
+        limit(1)
+    );
+
+    const unsubscribe = onSnapshot(listenerQuery, (snapshot) => {
         snapshot.docChanges().forEach((change) => {
             if (change.type === "added") {
                 const docData = change.doc.data();
                 const newPostId = change.doc.id;
                 
-                // Avoid adding the post if it's already in the main list or new list
+                // Defensive check: if post is already in either list, do nothing.
                 if (posts.some(p => p.id === newPostId) || newPosts.some(p => p.id === newPostId)) {
                     return;
                 }
@@ -155,13 +161,13 @@ export function PostProvider({ children }: { children: ReactNode }) {
                 // Don't show notifications for community/tribe posts on the main feed
                 if (newPost.communityId || newPost.tribeId) return;
 
-                // Also don't show a notification for the user's own post they just created.
+                // If it's the user's own post, add it directly to the feed.
                 if (user && newPost.authorId === user.uid) {
                     setPosts(prev => [newPost, ...prev]);
-                    return;
+                } else {
+                    // For other users' posts, add to the notification queue.
+                    setNewPosts(prev => [newPost, ...prev]);
                 }
-
-                setNewPosts(prev => [newPost, ...prev]);
             }
         });
     });
@@ -213,15 +219,14 @@ export function PostProvider({ children }: { children: ReactNode }) {
             postData.communityId = communityId;
         }
         
+        // The real-time listener will now handle adding the post to the UI.
         const docRef = await addDoc(collection(db, "posts"), postData);
         
-        // This is the only place we need to manually create the post object for the return type.
-        // The UI update will be handled by the real-time listener.
         const newPostForState: PostType = {
             id: docRef.id,
             ...postData,
             timestamp: 'Just now',
-            createdAt: serverTimestamp() as unknown as Timestamp, // This is a sentinel value
+            createdAt: serverTimestamp() as unknown as Timestamp,
         };
         
         if (text) {
@@ -243,7 +248,6 @@ export function PostProvider({ children }: { children: ReactNode }) {
         return newPostForState;
     } catch (error) {
         console.error("Failed to create post:", error);
-        // Re-throw the error to be caught by the calling component
         throw error;
     }
   };
