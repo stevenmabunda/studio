@@ -21,10 +21,10 @@ export async function getTrendingTopics(
   
   const numberOfTopicsToGenerate = input.numberOfTopics || 5;
 
-  // 1. Fetch all topics from the last 24 hours
+  // 1. Fetch all topics from the last 72 hours
   const topicsRef = collection(db, 'topics');
-  const twentyFourHoursAgo = Timestamp.fromDate(new Date(Date.now() - 24 * 60 * 60 * 1000));
-  const q = query(topicsRef, where('createdAt', '>=', twentyFourHoursAgo));
+  const seventyTwoHoursAgo = Timestamp.fromDate(new Date(Date.now() - 72 * 60 * 60 * 1000));
+  const q = query(topicsRef, where('createdAt', '>=', seventyTwoHoursAgo));
   const querySnapshot = await getDocs(q);
 
   const recentTopics = querySnapshot.docs.map(doc => doc.data().topic as string);
@@ -92,8 +92,8 @@ export async function getTrendingKeywords(
   const numberOfTopicsToFetch = input.numberOfTopics || 5;
 
   const topicsRef = collection(db, 'topics');
-  const twentyFourHoursAgo = Timestamp.fromDate(new Date(Date.now() - 24 * 60 * 60 * 1000));
-  const q = query(topicsRef, where('createdAt', '>=', twentyFourHoursAgo));
+  const seventyTwoHoursAgo = Timestamp.fromDate(new Date(Date.now() - 72 * 60 * 60 * 1000));
+  const q = query(topicsRef, where('createdAt', '>=', seventyTwoHoursAgo));
   const querySnapshot = await getDocs(q);
 
   const recentTopics = querySnapshot.docs.map(doc => doc.data().topic as string);
