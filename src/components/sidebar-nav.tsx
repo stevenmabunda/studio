@@ -10,7 +10,7 @@ import {
   SidebarMenuButton,
   SidebarFooter,
 } from '@/components/ui/sidebar';
-import { Home, Hash, Users, Bell, User, MessageSquare, LogOut, Bookmark, MoreHorizontal } from 'lucide-react';
+import { Home, Hash, Users, Bell, User, MessageSquare, LogOut, Bookmark, MoreHorizontal, Star } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -40,6 +40,7 @@ const navItems = [
   { href: '/notifications', label: 'Notifications', icon: Bell },
   { href: '/messages', label: 'Messages', icon: MessageSquare },
   { href: '/bookmarks', label: 'Bookmarks', icon: Bookmark },
+  { href: '/creators', label: 'Become a Creator', icon: Star },
 ];
 
 export function SidebarNav() {
