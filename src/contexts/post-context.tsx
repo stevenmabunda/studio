@@ -13,11 +13,11 @@ import { formatTimestamp } from '@/lib/utils';
 import { extractPostTopics } from '@/ai/flows/extract-post-topics';
 import { seedPosts } from '@/lib/seed-data';
 import type { ReplyMedia } from '@/components/create-comment';
-import { getFollowingPosts } from '@/app/(app)/home/actions';
 import { getMostViewedPosts } from '@/app/(app)/discover/actions';
 
 type PostContextType = {
   forYouPosts: PostType[];
+  setForYouPosts: React.Dispatch<React.SetStateAction<PostType[]>>;
   discoverPosts: PostType[];
   newForYouPosts: PostType[];
   showNewForYouPosts: () => void;
@@ -31,6 +31,7 @@ type PostContextType = {
   bookmarkPost: (postId: string, isBookmarked: boolean) => Promise<void>;
   bookmarkedPostIds: Set<string>;
   loadingForYou: boolean;
+  setLoadingForYou: React.Dispatch<React.SetStateAction<boolean>>;
   loadingDiscover: boolean;
 };
 
@@ -78,48 +79,42 @@ export function PostProvider({ children }: { children: ReactNode }) {
     setNewForYouPosts([]);
   };
 
-  const fetchAllData = useCallback(async () => {
-      if (!db) {
-          setLoadingForYou(false);
-          setLoadingDiscover(false);
-          return;
-      }
-      setLoadingForYou(true);
-      setLoadingDiscover(true);
-      
-      try {
-          await seedDatabaseIfEmpty();
+  const fetchDiscoverAndBookmarks = useCallback(async () => {
+    if (!db) {
+        setLoadingDiscover(false);
+        return;
+    }
+    setLoadingDiscover(true);
+    try {
+        await seedDatabaseIfEmpty();
 
-          getMostViewedPosts().then(posts => {
-            setDiscoverPosts(posts);
-            // For now, For You is the same as Discover
-            setForYouPosts(posts);
-            setLoadingDiscover(false);
-            setLoadingForYou(false);
-          });
-          
-          if (user) {
-              const bookmarksRef = collection(db, 'users', user.uid, 'bookmarks');
-              getDocs(bookmarksRef).then(bookmarksSnapshot => {
-                  const bookmarkIds = new Set(bookmarksSnapshot.docs.map(doc => doc.id));
-                  setBookmarkedPostIds(bookmarkIds);
-              });
-          } else {
-              setBookmarkedPostIds(new Set());
-          }
-      } catch (error) {
-          console.error("Error fetching initial data:", error);
-          setLoadingForYou(false);
+        getMostViewedPosts().then(posts => {
+          setDiscoverPosts(posts);
           setLoadingDiscover(false);
-      }
+        });
+        
+        if (user) {
+            const bookmarksRef = collection(db, 'users', user.uid, 'bookmarks');
+            getDocs(bookmarksRef).then(bookmarksSnapshot => {
+                const bookmarkIds = new Set(bookmarksSnapshot.docs.map(doc => doc.id));
+                setBookmarkedPostIds(bookmarkIds);
+            });
+        } else {
+            setBookmarkedPostIds(new Set());
+        }
+    } catch (error) {
+        console.error("Error fetching discover/bookmark data:", error);
+        setLoadingDiscover(false);
+    }
   }, [user]);
 
   useEffect(() => {
-    fetchAllData();
-  }, [fetchAllData]);
+    fetchDiscoverAndBookmarks();
+  }, [fetchDiscoverAndBookmarks]);
+
 
   useEffect(() => {
-    if (!db) return;
+    if (!db || !user) return;
 
     const postsQuery = query(collection(db, 'posts'), orderBy('createdAt', 'desc'), limit(1));
     
@@ -128,12 +123,10 @@ export function PostProvider({ children }: { children: ReactNode }) {
         snapshot.docChanges().forEach((change) => {
             if (change.type === "added") {
                 const postData = change.doc.data();
-                
-                const isOwnPost = user && postData.authorId === user.uid;
                 const postExistsInForYou = forYouPosts.some(p => p.id === change.doc.id);
                 const postExistsInNew = newForYouPosts.some(p => p.id === change.doc.id);
                 
-                if (!isOwnPost && !postExistsInForYou && !postExistsInNew) {
+                if (!postExistsInForYou && !postExistsInNew) {
                     const createdAt = (postData.createdAt as Timestamp)?.toDate();
                     newPosts.push({
                         id: change.doc.id,
@@ -197,20 +190,9 @@ export function PostProvider({ children }: { children: ReactNode }) {
             postData.communityId = communityId;
         }
         
+        // We no longer add to the state directly. The onSnapshot listener will handle it.
         const docRef = await addDoc(collection(db, "posts"), postData);
         
-        const newPost: PostType = {
-            ...postData,
-            id: docRef.id,
-            timestamp: 'now',
-            createdAt: new Date().toISOString(),
-        }
-        
-        // Add the post immediately to the feed for a good user experience
-        setForYouPosts(prev => [newPost, ...prev]);
-        setDiscoverPosts(prev => [newPost, ...prev]);
-
-
         if (text) {
             extractPostTopics({ content: text })
                 .then(async ({ topics }) => {
@@ -290,7 +272,8 @@ export function PostProvider({ children }: { children: ReactNode }) {
       });
     } catch (error) {
       console.error("Failed to update vote in Firestore:", error);
-      fetchAllData();
+      // Re-fetch all data on error to ensure consistency
+      fetchDiscoverAndBookmarks();
     }
   };
 
@@ -457,6 +440,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
 
   const value = {
       forYouPosts,
+      setForYouPosts,
       discoverPosts,
       newForYouPosts,
       showNewForYouPosts,
@@ -470,6 +454,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
       bookmarkPost,
       bookmarkedPostIds,
       loadingForYou,
+      setLoadingForYou,
       loadingDiscover,
   };
 

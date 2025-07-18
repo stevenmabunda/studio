@@ -14,38 +14,59 @@ import { VideoPost } from '@/components/video-post';
 import { useTabContext } from '@/contexts/tab-context';
 import { LiveMatches } from '@/components/live-matches';
 import { NewPostsNotification } from '@/components/new-posts-notification';
+import { getFollowingPosts } from './actions';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function HomePage() {
   const { 
     forYouPosts,
+    setForYouPosts,
     discoverPosts,
     newForYouPosts,
     showNewForYouPosts,
     loadingForYou,
+    setLoadingForYou,
     loadingDiscover,
     addPost 
   } = usePosts();
 
   const { toast } = useToast();
   const { activeTab, setActiveTab } = useTabContext();
+  const { user } = useAuth();
   
   const [showNotification, setShowNotification] = useState(false);
   const [hasScrolledFromTop, setHasScrolledFromTop] = useState(false);
 
+  // Fetch initial posts here instead of the context
+  useEffect(() => {
+    if (user) {
+      setLoadingForYou(true);
+      getFollowingPosts(user.uid)
+        .then(setForYouPosts)
+        .finally(() => setLoadingForYou(false));
+    } else {
+        // For logged-out users, 'For You' can be empty or show discover posts
+        setForYouPosts([]);
+        setLoadingForYou(false);
+    }
+  }, [user, setLoadingForYou, setForYouPosts]);
+
   useEffect(() => {
     const handleScroll = () => {
-      // Only show notification for the 'foryou' tab
       if (activeTab !== 'foryou') {
         setShowNotification(false);
         return;
       }
-      if (window.scrollY > 200) {
+      const isScrolled = window.scrollY > 200;
+      if (isScrolled) {
         setHasScrolledFromTop(true);
       } else {
+        // If user scrolls back to top, hide notification
         setShowNotification(false);
         setHasScrolledFromTop(false);
       }
     };
+
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, [activeTab]);
@@ -53,6 +74,8 @@ export default function HomePage() {
   useEffect(() => {
     if (newForYouPosts.length > 0 && hasScrolledFromTop && activeTab === 'foryou') {
       setShowNotification(true);
+    } else {
+      setShowNotification(false);
     }
   }, [newForYouPosts, hasScrolledFromTop, activeTab]);
 
@@ -145,7 +168,7 @@ export default function HomePage() {
               ) : (
                 <div className="p-8 text-center text-muted-foreground">
                   <h2 className="text-xl font-bold">Your feed is empty</h2>
-                  <p>Follow some accounts to see their posts here!</p>
+                  <p>Follow some accounts or check out the Discover tab!</p>
                 </div>
               )}
             </div>
