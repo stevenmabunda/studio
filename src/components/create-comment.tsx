@@ -6,16 +6,21 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import React, { useState, useRef } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { Image as ImageIcon, Film, X, Loader2 } from "lucide-react";
+import { Image as ImageIcon, Film, X, Loader2, Smile } from "lucide-react";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 
 export type ReplyMedia = {
   file: File;
   previewUrl: string;
   type: 'image' | 'video';
 };
+
+const EMOJIS = [
+    '😀', '😂', '😍', '🤔', '😭', '🙏', '❤️', '🔥', '👍', '⚽️', '🥅', '🏆', '🎉', '👏', '🚀', '💯'
+];
 
 export function CreateComment({ onComment }: { onComment: (data: { text: string; media: ReplyMedia[] }) => Promise<void> }) {
   const { user } = useAuth();
@@ -79,6 +84,10 @@ export function CreateComment({ onComment }: { onComment: (data: { text: string;
     }
   };
 
+  const handleEmojiClick = (emoji: string) => {
+    setText(prevText => prevText + emoji);
+  };
+
   const isPostable = text.trim().length > 0 || media.length > 0;
   const hasMedia = media.length > 0;
   const hasVideo = hasMedia && media[0].type === 'video';
@@ -138,6 +147,27 @@ export function CreateComment({ onComment }: { onComment: (data: { text: string;
                 <Button variant="ghost" size="icon" onClick={() => videoInputRef.current?.click()} disabled={posting || hasMedia}>
                     <Film className="h-5 w-5 text-primary" />
                 </Button>
+                 <Popover>
+                    <PopoverTrigger asChild>
+                        <Button variant="ghost" size="icon" disabled={posting}>
+                            <Smile className="h-5 w-5 text-primary" />
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-2 border-none bg-background/80 backdrop-blur-sm shadow-lg">
+                        <div className="grid grid-cols-8 gap-1">
+                            {EMOJIS.map((emoji) => (
+                                <Button
+                                    key={emoji}
+                                    variant="ghost"
+                                    className="text-xl rounded-full p-2 hover:bg-accent"
+                                    onClick={() => handleEmojiClick(emoji)}
+                                >
+                                    {emoji}
+                                </Button>
+                            ))}
+                        </div>
+                    </PopoverContent>
+                </Popover>
             </div>
             <Button disabled={!isPostable || posting} onClick={handleComment}>
                 {posting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
