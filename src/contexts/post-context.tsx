@@ -61,6 +61,35 @@ async function seedDatabaseIfEmpty() {
     }
 }
 
+async function getAllPosts(): Promise<PostType[]> {
+    if (!db) return [];
+    
+    const postsRef = collection(db, 'posts');
+    const q = query(postsRef, orderBy('createdAt', 'desc'), limit(50));
+    const querySnapshot = await getDocs(q);
+
+    return querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        const createdAt = (data.createdAt as Timestamp)?.toDate();
+        return {
+            id: doc.id,
+            authorId: data.authorId,
+            authorName: data.authorName,
+            authorHandle: data.authorHandle,
+            authorAvatar: data.authorAvatar,
+            content: data.content,
+            comments: data.comments,
+            reposts: data.reposts,
+            likes: data.likes,
+            views: data.views,
+            media: data.media,
+            poll: data.poll,
+            timestamp: createdAt ? formatTimestamp(createdAt) : 'now',
+            createdAt: createdAt?.toISOString()
+        } as PostType;
+    });
+}
+
 
 export function PostProvider({ children }: { children: ReactNode }) {
   const [forYouPosts, setForYouPosts] = useState<PostType[]>([]);
@@ -96,22 +125,19 @@ export function PostProvider({ children }: { children: ReactNode }) {
             setLoadingDiscover(false);
           });
           
-          // Fetch user-specific data
+          getAllPosts().then(posts => {
+            setForYouPosts(posts);
+            setLoadingForYou(false);
+          });
+          
           if (user) {
-              getFollowingPosts(user.uid).then(posts => {
-                setForYouPosts(posts);
-                setLoadingForYou(false);
-              });
-              
               const bookmarksRef = collection(db, 'users', user.uid, 'bookmarks');
               getDocs(bookmarksRef).then(bookmarksSnapshot => {
                   const bookmarkIds = new Set(bookmarksSnapshot.docs.map(doc => doc.id));
                   setBookmarkedPostIds(bookmarkIds);
               });
           } else {
-              setForYouPosts([]);
               setBookmarkedPostIds(new Set());
-              setLoadingForYou(false);
           }
       } catch (error) {
           console.error("Error fetching initial data:", error);
@@ -125,20 +151,38 @@ export function PostProvider({ children }: { children: ReactNode }) {
   }, [fetchAllData]);
 
   useEffect(() => {
-    if (!db || !user) return;
-    
-    const followingQuery = query(collection(db, 'users', user.uid, 'following'));
+    if (!db) return;
 
-    const unsubscribeFollowing = onSnapshot(followingQuery, () => {
-        // Refetch "For You" posts when the user's following list changes.
-        getFollowingPosts(user.uid).then(setForYouPosts);
+    const postsQuery = query(collection(db, 'posts'), orderBy('createdAt', 'desc'), limit(1));
+    
+    const unsubscribe = onSnapshot(postsQuery, (snapshot) => {
+        const newPosts: PostType[] = [];
+        snapshot.docChanges().forEach((change) => {
+            if (change.type === "added") {
+                const postData = change.doc.data();
+                // Ensure post is not from the current user and not already in any list
+                const isOwnPost = user && postData.authorId === user.uid;
+                const postExists = forYouPosts.some(p => p.id === change.doc.id) || newForYouPosts.some(p => p.id === change.doc.id);
+
+                if (!isOwnPost && !postExists) {
+                    const createdAt = (postData.createdAt as Timestamp)?.toDate();
+                    newPosts.push({
+                        id: change.doc.id,
+                        ...postData,
+                        timestamp: createdAt ? formatTimestamp(createdAt) : 'now',
+                        createdAt: createdAt?.toISOString()
+                    } as PostType);
+                }
+            }
+        });
+        
+        if (newPosts.length > 0) {
+            setNewForYouPosts(prev => [...newPosts, ...prev]);
+        }
     });
-    
-    return () => {
-        unsubscribeFollowing();
-    };
 
-  }, [user]);
+    return () => unsubscribe();
+}, [forYouPosts, newForYouPosts, user]);
 
 
   const addPost = async ({ text, media, poll, location, tribeId, communityId }: { text: string; media: Media[]; poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }): Promise<PostType | null> => {
@@ -184,11 +228,8 @@ export function PostProvider({ children }: { children: ReactNode }) {
             postData.communityId = communityId;
         }
         
+        // The real-time listener will now be the single source of truth for adding posts.
         const docRef = await addDoc(collection(db, "posts"), postData);
-        
-        // Let the real-time listener handle adding the post to the UI
-        const createdPost = await getDoc(docRef);
-        const newPostData = createdPost.data();
 
         if (text) {
             extractPostTopics({ content: text })
@@ -207,12 +248,8 @@ export function PostProvider({ children }: { children: ReactNode }) {
                 });
         }
         
-        return {
-            id: docRef.id,
-            ...newPostData,
-            timestamp: 'Just now',
-            createdAt: newPostData?.createdAt.toDate()
-        } as PostType;
+        // Return null as we are relying on the listener to update state.
+        return null;
 
     } catch (error) {
         console.error("Failed to create post:", error);
