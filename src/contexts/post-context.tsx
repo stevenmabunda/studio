@@ -7,7 +7,7 @@ import type { PostType } from '@/lib/data';
 import type { Media } from '@/components/create-post';
 import { useAuth } from '@/hooks/use-auth';
 import { db, storage } from '@/lib/firebase/config';
-import { collection, addDoc, serverTimestamp, getDocs, query, type Timestamp, doc, updateDoc, runTransaction, deleteDoc, orderBy, getDoc, setDoc, writeBatch, limit } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDocs, query, type Timestamp, doc, updateDoc, runTransaction, deleteDoc, orderBy, getDoc, setDoc, writeBatch, limit, onSnapshot } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { formatTimestamp } from '@/lib/utils';
 import { extractPostTopics } from '@/ai/flows/extract-post-topics';
@@ -16,6 +16,8 @@ import type { ReplyMedia } from '@/components/create-comment';
 
 type PostContextType = {
   posts: PostType[];
+  newPosts: PostType[];
+  showNewPosts: () => void;
   addPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }) => Promise<PostType | null>;
   editPost: (postId: string, data: { text:string }) => Promise<void>;
   deletePost: (postId: string) => Promise<void>;
@@ -59,9 +61,15 @@ async function seedDatabaseIfEmpty() {
 
 export function PostProvider({ children }: { children: ReactNode }) {
   const [posts, setPosts] = useState<PostType[]>([]);
+  const [newPosts, setNewPosts] = useState<PostType[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const [bookmarkedPostIds, setBookmarkedPostIds] = useState<Set<string>>(new Set());
+
+  const showNewPosts = () => {
+    setPosts(prev => [...newPosts, ...prev]);
+    setNewPosts([]);
+  };
 
   const fetchPostsAndBookmarks = async () => {
       if (!db) {
@@ -72,6 +80,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
       try {
           await seedDatabaseIfEmpty();
 
+          // Initial fetch
           const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
           const querySnapshot = await getDocs(q);
   
@@ -97,8 +106,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
                   timestamp: createdAt ? formatTimestamp(createdAt) : 'now',
                   createdAt: data.createdAt as Timestamp
               } as PostType;
-          })
-          .filter(post => !post.tribeId && !post.communityId); // Filter out tribe/community posts from the main feed
+          }).filter(post => !post.tribeId && !post.communityId);
   
           setPosts(postsData);
 
@@ -120,6 +128,47 @@ export function PostProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     fetchPostsAndBookmarks();
   }, [user]);
+
+  // Set up the real-time listener
+  useEffect(() => {
+    if (!db) return;
+
+    const q = query(collection(db, "posts"), orderBy("createdAt", "desc"), limit(1));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        snapshot.docChanges().forEach((change) => {
+            if (change.type === "added") {
+                const docData = change.doc.data();
+                const newPostId = change.doc.id;
+                
+                // Avoid adding the post if it's already in the main list or new list
+                if (posts.some(p => p.id === newPostId) || newPosts.some(p => p.id === newPostId)) {
+                    return;
+                }
+                
+                const createdAt = (docData.createdAt as Timestamp)?.toDate();
+                const newPost = {
+                    id: newPostId,
+                    ...docData,
+                    timestamp: createdAt ? formatTimestamp(createdAt) : 'now',
+                } as PostType;
+
+                // Don't show notifications for community/tribe posts on the main feed
+                if (newPost.communityId || newPost.tribeId) return;
+
+                // Also don't show a notification for the user's own post they just created.
+                if (user && newPost.authorId === user.uid) {
+                    setPosts(prev => [newPost, ...prev]);
+                    return;
+                }
+
+                setNewPosts(prev => [newPost, ...prev]);
+            }
+        });
+    });
+
+    return () => unsubscribe();
+  }, [posts, newPosts, user]);
+
 
   const addPost = async ({ text, media, poll, location, tribeId, communityId }: { text: string; media: Media[]; poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }): Promise<PostType | null> => {
     if (!user || !db || !storage) {
@@ -186,10 +235,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
             createdAt: serverTimestamp() as unknown as Timestamp,
         };
         
-        // Only add to the global feed if it's not a tribe or community post
-        if (!tribeId && !communityId) {
-            setPosts((prevPosts) => [newPostForState, ...prevPosts]);
-        }
+        // The real-time listener will now handle adding the post to the UI for the creator.
         
         if (text) {
             extractPostTopics({ content: text })
@@ -436,7 +482,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <PostContext.Provider value={{ posts, addPost, editPost, deletePost, addVote, addComment, likePost, repostPost, bookmarkPost, bookmarkedPostIds, loading }}>
+    <PostContext.Provider value={{ posts, newPosts, showNewPosts, addPost, editPost, deletePost, addVote, addComment, likePost, repostPost, bookmarkPost, bookmarkedPostIds, loading }}>
       {children}
     </PostContext.Provider>
   );

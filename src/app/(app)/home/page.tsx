@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { Post } from '@/components/post';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { usePosts } from '@/contexts/post-context';
@@ -13,11 +13,40 @@ import { useToast } from '@/hooks/use-toast';
 import { VideoPost } from '@/components/video-post';
 import { useTabContext } from '@/contexts/tab-context';
 import { LiveMatches } from '@/components/live-matches';
+import { NewPostsNotification } from '@/components/new-posts-notification';
 
 export default function HomePage() {
-  const { posts, loading: postsLoading, addPost } = usePosts();
+  const { posts, newPosts, showNewPosts, loading: postsLoading, addPost } = usePosts();
   const { toast } = useToast();
   const { setActiveTab } = useTabContext();
+  
+  const [showNotification, setShowNotification] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+        if (window.scrollY > 200 && newPosts.length > 0) {
+            setShowNotification(true);
+        } else {
+            setShowNotification(false);
+        }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [newPosts.length]);
+
+  // If new posts arrive while at the top, don't show the button.
+  useEffect(() => {
+      if (newPosts.length > 0 && window.scrollY < 200) {
+          setShowNotification(false);
+      }
+  }, [newPosts.length]);
+
+  const handleShowNewPosts = () => {
+    showNewPosts();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setShowNotification(false);
+  }
 
   const [isMuted, setIsMuted] = useState(true);
   const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
@@ -43,6 +72,7 @@ export default function HomePage() {
     try {
         await addPost(data);
         toast({ description: "Your post has been published!" });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
         console.error("Failed to create post:", error);
         toast({ variant: 'destructive', description: "Something went wrong. Please try again." });
@@ -50,7 +80,12 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex h-full min-h-screen flex-col">
+    <div className="flex h-full min-h-screen flex-col" ref={scrollRef}>
+       <NewPostsNotification 
+            show={showNotification}
+            avatars={newPosts.map(p => p.authorAvatar)}
+            onClick={handleShowNewPosts}
+        />
       <Tabs defaultValue="foryou" className="w-full flex flex-col flex-1" onValueChange={setActiveTab}>
         <header className="sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur-sm">
           <TabsList className="flex w-full overflow-x-auto bg-transparent p-0 no-scrollbar sm:grid sm:grid-cols-4">
