@@ -6,6 +6,7 @@ import { Input } from "./ui/input";
 import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { LiveMatches } from "./live-matches";
+import { CreatorProgramPromo } from "./creator-program-promo";
 
 export function RightSidebar() {
   const router = useRouter();
@@ -29,6 +30,7 @@ export function RightSidebar() {
             onKeyDown={handleSearch}
         />
       </div>
+      <CreatorProgramPromo />
       <LiveMatches />
       <TrendingTopics />
       <WhoToFollow />
