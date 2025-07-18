@@ -12,6 +12,7 @@ import { usePosts } from '@/contexts/post-context';
 import { useToast } from '@/hooks/use-toast';
 import type { PostType } from '@/lib/data';
 import { useTabContext } from '@/contexts/tab-context';
+import { ScrollArea } from './ui/scroll-area';
 
 const navItems = [
   { href: '/home', icon: Home, label: 'Home' },
@@ -81,15 +82,17 @@ export function MobileBottomNav() {
                 </SheetTrigger>
                 <SheetContent 
                     side="bottom" 
-                    className="rounded-t-lg p-0"
+                    className="rounded-t-lg p-0 h-[90vh]"
                     onOpenAutoFocus={(e) => e.preventDefault()}
                 >
                     <SheetHeader className="p-3 md:p-4 pb-0">
                       <SheetTitle>Create a new post</SheetTitle>
                     </SheetHeader>
-                    <div className="-mx-6">
-                        <CreatePost onPost={handlePost} />
-                    </div>
+                    <ScrollArea className="h-full">
+                        <div className="p-3 md:p-4 pt-0">
+                            <CreatePost onPost={handlePost} />
+                        </div>
+                    </ScrollArea>
                 </SheetContent>
               </Sheet>
             );
