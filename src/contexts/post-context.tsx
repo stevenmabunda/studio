@@ -61,36 +61,6 @@ async function seedDatabaseIfEmpty() {
     }
 }
 
-async function getAllPosts(): Promise<PostType[]> {
-    if (!db) return [];
-    
-    const postsRef = collection(db, 'posts');
-    const q = query(postsRef, orderBy('createdAt', 'desc'), limit(50));
-    const querySnapshot = await getDocs(q);
-
-    return querySnapshot.docs.map(doc => {
-        const data = doc.data();
-        const createdAt = (data.createdAt as Timestamp)?.toDate();
-        return {
-            id: doc.id,
-            authorId: data.authorId,
-            authorName: data.authorName,
-            authorHandle: data.authorHandle,
-            authorAvatar: data.authorAvatar,
-            content: data.content,
-            comments: data.comments,
-            reposts: data.reposts,
-            likes: data.likes,
-            views: data.views,
-            media: data.media,
-            poll: data.poll,
-            timestamp: createdAt ? formatTimestamp(createdAt) : 'now',
-            createdAt: createdAt?.toISOString()
-        } as PostType;
-    });
-}
-
-
 export function PostProvider({ children }: { children: ReactNode }) {
   const [forYouPosts, setForYouPosts] = useState<PostType[]>([]);
   const [discoverPosts, setDiscoverPosts] = useState<PostType[]>([]);
@@ -104,6 +74,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
 
   const showNewForYouPosts = () => {
     setForYouPosts(prev => [...newForYouPosts, ...prev]);
+    setDiscoverPosts(prev => [...newForYouPosts, ...prev]);
     setNewForYouPosts([]);
   };
 
@@ -119,14 +90,11 @@ export function PostProvider({ children }: { children: ReactNode }) {
       try {
           await seedDatabaseIfEmpty();
 
-          // Fetch discover posts (most viewed)
           getMostViewedPosts().then(posts => {
             setDiscoverPosts(posts);
-            setLoadingDiscover(false);
-          });
-          
-          getAllPosts().then(posts => {
+            // For now, For You is the same as Discover
             setForYouPosts(posts);
+            setLoadingDiscover(false);
             setLoadingForYou(false);
           });
           
@@ -162,6 +130,8 @@ export function PostProvider({ children }: { children: ReactNode }) {
                 const postData = change.doc.data();
                 // Ensure post is not from the current user and not already in any list
                 const isOwnPost = user && postData.authorId === user.uid;
+                
+                // Check if the post already exists in either the main feed or the new posts notification
                 const postExists = forYouPosts.some(p => p.id === change.doc.id) || newForYouPosts.some(p => p.id === change.doc.id);
 
                 if (!isOwnPost && !postExists) {
