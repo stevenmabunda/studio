@@ -2,22 +2,25 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { PostType } from '@/lib/data';
 import type { Media } from '@/components/create-post';
 import { useAuth } from '@/hooks/use-auth';
 import { db, storage } from '@/lib/firebase/config';
-import { collection, addDoc, serverTimestamp, getDocs, query, type Timestamp, doc, updateDoc, runTransaction, deleteDoc, orderBy, getDoc, setDoc, writeBatch, limit, onSnapshot } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDocs, query, type Timestamp, doc, updateDoc, runTransaction, deleteDoc, orderBy, getDoc, setDoc, writeBatch, limit, onSnapshot, where } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { formatTimestamp } from '@/lib/utils';
 import { extractPostTopics } from '@/ai/flows/extract-post-topics';
 import { seedPosts } from '@/lib/seed-data';
 import type { ReplyMedia } from '@/components/create-comment';
+import { getFollowingPosts } from '@/app/(app)/home/actions';
+import { getMostViewedPosts } from '@/app/(app)/discover/actions';
 
 type PostContextType = {
-  posts: PostType[];
-  newPosts: PostType[];
-  showNewPosts: () => void;
+  forYouPosts: PostType[];
+  discoverPosts: PostType[];
+  newForYouPosts: PostType[];
+  showNewForYouPosts: () => void;
   addPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }) => Promise<PostType | null>;
   editPost: (postId: string, data: { text:string }) => Promise<void>;
   deletePost: (postId: string) => Promise<void>;
@@ -27,7 +30,8 @@ type PostContextType = {
   repostPost: (postId: string, isReposted: boolean) => Promise<void>;
   bookmarkPost: (postId: string, isBookmarked: boolean) => Promise<void>;
   bookmarkedPostIds: Set<string>;
-  loading: boolean;
+  loadingForYou: boolean;
+  loadingDiscover: boolean;
 };
 
 const PostContext = createContext<PostContextType | undefined>(undefined);
@@ -44,10 +48,9 @@ async function seedDatabaseIfEmpty() {
         const batch = writeBatch(db);
         seedPosts.forEach((post) => {
             const docRef = doc(postsRef); // Create a new doc with a random ID
-            // We need to convert the plain object to what Firestore expects
             const firestorePost = {
                 ...post,
-                createdAt: serverTimestamp() // Use server timestamp for creation
+                createdAt: serverTimestamp()
             };
             batch.set(docRef, firestorePost);
         });
@@ -60,120 +63,82 @@ async function seedDatabaseIfEmpty() {
 
 
 export function PostProvider({ children }: { children: ReactNode }) {
-  const [posts, setPosts] = useState<PostType[]>([]);
-  const [newPosts, setNewPosts] = useState<PostType[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [forYouPosts, setForYouPosts] = useState<PostType[]>([]);
+  const [discoverPosts, setDiscoverPosts] = useState<PostType[]>([]);
+  const [newForYouPosts, setNewForYouPosts] = useState<PostType[]>([]);
+  
+  const [loadingForYou, setLoadingForYou] = useState(true);
+  const [loadingDiscover, setLoadingDiscover] = useState(true);
+
   const { user } = useAuth();
   const [bookmarkedPostIds, setBookmarkedPostIds] = useState<Set<string>>(new Set());
 
-  const showNewPosts = () => {
-    setPosts(prev => [...newPosts, ...prev]);
-    setNewPosts([]);
+  const showNewForYouPosts = () => {
+    setForYouPosts(prev => [...newForYouPosts, ...prev]);
+    setNewForYouPosts([]);
   };
 
-  const fetchPostsAndBookmarks = async () => {
+  const fetchAllData = useCallback(async () => {
       if (!db) {
-          setLoading(false);
+          setLoadingForYou(false);
+          setLoadingDiscover(false);
           return;
       }
-      setLoading(true);
+      setLoadingForYou(true);
+      setLoadingDiscover(true);
+      
       try {
           await seedDatabaseIfEmpty();
 
-          // Initial fetch
-          const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
-          const querySnapshot = await getDocs(q);
-  
-          const postsData = querySnapshot.docs.map(doc => {
-              const data = doc.data();
-              const createdAt = (data.createdAt as Timestamp)?.toDate();
-              return {
-                  id: doc.id,
-                  authorId: data.authorId,
-                  authorName: data.authorName,
-                  authorHandle: data.authorHandle,
-                  authorAvatar: data.authorAvatar,
-                  content: data.content,
-                  comments: data.comments,
-                  reposts: data.reposts,
-                  likes: data.likes,
-                  views: data.views || 0,
-                  location: data.location,
-                  media: data.media,
-                  poll: data.poll,
-                  tribeId: data.tribeId,
-                  communityId: data.communityId,
-                  timestamp: createdAt ? formatTimestamp(createdAt) : 'now',
-                  createdAt: data.createdAt as Timestamp
-              } as PostType;
-          }).filter(post => !post.tribeId && !post.communityId);
-  
-          setPosts(postsData);
-
+          // Fetch discover posts (most viewed)
+          getMostViewedPosts().then(posts => {
+            setDiscoverPosts(posts);
+            setLoadingDiscover(false);
+          });
+          
+          // Fetch user-specific data
           if (user) {
+              getFollowingPosts(user.uid).then(posts => {
+                setForYouPosts(posts);
+                setLoadingForYou(false);
+              });
+              
               const bookmarksRef = collection(db, 'users', user.uid, 'bookmarks');
-              const bookmarksSnapshot = await getDocs(bookmarksRef);
-              const bookmarkIds = new Set(bookmarksSnapshot.docs.map(doc => doc.id));
-              setBookmarkedPostIds(bookmarkIds);
+              getDocs(bookmarksRef).then(bookmarksSnapshot => {
+                  const bookmarkIds = new Set(bookmarksSnapshot.docs.map(doc => doc.id));
+                  setBookmarkedPostIds(bookmarkIds);
+              });
           } else {
+              setForYouPosts([]);
               setBookmarkedPostIds(new Set());
+              setLoadingForYou(false);
           }
       } catch (error) {
-          console.error("Error fetching data:", error);
-      } finally {
-          setLoading(false);
+          console.error("Error fetching initial data:", error);
+          setLoadingForYou(false);
+          setLoadingDiscover(false);
       }
-  };
-
-  useEffect(() => {
-    fetchPostsAndBookmarks();
   }, [user]);
 
-  // Set up the real-time listener
   useEffect(() => {
-    if (!db) return;
+    fetchAllData();
+  }, [fetchAllData]);
 
-    // Use a later timestamp to avoid fetching initial data again
-    const listenerQuery = query(
-        collection(db, "posts"), 
-        orderBy("createdAt", "desc"),
-        limit(1)
-    );
+  useEffect(() => {
+    if (!db || !user) return;
+    
+    const followingQuery = query(collection(db, 'users', user.uid, 'following'));
 
-    const unsubscribe = onSnapshot(listenerQuery, (snapshot) => {
-        snapshot.docChanges().forEach((change) => {
-            if (change.type === "added") {
-                const docData = change.doc.data();
-                const newPostId = change.doc.id;
-                
-                // Defensive check: if post is already in either list, do nothing.
-                if (posts.some(p => p.id === newPostId) || newPosts.some(p => p.id === newPostId)) {
-                    return;
-                }
-                
-                const createdAt = (docData.createdAt as Timestamp)?.toDate();
-                const newPost = {
-                    id: newPostId,
-                    ...docData,
-                    timestamp: createdAt ? formatTimestamp(createdAt) : 'now',
-                } as PostType;
-
-                // Don't show notifications for community/tribe posts on the main feed
-                if (newPost.communityId || newPost.tribeId) return;
-
-                // If it's the user's own post, add it directly to the feed.
-                if (user && newPost.authorId === user.uid) {
-                    setPosts(prev => [newPost, ...prev]);
-                } else {
-                    // For other users' posts, add to the notification queue.
-                    setNewPosts(prev => [newPost, ...prev]);
-                }
-            }
-        });
+    const unsubscribeFollowing = onSnapshot(followingQuery, () => {
+        // Refetch "For You" posts when the user's following list changes.
+        getFollowingPosts(user.uid).then(setForYouPosts);
     });
+    
+    return () => {
+        unsubscribeFollowing();
+    };
 
-    return () => unsubscribe();
-  }, [posts, newPosts, user]);
+  }, [user]);
 
 
   const addPost = async ({ text, media, poll, location, tribeId, communityId }: { text: string; media: Media[]; poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }): Promise<PostType | null> => {
@@ -219,16 +184,12 @@ export function PostProvider({ children }: { children: ReactNode }) {
             postData.communityId = communityId;
         }
         
-        // The real-time listener will now handle adding the post to the UI.
         const docRef = await addDoc(collection(db, "posts"), postData);
         
-        const newPostForState: PostType = {
-            id: docRef.id,
-            ...postData,
-            timestamp: 'Just now',
-            createdAt: serverTimestamp() as unknown as Timestamp,
-        };
-        
+        // Let the real-time listener handle adding the post to the UI
+        const createdPost = await getDoc(docRef);
+        const newPostData = createdPost.data();
+
         if (text) {
             extractPostTopics({ content: text })
                 .then(async ({ topics }) => {
@@ -245,7 +206,14 @@ export function PostProvider({ children }: { children: ReactNode }) {
                     console.error("Background topic extraction failed:", error);
                 });
         }
-        return newPostForState;
+        
+        return {
+            id: docRef.id,
+            ...newPostData,
+            timestamp: 'Just now',
+            createdAt: newPostData?.createdAt.toDate()
+        } as PostType;
+
     } catch (error) {
         console.error("Failed to create post:", error);
         throw error;
@@ -256,14 +224,16 @@ export function PostProvider({ children }: { children: ReactNode }) {
     if (!db || !user) throw new Error("Not authorized or db not available");
     const postRef = doc(db, 'posts', postId);
     await updateDoc(postRef, { content: data.text });
-    setPosts(posts => posts.map(p => p.id === postId ? { ...p, content: data.text } : p));
+    setForYouPosts(posts => posts.map(p => p.id === postId ? { ...p, content: data.text } : p));
+    setDiscoverPosts(posts => posts.map(p => p.id === postId ? { ...p, content: data.text } : p));
   };
 
   const deletePost = async (postId: string) => {
     if (!db || !user) throw new Error("Not authorized or db not available");
     const postRef = doc(db, 'posts', postId);
     await deleteDoc(postRef);
-    setPosts(posts => posts.filter(p => p.id !== postId));
+    setForYouPosts(posts => posts.filter(p => p.id !== postId));
+    setDiscoverPosts(posts => posts.filter(p => p.id !== postId));
   };
 
   const addVote = async (postId: string, choiceIndex: number) => {
@@ -271,8 +241,8 @@ export function PostProvider({ children }: { children: ReactNode }) {
 
     const postRef = doc(db, "posts", postId);
 
-    setPosts(prevPosts =>
-      prevPosts.map(p => {
+    const updater = (posts: PostType[]) =>
+      posts.map(p => {
         if (p.id === postId && p.poll) {
           const newChoices = p.poll.choices.map((choice, index) => 
             index === choiceIndex ? { ...choice, votes: choice.votes + 1 } : choice
@@ -280,8 +250,10 @@ export function PostProvider({ children }: { children: ReactNode }) {
           return { ...p, poll: { ...p.poll, choices: newChoices } };
         }
         return p;
-      })
-    );
+      });
+
+    setForYouPosts(updater);
+    setDiscoverPosts(updater);
 
     try {
       await runTransaction(db, async (transaction) => {
@@ -304,8 +276,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
       });
     } catch (error) {
       console.error("Failed to update vote in Firestore:", error);
-      // Re-fetch posts to ensure UI consistency if transaction fails
-      fetchPostsAndBookmarks();
+      fetchAllData();
     }
   };
 
@@ -352,9 +323,10 @@ export function PostProvider({ children }: { children: ReactNode }) {
             transaction.set(newCommentRef, commentData);
         });
         
-        setPosts(posts => posts.map(p => p.id === postId ? { ...p, comments: (p.comments || 0) + 1 } : p));
+        const updater = (posts: PostType[]) => posts.map(p => p.id === postId ? { ...p, comments: (p.comments || 0) + 1 } : p);
+        setForYouPosts(updater);
+        setDiscoverPosts(updater);
         
-        // Create notification
         const postDoc = await getDoc(postRef);
         if (postDoc.exists()) {
             const postAuthorId = postDoc.data().authorId;
@@ -392,19 +364,16 @@ export function PostProvider({ children }: { children: ReactNode }) {
             }
             
             if (isLiked) {
-                // Unlike
                 const newLikes = Math.max(0, postDoc.data().likes - 1);
                 transaction.update(postRef, { likes: newLikes });
                 transaction.delete(likeRef);
             } else {
-                // Like
                 const newLikes = postDoc.data().likes + 1;
                 transaction.update(postRef, { likes: newLikes });
                 transaction.set(likeRef, { createdAt: serverTimestamp() });
             }
         });
 
-        // Create notification only on like, not on unlike
         if (!isLiked) {
             const postDoc = await getDoc(postRef);
             if (postDoc.exists()) {
@@ -472,8 +441,26 @@ export function PostProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const value = {
+      forYouPosts,
+      discoverPosts,
+      newForYouPosts,
+      showNewForYouPosts,
+      addPost,
+      editPost,
+      deletePost,
+      addVote,
+      addComment,
+      likePost,
+      repostPost,
+      bookmarkPost,
+      bookmarkedPostIds,
+      loadingForYou,
+      loadingDiscover,
+  };
+
   return (
-    <PostContext.Provider value={{ posts, newPosts, showNewPosts, addPost, editPost, deletePost, addVote, addComment, likePost, repostPost, bookmarkPost, bookmarkedPostIds, loading }}>
+    <PostContext.Provider value={value}>
       {children}
     </PostContext.Provider>
   );

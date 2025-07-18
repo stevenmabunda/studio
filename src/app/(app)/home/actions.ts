@@ -7,7 +7,10 @@ import {
   type GenerateTrendingHashtagsOutput,
 } from '@/ai/flows/generate-trending-hashtags';
 import { getLiveMatchesFromApi } from '@/services/live-scores-service';
-import type { MatchType } from '@/lib/data';
+import type { MatchType, PostType } from '@/lib/data';
+import { db } from '@/lib/firebase/config';
+import { collection, getDocs, query, where, orderBy, type Timestamp, limit } from 'firebase/firestore';
+import { formatTimestamp } from '@/lib/utils';
 
 
 export async function getTrendingHashtags(
@@ -26,4 +29,70 @@ export async function getLiveMatches(): Promise<MatchType[]> {
     // or re-throw the error to be handled by the UI.
     return [];
   }
+}
+
+export async function getFollowingPosts(userId: string): Promise<PostType[]> {
+    if (!db) {
+        return [];
+    }
+
+    try {
+        // 1. Get the list of users the current user is following.
+        const followingRef = collection(db, 'users', userId, 'following');
+        const followingSnapshot = await getDocs(followingRef);
+        const followingIds = followingSnapshot.docs.map(doc => doc.id);
+        
+        // Always include the user's own posts in their feed.
+        if (!followingIds.includes(userId)) {
+            followingIds.push(userId);
+        }
+
+        if (followingIds.length === 0) {
+            return [];
+        }
+
+        // 2. Query for posts where the authorId is in the list of followed users.
+        // Firestore 'in' query is limited to 30 items. For a larger app, this would need pagination or a different data model.
+        const postsRef = collection(db, 'posts');
+        const q = query(
+            postsRef,
+            where('authorId', 'in', followingIds.slice(0, 30)),
+            orderBy('createdAt', 'desc'),
+            limit(50) // Limit the number of posts fetched for performance.
+        );
+
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            return [];
+        }
+
+        // 3. Map documents to PostType objects.
+        const posts = querySnapshot.docs.map(doc => {
+            const data = doc.data();
+            const createdAt = (data.createdAt as Timestamp)?.toDate();
+            return {
+                id: doc.id,
+                authorId: data.authorId,
+                authorName: data.authorName,
+                authorHandle: data.authorHandle,
+                authorAvatar: data.authorAvatar,
+                content: data.content,
+                comments: data.comments,
+                reposts: data.reposts,
+                likes: data.likes,
+                views: data.views,
+                media: data.media,
+                poll: data.poll,
+                timestamp: createdAt ? formatTimestamp(createdAt) : 'now',
+                createdAt: createdAt
+            } as PostType;
+        });
+        
+        return posts;
+
+    } catch (error) {
+        console.error("Error fetching following posts:", error);
+        return [];
+    }
 }

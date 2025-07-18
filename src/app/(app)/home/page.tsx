@@ -16,37 +16,49 @@ import { LiveMatches } from '@/components/live-matches';
 import { NewPostsNotification } from '@/components/new-posts-notification';
 
 export default function HomePage() {
-  const { posts, newPosts, showNewPosts, loading: postsLoading, addPost } = usePosts();
+  const { 
+    forYouPosts,
+    discoverPosts,
+    newForYouPosts,
+    showNewForYouPosts,
+    loadingForYou,
+    loadingDiscover,
+    addPost 
+  } = usePosts();
+
   const { toast } = useToast();
-  const { setActiveTab } = useTabContext();
+  const { activeTab, setActiveTab } = useTabContext();
   
   const [showNotification, setShowNotification] = useState(false);
   const [hasScrolledFromTop, setHasScrolledFromTop] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
+      // Only show notification for the 'foryou' tab
+      if (activeTab !== 'foryou') {
+        setShowNotification(false);
+        return;
+      }
       if (window.scrollY > 200) {
         setHasScrolledFromTop(true);
       } else {
-        // If user scrolls back to top, hide notification
         setShowNotification(false);
         setHasScrolledFromTop(false);
       }
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [activeTab]);
 
-  // Show notification only if there are new posts AND user has scrolled down
   useEffect(() => {
-    if (newPosts.length > 0 && hasScrolledFromTop) {
+    if (newForYouPosts.length > 0 && hasScrolledFromTop && activeTab === 'foryou') {
       setShowNotification(true);
     }
-  }, [newPosts, hasScrolledFromTop]);
+  }, [newForYouPosts, hasScrolledFromTop, activeTab]);
 
 
   const handleShowNewPosts = () => {
-    showNewPosts();
+    showNewForYouPosts();
     window.scrollTo({ top: 0, behavior: 'smooth' });
     setShowNotification(false);
   }
@@ -55,16 +67,14 @@ export default function HomePage() {
   const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
 
   const videoPosts = useMemo(
-    () => posts.filter(post => post.media?.some(m => m.type === 'video')),
-    [posts]
+    () => discoverPosts.filter(post => post.media?.some(m => m.type === 'video')),
+    [discoverPosts]
   );
   
-  // This will be called by the IntersectionObserver in the VideoPost component
   const handleVisibilityChange = useCallback((id: string, isVisible: boolean) => {
     if (isVisible) {
       setPlayingVideoId(id);
     } else {
-      // Only pause if this specific video is the one that was playing
       if (playingVideoId === id) {
         setPlayingVideoId(null);
       }
@@ -86,7 +96,7 @@ export default function HomePage() {
     <div className="flex h-full min-h-screen flex-col">
        <NewPostsNotification 
             show={showNotification}
-            avatars={newPosts.map(p => p.authorAvatar)}
+            avatars={newForYouPosts.map(p => p.authorAvatar)}
             onClick={handleShowNewPosts}
         />
       <Tabs defaultValue="foryou" className="w-full flex flex-col flex-1" onValueChange={setActiveTab}>
@@ -124,18 +134,18 @@ export default function HomePage() {
               <CreatePost onPost={handlePost} />
             </div>
             <div className="divide-y divide-border">
-              {postsLoading ? (
+              {loadingForYou ? (
                 <>
                   <PostSkeleton />
                   <PostSkeleton />
                   <PostSkeleton />
                 </>
-              ) : posts.length > 0 ? (
-                posts.map((post) => <Post key={post.id} {...post} />)
+              ) : forYouPosts.length > 0 ? (
+                forYouPosts.map((post) => <Post key={post.id} {...post} />)
               ) : (
                 <div className="p-8 text-center text-muted-foreground">
-                  <h2 className="text-xl font-bold">No posts yet!</h2>
-                  <p>Be the first one to kick-it!</p>
+                  <h2 className="text-xl font-bold">Your feed is empty</h2>
+                  <p>Follow some accounts to see their posts here!</p>
                 </div>
               )}
             </div>
@@ -148,7 +158,7 @@ export default function HomePage() {
           </TabsContent>
           <TabsContent value="video" className="h-full bg-black">
              <div className="h-[calc(100vh-160px)] md:h-[calc(100vh-110px)] overflow-y-auto snap-y snap-mandatory">
-              {postsLoading ? (
+              {loadingDiscover ? (
                 <div className="flex items-center justify-center h-full">
                   <PostSkeleton />
                 </div>
