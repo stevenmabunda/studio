@@ -6,8 +6,7 @@ import {
   type GenerateTrendingTopicsOutput,
 } from '@/ai/flows/generate-trending-topics';
 import { db } from '@/lib/firebase/config';
-import { collection, query, where, getDocs, Timestamp, orderBy } from 'firebase/firestore';
-import { getFootballNews, type NewsArticle } from '@/services/news-service';
+import { collection, query, where, getDocs, Timestamp, orderBy } from 'firestore';
 
 
 export async function getTrendingTopics(
@@ -159,10 +158,4 @@ export async function getTrendingKeywords(
     }));
 
   return popularTopics;
-}
-
-
-// Server action to get news headlines
-export async function getNewsHeadlines(): Promise<NewsArticle[]> {
-    return await getFootballNews();
 }

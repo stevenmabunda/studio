@@ -6,7 +6,6 @@ import { Input } from "./ui/input";
 import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { LiveMatches } from "./live-matches";
-import { NewsFeed } from "./news-feed";
 
 export function RightSidebar() {
   const router = useRouter();
@@ -31,7 +30,6 @@ export function RightSidebar() {
         />
       </div>
       <LiveMatches />
-      <NewsFeed />
       <TrendingTopics />
       <WhoToFollow />
     </aside>
