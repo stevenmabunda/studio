@@ -110,13 +110,3 @@ export async function getLiveMatchesFromApi(): Promise<MatchType[]> {
   const apiData = await fetchFromApi('fixtures', params);
   return mapApiDataToMatchType(apiData.response);
 }
-
-// Service function to get upcoming matches
-export async function getUpcomingMatchesFromApi(): Promise<MatchType[]> {
-    const params = new URLSearchParams({ 
-        status: 'NS', // Not Started
-        next: '20' // Get the next 20 fixtures
-    });
-    const apiData = await fetchFromApi('fixtures', params);
-    return mapApiDataToMatchType(apiData.response);
-}
