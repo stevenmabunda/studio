@@ -203,7 +203,7 @@ export default function SearchPage() {
                                 <p className="mt-2 text-sm">{p.bio}</p>
                             </div>
                         ))}
-                        {results?.posts.slice(0, 3).map(post => <Post key={post.id} {...post} />)}
+                        {results?.posts.slice(0, 10).map(post => <Post key={post.id} {...post} />)}
                     </div>
                 </TabsContent>
                 <TabsContent value="users">
