@@ -10,6 +10,7 @@ import { applyForCreatorProgram } from "./actions";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useAuth } from "@/hooks/use-auth";
+import Link from "next/link";
 
 const tiers = [
   {
@@ -81,16 +82,16 @@ export default function CreatorsPage() {
     return (
        <div className="flex flex-col min-h-screen bg-background text-foreground">
          <main className="flex-1 flex items-center justify-center p-4 sm:p-6 md:p-8">
-            <div className="max-w-md mx-auto text-center space-y-4">
-                <Alert>
-                    <Check className="h-4 w-4" />
-                    <AlertTitle>Application Submitted!</AlertTitle>
-                    <AlertDescription>
+            <div className="max-w-md mx-auto text-center space-y-6">
+                <Alert className="text-left border-muted-foreground/50">
+                    <Check className="h-5 w-5" />
+                    <AlertTitle className="text-lg font-bold">Application Submitted!</AlertTitle>
+                    <AlertDescription className="text-muted-foreground">
                         Thank you for applying. Your account will be reviewed and you will receive a confirmation within 24 hours.
                     </AlertDescription>
                 </Alert>
-                <Button asChild>
-                    <a href="/home">Back to Home</a>
+                <Button asChild size="lg">
+                    <Link href="/home">Back to Home</Link>
                 </Button>
             </div>
          </main>
