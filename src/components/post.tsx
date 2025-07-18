@@ -47,6 +47,8 @@ import { usePosts } from "@/contexts/post-context";
 import { useAuth } from "@/hooks/use-auth";
 import { Textarea } from "./ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { FollowButton } from "./follow-button";
+import { getIsFollowing } from "@/app/(app)/profile/actions";
 
 type PostProps = PostType & {
   isStandalone?: boolean;
@@ -154,6 +156,9 @@ export function Post(props: PostProps) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   
   const [isExpanded, setIsExpanded] = useState(false);
+  
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(true);
 
   const isBookmarked = useMemo(() => bookmarkedPostIds.has(id), [bookmarkedPostIds, id]);
 
@@ -162,6 +167,18 @@ export function Post(props: PostProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const isAuthor = user && user.uid === authorId;
+
+  useEffect(() => {
+    if (user && user.uid !== authorId) {
+        setFollowLoading(true);
+        getIsFollowing(user.uid, authorId).then(status => {
+            setIsFollowing(status);
+            setFollowLoading(false);
+        });
+    } else {
+        setFollowLoading(false);
+    }
+  }, [user, authorId]);
   
   const needsTruncation = !isStandalone && !isExpanded && content.length > 280;
   const displayText = needsTruncation ? `${content.substring(0, 280)}` : content;
@@ -297,7 +314,7 @@ export function Post(props: PostProps) {
             <span className="text-muted-foreground">·</span>
             <span className="flex-shrink-0 text-sm text-muted-foreground">{timestamp}</span>
           </div>
-           {isAuthor && (
+           {isAuthor ? (
                 <div className="flex-shrink-0">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -318,7 +335,16 @@ export function Post(props: PostProps) {
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
-           )}
+           ) : user ? (
+                <div className="flex-shrink-0 -mr-2">
+                     <FollowButton
+                        profileId={authorId}
+                        isFollowing={isFollowing}
+                        isLoading={followLoading}
+                        onToggleFollow={setIsFollowing}
+                    />
+                </div>
+           ): null}
         </div>
         <p className="mt-2 whitespace-pre-wrap text-sm">
           {linkify(displayText)}
