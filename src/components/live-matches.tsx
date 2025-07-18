@@ -9,6 +9,7 @@ import { Skeleton } from './ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import Link from 'next/link';
+import { TrendingTopics } from './trending-topics';
 
 function MatchSkeleton() {
     return (
@@ -79,7 +80,13 @@ export function LiveMatches({ isPage = false }: { isPage?: boolean }) {
                     </div>
                 ))
             ) : (
-                <p className="text-sm text-muted-foreground text-center p-4">No live matches right now.</p>
+                <div className="text-center p-4">
+                    <h2 className="text-lg font-bold">NO LIVE MATCHES RIGHT NOW</h2>
+                    <p className="text-muted-foreground">But there are live conversations, dive in!</p>
+                    <div className="mt-4 text-left">
+                        <TrendingTopics />
+                    </div>
+                </div>
             )}
             
             {!isPage && matches.length > 0 && (
@@ -105,4 +112,3 @@ export function LiveMatches({ isPage = false }: { isPage?: boolean }) {
         </Card>
     );
 }
-
