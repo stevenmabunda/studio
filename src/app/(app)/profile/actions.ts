@@ -240,20 +240,25 @@ export async function getLikedPosts(userId: string): Promise<PostType[]> {
   }
 }
 
-export async function getMediaPosts(userId: string): Promise<PostType[]> {
-  if (!db || !userId) {
+export async function getMediaPosts(userId?: string): Promise<PostType[]> {
+  if (!db) {
     return [];
   }
 
   const postsRef = collection(db, 'posts');
-  // Query for posts by the user where the 'media' field exists and is not an empty array.
-  // Firestore doesn't support "is not empty" queries directly on arrays,
-  // so we query for `authorId` and filter in memory. This is acceptable for a reasonable number of posts.
-  // The orderBy was removed to prevent a composite index error. Sorting will be done in-memory.
-  const q = query(
-    postsRef, 
-    where('authorId', '==', userId)
-  );
+  let q;
+  // If a userId is provided, query for that user's media posts.
+  // Otherwise, fetch all media posts.
+  if (userId) {
+    q = query(
+      postsRef, 
+      where('authorId', '==', userId),
+      orderBy('createdAt', 'desc')
+    );
+  } else {
+    q = query(postsRef, orderBy('createdAt', 'desc'));
+  }
+
 
   try {
     const querySnapshot = await getDocs(q);
@@ -284,12 +289,14 @@ export async function getMediaPosts(userId: string): Promise<PostType[]> {
       })
       .filter(post => post.media && post.media.length > 0); // Filter for posts that have media
 
-    // Sort by creation date descending in-memory
-    mediaPosts.sort((a, b) => {
-        const timeA = a.createdAt?.getTime() || 0;
-        const timeB = b.createdAt?.getTime() || 0;
-        return timeB - timeA;
-    });
+    // Sort by creation date descending in-memory if not already ordered by query
+    if (!userId) {
+        mediaPosts.sort((a, b) => {
+            const timeA = a.createdAt?.getTime() || 0;
+            const timeB = b.createdAt?.getTime() || 0;
+            return timeB - timeA;
+        });
+    }
 
     return mediaPosts;
 

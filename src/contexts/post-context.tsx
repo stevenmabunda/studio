@@ -13,7 +13,7 @@ import { formatTimestamp } from '@/lib/utils';
 import { extractPostTopics } from '@/ai/flows/extract-post-topics';
 import { seedPosts } from '@/lib/seed-data';
 import type { ReplyMedia } from '@/components/create-comment';
-import { getMostViewedPosts } from '@/app/(app)/discover/actions';
+import { getMediaPosts } from '@/app/(app)/profile/actions';
 
 type PostContextType = {
   forYouPosts: PostType[];
@@ -87,7 +87,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
     try {
         await seedDatabaseIfEmpty();
 
-        getMostViewedPosts().then(posts => {
+        getMediaPosts().then(posts => {
           setDiscoverPosts(posts);
           setLoadingDiscover(false);
         });
