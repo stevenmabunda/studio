@@ -50,9 +50,9 @@ export async function searchEverything(searchText: string): Promise<SearchResult
     );
 
     // For posts, a direct query is inefficient without a proper search index.
-    // We will fetch recent posts and filter them in memory.
+    // We will fetch all posts and filter them in memory.
     // This is not scalable but works for a demo.
-    const postsQuery = query(collection(db, 'posts'), orderBy('createdAt', 'desc'), limit(50));
+    const postsQuery = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
     
     // Execute all queries in parallel
     const [userByNameSnap, userByHandleSnap, tribeSnap, postsSnap] = await Promise.all([
