@@ -54,14 +54,15 @@ function mapApiDataToMatchType(fixtures: ApiFixture[]): MatchType[] {
                 // Show time if it's today
                 return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
             }
-            return f.fixture.status.short; // FT, AET, etc.
+            // For historical data, just show the status (e.g., FT)
+            return f.fixture.status.short;
         }
 
         return {
             id: f.fixture.id,
             team1: { name: f.teams.home.name, logo: f.teams.home.logo },
             team2: { name: f.teams.away.name, logo: f.teams.away.logo },
-            score: isLive ? `${f.goals.home || 0} - ${f.goals.away || 0}` : undefined,
+            score: `${f.goals.home || 0} - ${f.goals.away || 0}`,
             time: formatTime(),
             league: f.league.name,
             isLive: isLive,
@@ -104,9 +105,9 @@ async function fetchFromApi(endpoint: string, params: URLSearchParams): Promise<
   }
 }
 
-// Service function to get live matches
+// Service function to get live matches (currently using historical data for testing)
 export async function getLiveMatchesFromApi(): Promise<MatchType[]> {
-  const params = new URLSearchParams({ live: 'all' });
+  const params = new URLSearchParams({ league: '39', season: '2020' });
   const apiData = await fetchFromApi('fixtures', params);
   return mapApiDataToMatchType(apiData.response);
 }
