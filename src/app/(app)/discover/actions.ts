@@ -47,25 +47,29 @@ export async function getMostViewedPosts(): Promise<PostType[]> {
       } as PostType;
     });
     
-    // 4. Sort the recent posts by views in descending order in code.
+    // 4. Sort all recent posts by views in descending order.
     posts.sort((a, b) => (b.views || 0) - (a.views || 0));
 
-    // 5. Take the top 5 posts.
-    const topPosts = posts.slice(0, 5);
+    // 5. Take the top 15 posts.
+    const topPosts = posts.slice(0, 15);
 
     if (topPosts.length === 0) {
       return [];
     }
 
-    // 6. Randomly select one to be the hero (the first element).
-    const heroIndex = Math.floor(Math.random() * topPosts.length);
-    const heroPost = topPosts.splice(heroIndex, 1)[0];
+    // 6. Randomly select one to be the hero from the top 5.
+    const heroCandidates = topPosts.slice(0, 5);
+    const heroIndex = Math.floor(Math.random() * heroCandidates.length);
+    const heroPost = heroCandidates[heroIndex];
 
-    // 7. Return the hero post followed by the rest.
-    return [heroPost, ...topPosts];
+    // 7. Create the final list, hero first, then the rest of the top posts.
+    const remainingPosts = topPosts.filter(p => p.id !== heroPost.id);
+
+    return [heroPost, ...remainingPosts];
 
   } catch (error) {
     console.error("Error fetching most viewed posts:", error);
     return [];
   }
 }
+
