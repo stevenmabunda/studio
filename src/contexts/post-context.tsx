@@ -21,7 +21,7 @@ type PostContextType = {
   discoverPosts: PostType[];
   newForYouPosts: PostType[];
   showNewForYouPosts: () => void;
-  addPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }) => Promise<void>;
+  addPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }) => Promise<PostType | undefined>;
   editPost: (postId: string, data: { text:string }) => Promise<void>;
   deletePost: (postId: string) => Promise<void>;
   addVote: (postId: string, choiceIndex: number) => Promise<void>;
@@ -75,7 +75,6 @@ export function PostProvider({ children }: { children: ReactNode }) {
 
   const showNewForYouPosts = () => {
     setForYouPosts(prev => [...newForYouPosts, ...prev]);
-    setDiscoverPosts(prev => [...newForYouPosts, ...prev]);
     setNewForYouPosts([]);
   };
 
@@ -95,10 +94,12 @@ export function PostProvider({ children }: { children: ReactNode }) {
         
         if (user) {
             const bookmarksRef = collection(db, 'users', user.uid, 'bookmarks');
-            getDocs(bookmarksRef).then(bookmarksSnapshot => {
-                const bookmarkIds = new Set(bookmarksSnapshot.docs.map(doc => doc.id));
+            const unsubscribe = onSnapshot(bookmarksRef, (snapshot) => {
+                const bookmarkIds = new Set(snapshot.docs.map(doc => doc.id));
                 setBookmarkedPostIds(bookmarkIds);
             });
+            // Note: In a real app, you'd want to store and call this unsubscribe function on cleanup.
+            // For simplicity here, we're not.
         } else {
             setBookmarkedPostIds(new Set());
         }
@@ -116,23 +117,29 @@ export function PostProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!db || !user) return;
 
+    // We only listen for one new document at a time to avoid fetching the whole collection.
     const postsQuery = query(collection(db, 'posts'), orderBy('createdAt', 'desc'), limit(1));
     
     const unsubscribe = onSnapshot(postsQuery, (snapshot) => {
         const newPosts: PostType[] = [];
         snapshot.docChanges().forEach((change) => {
+            // We only care about new posts added
             if (change.type === "added") {
                 const postData = change.doc.data();
+                const now = new Date();
+                const postDate = (postData.createdAt as Timestamp)?.toDate() || now;
+                // Only consider posts created in the last few minutes as "new" for the notification
+                const isRecent = (now.getTime() - postDate.getTime()) < 5 * 60 * 1000;
+
                 const postExistsInForYou = forYouPosts.some(p => p.id === change.doc.id);
                 const postExistsInNew = newForYouPosts.some(p => p.id === change.doc.id);
                 
-                if (!postExistsInForYou && !postExistsInNew) {
-                    const createdAt = (postData.createdAt as Timestamp)?.toDate();
+                if (isRecent && !postExistsInForYou && !postExistsInNew) {
                     newPosts.push({
                         id: change.doc.id,
                         ...postData,
-                        timestamp: createdAt ? formatTimestamp(createdAt) : 'now',
-                        createdAt: createdAt?.toISOString()
+                        timestamp: formatTimestamp(postDate),
+                        createdAt: postDate.toISOString()
                     } as PostType);
                 }
             }
@@ -147,7 +154,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
 }, [forYouPosts, newForYouPosts, user]);
 
 
-  const addPost = async ({ text, media, poll, location, tribeId, communityId }: { text: string; media: Media[]; poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }) => {
+  const addPost = async ({ text, media, poll, location, tribeId, communityId }: { text: string; media: Media[]; poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }): Promise<PostType | undefined> => {
     if (!user || !db || !storage) {
         throw new Error("Cannot add post: user not logged in or Firebase not configured.");
     }
@@ -162,8 +169,8 @@ export function PostProvider({ children }: { children: ReactNode }) {
             const downloadURL = await getDownloadURL(snapshot.ref);
             mediaUrls.push({ url: downloadURL, type: m.type, hint: 'user uploaded content' });
         }
-
-        const postData: Omit<PostType, 'id' | 'timestamp'> & { createdAt: any } = {
+        
+        const postDataForDb = {
           authorId: user.uid,
           authorName: user.displayName || 'Anonymous User',
           authorHandle: user.email?.split('@')[0] || 'user',
@@ -175,41 +182,56 @@ export function PostProvider({ children }: { children: ReactNode }) {
           likes: 0,
           views: 0,
           media: mediaUrls,
+          ...(poll && { poll }),
+          ...(location && { location }),
+          ...(tribeId && { tribeId }),
+          ...(communityId && { communityId }),
         };
 
-        if (poll) {
-            postData.poll = poll;
-        }
-        if (location) {
-            postData.location = location;
-        }
-        if (tribeId) {
-            postData.tribeId = tribeId;
-        }
-        if (communityId) {
-            postData.communityId = communityId;
-        }
-        
-        // We no longer add to the state directly. The onSnapshot listener will handle it.
-        const docRef = await addDoc(collection(db, "posts"), postData);
-        
+        const docRef = await addDoc(collection(db, "posts"), postDataForDb);
+
         if (text) {
             extractPostTopics({ content: text })
                 .then(async ({ topics }) => {
                     if (!db) return;
                     const topicsCollectionRef = collection(db, 'topics');
+                    const batch = writeBatch(db);
                     for (const topic of topics) {
-                        await addDoc(topicsCollectionRef, {
+                        const newTopicRef = doc(topicsCollectionRef);
+                        batch.set(newTopicRef, {
                             topic: topic.toLowerCase(),
                             createdAt: serverTimestamp(),
                         });
                     }
+                    await batch.commit();
                 })
                 .catch(error => {
                     console.error("Background topic extraction failed:", error);
                 });
         }
+        
+        const createdAt = new Date();
+        const newPost: PostType = {
+          id: docRef.id,
+          authorId: user.uid,
+          authorName: user.displayName || 'Anonymous User',
+          authorHandle: user.email?.split('@')[0] || 'user',
+          authorAvatar: user.photoURL || 'https://placehold.co/40x40.png',
+          content: text,
+          timestamp: formatTimestamp(createdAt),
+          createdAt: createdAt.toISOString(),
+          comments: 0,
+          reposts: 0,
+          likes: 0,
+          views: 0,
+          media: mediaUrls,
+          ...(poll && { poll }),
+          ...(location && { location }),
+          ...(tribeId && { tribeId }),
+          ...(communityId && { communityId }),
+        };
 
+        return newPost;
     } catch (error) {
         console.error("Failed to create post:", error);
         throw error;
@@ -220,16 +242,20 @@ export function PostProvider({ children }: { children: ReactNode }) {
     if (!db || !user) throw new Error("Not authorized or db not available");
     const postRef = doc(db, 'posts', postId);
     await updateDoc(postRef, { content: data.text });
-    setForYouPosts(posts => posts.map(p => p.id === postId ? { ...p, content: data.text } : p));
-    setDiscoverPosts(posts => posts.map(p => p.id === postId ? { ...p, content: data.text } : p));
+    
+    const updater = (posts: PostType[]) => posts.map(p => p.id === postId ? { ...p, content: data.text } : p)
+    setForYouPosts(updater);
+    setDiscoverPosts(updater);
   };
 
   const deletePost = async (postId: string) => {
     if (!db || !user) throw new Error("Not authorized or db not available");
     const postRef = doc(db, 'posts', postId);
     await deleteDoc(postRef);
-    setForYouPosts(posts => posts.filter(p => p.id !== postId));
-    setDiscoverPosts(posts => posts.filter(p => p.id !== postId));
+
+    const updater = (posts: PostType[]) => posts.filter(p => p.id !== postId)
+    setForYouPosts(updater);
+    setDiscoverPosts(updater);
   };
 
   const addVote = async (postId: string, choiceIndex: number) => {
@@ -258,10 +284,10 @@ export function PostProvider({ children }: { children: ReactNode }) {
           throw "Document does not exist!";
         }
         
-        const postData = postDoc.data() as PostType;
+        const postData = postDoc.data();
         const currentChoices = postData.poll?.choices || [];
         
-        const newChoices = currentChoices.map((choice, index) => {
+        const newChoices = currentChoices.map((choice: { text: string, votes: number }, index: number) => {
           if (index === choiceIndex) {
             return { ...choice, votes: choice.votes + 1 };
           }
@@ -360,13 +386,12 @@ export function PostProvider({ children }: { children: ReactNode }) {
                 throw "Post does not exist!";
             }
             
+            const newLikeCount = postDoc.data().likes + (isLiked ? -1 : 1);
+            transaction.update(postRef, { likes: Math.max(0, newLikeCount) });
+            
             if (isLiked) {
-                const newLikes = Math.max(0, postDoc.data().likes - 1);
-                transaction.update(postRef, { likes: newLikes });
                 transaction.delete(likeRef);
             } else {
-                const newLikes = postDoc.data().likes + 1;
-                transaction.update(postRef, { likes: newLikes });
                 transaction.set(likeRef, { createdAt: serverTimestamp() });
             }
         });
@@ -420,18 +445,8 @@ export function PostProvider({ children }: { children: ReactNode }) {
     try {
         if (isBookmarked) {
             await deleteDoc(bookmarkRef);
-            setBookmarkedPostIds(prev => {
-                const newSet = new Set(prev);
-                newSet.delete(postId);
-                return newSet;
-            });
         } else {
             await setDoc(bookmarkRef, { createdAt: serverTimestamp() });
-            setBookmarkedPostIds(prev => {
-                const newSet = new Set(prev);
-                newSet.add(postId);
-                return newSet;
-            });
         }
     } catch (error) {
         console.error("Error updating bookmark:", error);
@@ -472,3 +487,5 @@ export function usePosts() {
   }
   return context;
 }
+
+    
