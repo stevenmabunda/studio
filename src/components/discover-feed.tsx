@@ -89,9 +89,8 @@ export function DiscoverFeed() {
             <Image
                 src={heroPost.media?.[0]?.url || 'https://placehold.co/600x300.png'}
                 alt={heroPost.content}
-                layout="fill"
-                objectFit="cover"
-                className="group-hover:opacity-90 transition-opacity"
+                fill
+                className="object-cover object-top group-hover:opacity-90 transition-opacity"
                 data-ai-hint={heroPost.media?.[0]?.hint || 'stadium lights'}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
