@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -11,11 +12,11 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-// Input is now a list of raw topic strings
+// Input is now a list of raw topic strings, potentially with counts
 const GenerateTrendingTopicsInputSchema = z.object({
   topics: z
     .array(z.string())
-    .describe('A list of trending keywords or topics.'),
+    .describe('A list of trending keywords or topics, which may include post counts like "messi retirement (55 posts)".'),
 });
 export type GenerateTrendingTopicsInput = z.infer<
   typeof GenerateTrendingTopicsInputSchema
@@ -55,14 +56,14 @@ const prompt = ai.definePrompt({
   name: 'generateTrendingTopicsPrompt',
   input: {schema: GenerateTrendingTopicsInputSchema},
   output: {schema: GenerateTrendingTopicsOutputSchema},
-  prompt: `You are a social media expert for a football-focused platform. You are given a list of raw trending topics.
+  prompt: `You are a social media expert for a football-focused platform. You are given a list of raw trending topics, some with real post counts.
 
-Your task is to convert these raw topics into engaging, headline-style conversations. You must generate a headline for each raw topic provided.
+Your task is to process this list into engaging, headline-style conversations. You must generate a headline for each raw topic provided.
 
-For each topic, generate:
-- A category, which should always be "Football • Trending".
-- A short, engaging topic headline. For example, for the raw topic "messi retirement", a good headline would be "Messi's shock retirement". For "haaland man utd", a good headline would be "Haaland to Manchester United?".
-- A fictional post count, formatted as a string like "15.7K posts" or "2,123 posts". Make it look realistic.
+For each topic, you must:
+- Generate a category, which should always be "Football • Trending".
+- Create a short, engaging topic headline based on the raw topic. For example, for "messi retirement", a good headline is "Messi's shock retirement". For "haaland man utd", a good headline would be "Haaland to Manchester United?".
+- Use the provided post count if it exists in the raw topic string. For example, if the input is "Ronaldo hat-trick (123 posts)", you MUST use "123 posts" as the postCount. If no count is provided, you must create a realistic-looking one.
 - For the VERY FIRST topic in the list ONLY, provide a concise one or two word \`imageHint\` for a relevant background image. Examples: "player celebrating", "stadium lights", "manager sideline". Do not provide a hint for other topics.
 
 Raw Topics:

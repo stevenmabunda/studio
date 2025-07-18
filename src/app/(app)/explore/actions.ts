@@ -21,68 +21,47 @@ export async function getTrendingTopics(
   
   const numberOfTopicsToGenerate = input.numberOfTopics || 5;
 
-  // 1. Fetch all topics and filter in code to be more robust
+  // 1. Fetch all topics from the last 24 hours
   const topicsRef = collection(db, 'topics');
-  const querySnapshot = await getDocs(topicsRef);
+  const twentyFourHoursAgo = Timestamp.fromDate(new Date(Date.now() - 24 * 60 * 60 * 1000));
+  const q = query(topicsRef, where('createdAt', '>=', twentyFourHoursAgo));
+  const querySnapshot = await getDocs(q);
 
-  // 2. Filter for topics from the last 24 hours
-  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const recentTopics = querySnapshot.docs
-    .map(doc => {
-        const data = doc.data();
-        // Ensure createdAt exists and is a Timestamp before converting
-        if (data.createdAt && typeof data.createdAt.toDate === 'function') {
-            return {
-                topic: data.topic as string,
-                createdAt: (data.createdAt as Timestamp).toDate()
-            }
-        }
-        return null;
-    })
-    .filter((item): item is { topic: string, createdAt: Date } => {
-        if (!item) return false;
-        return item.createdAt >= twentyFourHoursAgo;
-    })
-    .map(item => item.topic);
+  const recentTopics = querySnapshot.docs.map(doc => doc.data().topic as string);
 
-  
-  let topicsToGenerate: string[] = [];
-
-  if (recentTopics.length > 0) {
-    // 3. Count occurrences of each topic
-    const topicCounts = recentTopics.reduce((acc, topic) => {
-      acc[topic] = (acc[topic] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    // 4. Get topics mentioned at least 3 times, then take the top N
-    const popularTopics = Object.entries(topicCounts)
-      .filter(([, count]) => count >= 3)
-      .sort(([, a], [, b]) => b - a) // Sort by most popular
-      .map(([topic]) => topic);
-    
-    topicsToGenerate = popularTopics.slice(0, numberOfTopicsToGenerate);
+  if (recentTopics.length === 0) {
+    return { topics: [] };
   }
   
-  // 5. If no topics meet the threshold, use a fallback list with current news.
+  // 2. Count occurrences of each topic
+  const topicCounts = recentTopics.reduce((acc, topic) => {
+    acc[topic] = (acc[topic] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  // 3. Get topics mentioned at least 3 times, then sort by popularity
+  const popularTopics = Object.entries(topicCounts)
+    .filter(([, count]) => count >= 3)
+    .sort(([, a], [, b]) => b - a)
+    .map(([topic]) => topic);
+  
+  const topicsToGenerate = popularTopics.slice(0, numberOfTopicsToGenerate);
+
+  // 4. If no topics meet the threshold, return empty.
   if (topicsToGenerate.length === 0) {
-    topicsToGenerate = [
-      'Teboho Mokoena R100m PSV offer',
-      'premier league winners',
-      'champions league final',
-      'mbappe transfer',
-      'el clasico highlights',
-    ];
+    return { topics: [] };
   }
 
-  // 6. Generate headlines from these topics
+  // 5. Generate headlines from these real, filtered topics
   const maxRetries = 3;
-  const retryDelayMs = 1000; // 1 second
+  const retryDelayMs = 1000;
   let lastError: any = null;
 
   for (let i = 0; i < maxRetries; i++) {
     try {
-      return await generateTrendingTopics({ topics: topicsToGenerate });
+      // Pass the accurate counts to the AI for context
+      const topicsWithCounts = topicsToGenerate.map(topic => `${topic} (${topicCounts[topic]} posts)`);
+      return await generateTrendingTopics({ topics: topicsWithCounts });
     } catch (error) {
       lastError = error;
       console.error(`Attempt ${i + 1} failed to generate trending topics:`, error);
@@ -101,7 +80,7 @@ export type TrendingKeyword = {
   postCount: string;
 };
 
-// New function to get raw keywords without AI generation.
+// This function now provides accurate, filtered data
 export async function getTrendingKeywords(
   input: { numberOfTopics?: number }
 ): Promise<TrendingKeyword[]> {
@@ -113,34 +92,14 @@ export async function getTrendingKeywords(
   const numberOfTopicsToFetch = input.numberOfTopics || 5;
 
   const topicsRef = collection(db, 'topics');
-  const querySnapshot = await getDocs(topicsRef);
+  const twentyFourHoursAgo = Timestamp.fromDate(new Date(Date.now() - 24 * 60 * 60 * 1000));
+  const q = query(topicsRef, where('createdAt', '>=', twentyFourHoursAgo));
+  const querySnapshot = await getDocs(q);
 
-  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const recentTopics = querySnapshot.docs
-    .map(doc => {
-      const data = doc.data();
-      if (data.createdAt && typeof data.createdAt.toDate === 'function') {
-        return {
-          topic: data.topic as string,
-          createdAt: (data.createdAt as Timestamp).toDate()
-        };
-      }
-      return null;
-    })
-    .filter((item): item is { topic: string, createdAt: Date } => {
-      if (!item) return false;
-      return item.createdAt >= twentyFourHoursAgo;
-    })
-    .map(item => item.topic);
+  const recentTopics = querySnapshot.docs.map(doc => doc.data().topic as string);
 
   if (recentTopics.length === 0) {
-    return [
-      { topic: 'Kaizer Chiefs', category: 'Football', postCount: '12.1K posts' },
-      { topic: 'Orlando Pirates', category: 'Football', postCount: '10.8K posts' },
-      { topic: 'VAR', category: 'Football', postCount: '9.3K posts' },
-      { topic: 'AFCON', category: 'Football', postCount: '7.5K posts' },
-      { topic: '#TransferNews', category: 'Football', postCount: '5.2K posts' },
-    ];
+    return [];
   }
 
   const topicCounts = recentTopics.reduce((acc, topic) => {
@@ -148,13 +107,17 @@ export async function getTrendingKeywords(
     return acc;
   }, {} as Record<string, number>);
 
+  // Filter for topics mentioned at least 3 times and sort
   const popularTopics = Object.entries(topicCounts)
+    .filter(([, count]) => count >= 3)
     .sort(([, a], [, b]) => b - a)
     .slice(0, numberOfTopicsToFetch)
     .map(([topic, count]) => ({
-      topic: topic.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '), // Capitalize words
+      // Capitalize words for display
+      topic: topic.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
       category: 'Football · Trending',
-      postCount: `${(count * 15).toLocaleString()} posts` // Make up a post count
+      // Use the accurate count
+      postCount: `${count.toLocaleString()} ${count === 1 ? 'post' : 'posts'}`
     }));
 
   return popularTopics;
