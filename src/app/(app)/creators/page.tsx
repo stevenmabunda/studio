@@ -9,6 +9,7 @@ import { useState } from "react";
 import { applyForCreatorProgram } from "./actions";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useAuth } from "@/hooks/use-auth";
 
 const tiers = [
   {
@@ -50,14 +51,19 @@ const tiers = [
 ];
 
 export default function CreatorsPage() {
+  const { user } = useAuth();
   const { toast } = useToast();
   const [loadingTier, setLoadingTier] = useState<string | null>(null);
   const [applicationSubmitted, setApplicationSubmitted] = useState(false);
 
   const handleApply = async (tierName: string) => {
+    if (!user) {
+        toast({ variant: 'destructive', description: "You must be logged in to apply." });
+        return;
+    }
     setLoadingTier(tierName);
     try {
-      const result = await applyForCreatorProgram(tierName);
+      const result = await applyForCreatorProgram(user.uid, tierName);
       if ('mailto' in result) {
         window.location.href = result.mailto;
         setApplicationSubmitted(true);
