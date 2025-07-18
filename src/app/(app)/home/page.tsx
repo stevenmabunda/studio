@@ -124,6 +124,7 @@ export default function HomePage() {
                         onToggleMute={() => setIsMuted(prev => !prev)}
                         isPlaying={playingVideoId === post.id}
                         onVisibilityChange={handleVisibilityChange}
+                        activeVideoId={playingVideoId}
                       />
                     </div>
                   ))}

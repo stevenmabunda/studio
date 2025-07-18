@@ -24,6 +24,7 @@ interface VideoPostProps {
   onToggleMute: () => void;
   isPlaying: boolean;
   onVisibilityChange: (id: string, isVisible: boolean) => void;
+  activeVideoId: string | null;
 }
 
 const TwitterIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -78,7 +79,7 @@ const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 
-export function VideoPost({ post, isMuted, onToggleMute, isPlaying, onVisibilityChange }: VideoPostProps) {
+export function VideoPost({ post, isMuted, onToggleMute, isPlaying, onVisibilityChange, activeVideoId }: VideoPostProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -102,15 +103,15 @@ export function VideoPost({ post, isMuted, onToggleMute, isPlaying, onVisibility
   useEffect(() => {
     const videoElement = videoRef.current;
     if (videoElement) {
-        if (isPlaying && !isFullScreen) {
+        if (isPlaying && post.id === activeVideoId && !isFullScreen) {
             videoElement.play().catch(error => {
                 console.error("Video play failed:", error);
             });
-        } else if (!isPlaying && !isFullScreen) {
+        } else {
             videoElement.pause();
         }
     }
-  }, [isPlaying, isFullScreen]);
+  }, [isPlaying, isFullScreen, activeVideoId, post.id]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
