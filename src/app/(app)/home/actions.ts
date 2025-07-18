@@ -96,3 +96,51 @@ export async function getFollowingPosts(userId: string): Promise<PostType[]> {
         return [];
     }
 }
+
+export async function getRecentPosts(options: { limit?: number } = {}): Promise<PostType[]> {
+    if (!db) {
+        return [];
+    }
+
+    try {
+        const postsRef = collection(db, 'posts');
+        const q = query(
+            postsRef,
+            orderBy('createdAt', 'desc'),
+            limit(options.limit || 50) 
+        );
+
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            return [];
+        }
+
+        const posts = querySnapshot.docs.map(doc => {
+            const data = doc.data();
+            const createdAt = (data.createdAt as Timestamp)?.toDate();
+            return {
+                id: doc.id,
+                authorId: data.authorId,
+                authorName: data.authorName,
+                authorHandle: data.authorHandle,
+                authorAvatar: data.authorAvatar,
+                content: data.content,
+                comments: data.comments,
+                reposts: data.reposts,
+                likes: data.likes,
+                views: data.views,
+                media: data.media,
+                poll: data.poll,
+                timestamp: createdAt ? formatTimestamp(createdAt) : 'now',
+                createdAt: createdAt
+            } as PostType;
+        });
+        
+        return posts;
+
+    } catch (error) {
+        console.error("Error fetching recent posts:", error);
+        return [];
+    }
+}

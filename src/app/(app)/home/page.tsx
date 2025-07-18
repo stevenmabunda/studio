@@ -14,7 +14,7 @@ import { VideoPost } from '@/components/video-post';
 import { useTabContext } from '@/contexts/tab-context';
 import { LiveMatches } from '@/components/live-matches';
 import { NewPostsNotification } from '@/components/new-posts-notification';
-import { getMostViewedPosts } from '../discover/actions';
+import { getRecentPosts } from './actions';
 import { useAuth } from '@/hooks/use-auth';
 
 export default function HomePage() {
@@ -40,7 +40,7 @@ export default function HomePage() {
   // Fetch initial posts here instead of the context
   useEffect(() => {
     setLoadingForYou(true);
-    getMostViewedPosts()
+    getRecentPosts()
       .then(setForYouPosts)
       .finally(() => setLoadingForYou(false));
   }, [setLoadingForYou, setForYouPosts]);
