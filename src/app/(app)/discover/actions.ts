@@ -17,7 +17,6 @@ export async function getMostViewedPosts(): Promise<PostType[]> {
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
     // 2. Query for posts created in the last 24 hours.
-    // We can't combine this with orderBy('views') without a composite index.
     const postsRef = collection(db, 'posts');
     const q = query(postsRef, where('createdAt', '>=', twentyFourHoursAgo));
     
@@ -51,8 +50,19 @@ export async function getMostViewedPosts(): Promise<PostType[]> {
     // 4. Sort the recent posts by views in descending order in code.
     posts.sort((a, b) => (b.views || 0) - (a.views || 0));
 
-    // 5. Return the top 10.
-    return posts.slice(0, 10);
+    // 5. Take the top 5 posts.
+    const topPosts = posts.slice(0, 5);
+
+    if (topPosts.length === 0) {
+      return [];
+    }
+
+    // 6. Randomly select one to be the hero (the first element).
+    const heroIndex = Math.floor(Math.random() * topPosts.length);
+    const heroPost = topPosts.splice(heroIndex, 1)[0];
+
+    // 7. Return the hero post followed by the rest.
+    return [heroPost, ...topPosts];
 
   } catch (error) {
     console.error("Error fetching most viewed posts:", error);

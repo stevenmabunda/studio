@@ -105,10 +105,6 @@ export function DiscoverFeed() {
                         <MessageCircle className="h-4 w-4" />
                         <span>{heroPost.comments}</span>
                     </div>
-                    <div className="flex items-center gap-1">
-                        <Eye className="h-4 w-4" />
-                        <span>{heroPost.views} views</span>
-                    </div>
                 </div>
             </div>
         </div>
@@ -123,7 +119,16 @@ export function DiscoverFeed() {
           <div className="flex-1">
             <p className="text-sm text-muted-foreground">@{post.authorHandle}</p>
             <p className="font-bold text-base group-hover:underline line-clamp-2">{post.content}</p>
-            <p className="text-sm text-muted-foreground mt-1">{post.views} views</p>
+             <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
+                <div className="flex items-center gap-1">
+                    <Heart className="h-3 w-3" />
+                    <span>{post.likes}</span>
+                </div>
+                    <div className="flex items-center gap-1">
+                    <MessageCircle className="h-3 w-3" />
+                    <span>{post.comments}</span>
+                </div>
+            </div>
           </div>
           {post.media?.[0]?.url &&
             <Image 
