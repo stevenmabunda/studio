@@ -1,41 +1,93 @@
-import { Button } from "@/components/ui/button";
+'use client';
 
-const newsItems = [
-  {
-    source: "ESPN FC",
-    headline: "Man United agree terms with Jarrad Branthwaite.",
-    handle: "ESPNFC",
-  },
-  {
-    source: "Sky Sports",
-    headline: "Chelsea in talks to sign Michael Olise from Crystal Palace.",
-    handle: "SkySports",
-  },
-  {
-    source: "BBC Sport",
-    headline: "Euro 2024: Germany thrash Scotland in tournament opener.",
-    handle: "BBCSport",
-  },
-];
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { getNewsHeadlines } from '@/app/(app)/explore/actions';
+import type { NewsArticle } from '@/services/news-service';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from './ui/button';
+import { formatTimestamp } from '@/lib/utils';
+import Image from 'next/image';
+
+function NewsSkeleton() {
+    return (
+        <div className="space-y-1">
+            <Skeleton className="h-3 w-1/3" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-4/5" />
+        </div>
+    );
+}
 
 export function NewsFeed() {
+  const [articles, setArticles] = useState<NewsArticle[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchNews = async () => {
+      setLoading(true);
+      try {
+        const headlines = await getNewsHeadlines();
+        setArticles(headlines);
+      } catch (error) {
+        console.error("Failed to fetch news headlines:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNews();
+  }, []);
+
   return (
-    <div className="border rounded-lg p-4 bg-secondary space-y-4">
-        <h3 className="font-bold text-lg">News Feed</h3>
-        <div className="flex flex-col gap-3">
-          {newsItems.map((item) => (
-            <div key={item.handle} className="flex items-start justify-between gap-3 group cursor-pointer">
-              <div className="flex-1">
-                <p className="font-bold text-sm">{item.source}</p>
-                <p className="text-sm text-muted-foreground group-hover:underline">{item.headline}</p>
-              </div>
-              <Button variant="outline" size="sm" className="shrink-0 rounded-full text-xs h-7 bg-foreground text-background hover:bg-foreground/90">
-                Follow
-              </Button>
-            </div>
-          ))}
-           <Button variant="link" className="p-0 text-primary w-fit text-sm">Show more</Button>
+    <Card className="bg-secondary">
+      <CardHeader className="p-4">
+        <CardTitle className="text-lg font-bold text-primary">Latest News</CardTitle>
+      </CardHeader>
+      <CardContent className="p-4 pt-0">
+        <div className="space-y-4">
+          {loading ? (
+            Array.from({ length: 3 }).map((_, i) => <NewsSkeleton key={i} />)
+          ) : articles.length > 0 ? (
+            articles.map((article, index) => (
+              <Link
+                key={index}
+                href={article.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group block"
+              >
+                <div className="flex items-start gap-3">
+                    {article.urlToImage && (
+                        <div className="w-16 h-16 shrink-0">
+                             <Image 
+                                src={article.urlToImage}
+                                alt={article.title}
+                                width={64}
+                                height={64}
+                                className="rounded-md object-cover w-full h-full"
+                             />
+                        </div>
+                    )}
+                    <div className="flex-1">
+                        <p className="text-xs text-muted-foreground">{article.source.name} · {formatTimestamp(new Date(article.publishedAt))}</p>
+                        <p className="font-semibold text-sm leading-snug group-hover:underline">
+                            {article.title}
+                        </p>
+                    </div>
+                </div>
+              </Link>
+            ))
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-4">Could not load news at the moment.</p>
+          )}
+
+          {articles.length > 0 && (
+             <Button variant="link" className="p-0 text-primary w-fit text-sm">Show more</Button>
+          )}
         </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

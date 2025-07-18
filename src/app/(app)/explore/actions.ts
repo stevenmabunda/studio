@@ -7,6 +7,8 @@ import {
 } from '@/ai/flows/generate-trending-topics';
 import { db } from '@/lib/firebase/config';
 import { collection, query, where, getDocs, Timestamp, orderBy } from 'firebase/firestore';
+import { getFootballNews, type NewsArticle } from '@/services/news-service';
+
 
 export async function getTrendingTopics(
   // @ts-ignore - next doesn't like passing objects with optional props through server actions
@@ -157,4 +159,10 @@ export async function getTrendingKeywords(
     }));
 
   return popularTopics;
+}
+
+
+// Server action to get news headlines
+export async function getNewsHeadlines(): Promise<NewsArticle[]> {
+    return await getFootballNews();
 }
