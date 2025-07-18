@@ -115,7 +115,7 @@ export async function getTrendingKeywords(
   const topicsRef = collection(db, 'topics');
   const querySnapshot = await getDocs(topicsRef);
 
-  const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const recentTopics = querySnapshot.docs
     .map(doc => {
       const data = doc.data();
@@ -129,7 +129,7 @@ export async function getTrendingKeywords(
     })
     .filter((item): item is { topic: string, createdAt: Date } => {
       if (!item) return false;
-      return item.createdAt >= oneWeekAgo;
+      return item.createdAt >= twentyFourHoursAgo;
     })
     .map(item => item.topic);
 
