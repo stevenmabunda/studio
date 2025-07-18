@@ -40,7 +40,6 @@ const navItems = [
   { href: '/notifications', label: 'Notifications', icon: Bell },
   { href: '/messages', label: 'Messages', icon: MessageSquare },
   { href: '/bookmarks', label: 'Bookmarks', icon: Bookmark },
-  { href: '/profile', label: 'Profile', icon: User },
 ];
 
 export function SidebarNav() {
