@@ -215,27 +215,14 @@ export function PostProvider({ children }: { children: ReactNode }) {
         
         const docRef = await addDoc(collection(db, "posts"), postData);
         
+        // This is the only place we need to manually create the post object for the return type.
+        // The UI update will be handled by the real-time listener.
         const newPostForState: PostType = {
             id: docRef.id,
-            authorId: postData.authorId,
-            authorName: postData.authorName,
-            authorHandle: postData.authorHandle,
-            authorAvatar: postData.authorAvatar,
-            content: postData.content,
+            ...postData,
             timestamp: 'Just now',
-            comments: postData.comments,
-            reposts: postData.reposts,
-            likes: postData.likes,
-            views: postData.views,
-            media: mediaUrls,
-            poll: postData.poll,
-            location: postData.location,
-            tribeId: postData.tribeId,
-            communityId: postData.communityId,
-            createdAt: serverTimestamp() as unknown as Timestamp,
+            createdAt: serverTimestamp() as unknown as Timestamp, // This is a sentinel value
         };
-        
-        // The real-time listener will now handle adding the post to the UI for the creator.
         
         if (text) {
             extractPostTopics({ content: text })
