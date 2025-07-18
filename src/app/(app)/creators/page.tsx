@@ -3,7 +3,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Star, Gem, Crown } from "lucide-react";
+import { Check, Star, Gem } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const tiers = [
@@ -11,9 +11,6 @@ const tiers = [
     name: 'Rising Star',
     price: 'Open to All',
     priceDetail: 'Entry-level Creators',
-    bgColor: 'bg-yellow-500/10',
-    borderColor: 'border-yellow-500/30',
-    textColor: 'text-yellow-400',
     icon: Star,
     eligibility: [
       '18+ years old',
@@ -23,7 +20,6 @@ const tiers = [
     ],
     perks: [
       'Creator Badge',
-      'Chance to be featured on BHOLO homepage',
       'Mobile data or airtime rewards',
       'Access to creator tips & tools',
     ],
@@ -33,46 +29,19 @@ const tiers = [
     name: 'Pro Creator',
     price: 'For Consistent Creators',
     priceDetail: 'High-Impact',
-    bgColor: 'bg-primary/10',
-    borderColor: 'border-primary',
-    textColor: 'text-primary',
     icon: Gem,
     eligibility: [
       'Meet Rising Star criteria',
       'At least 10 football posts/month',
       '1K+ monthly engagements or strong follower base',
-      'Positive community rep (no bans or spam)',
     ],
     perks: [
-      'Cash payouts (R250–R500 monthly)',
+      'Cash payouts (R250–R750 monthly)',
       'Pro Creator Badge',
       'Priority featuring in trending tabs',
-      'Invitation to host watch-alongs',
       'Exclusive BHOLO merch drops',
     ],
     featured: true,
-  },
-  {
-    name: 'Creator Ambassador',
-    price: 'Invite Only',
-    priceDetail: 'Top-tier content kings & queens',
-    bgColor: 'bg-red-500/10',
-    borderColor: 'border-red-500/30',
-    textColor: 'text-red-400',
-    icon: Crown,
-    eligibility: [
-      'Consistently top-performing Pro Creators',
-      'Regularly spark debates, memes, fan love',
-      'Represent a team, city, or fanbase on the app',
-    ],
-    perks: [
-      'Premium cash rewards',
-      'Collaboration on BHOLO Originals',
-      'Social media shoutouts',
-      'Host official live events or shows',
-      'VIP invites to BHOLO parties & matches',
-    ],
-    featured: false,
   },
 ];
 
@@ -90,15 +59,14 @@ export default function CreatorsPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-3xl mx-auto">
             {tiers.map((tier) => (
               <Card key={tier.name} className={cn(
-                "flex flex-col border-2",
-                tier.bgColor,
-                tier.featured ? tier.borderColor : 'border-transparent'
+                "flex flex-col border-2 bg-card",
+                tier.featured ? "border-primary" : 'border-border'
               )}>
                 <CardHeader className="text-center">
-                  <tier.icon className={cn("h-10 w-10 mx-auto mb-4", tier.textColor)} />
+                  <tier.icon className="h-10 w-10 mx-auto mb-4 text-primary" />
                   <CardTitle className="text-2xl">{tier.name}</CardTitle>
                   <p className="font-bold text-xl">{tier.price}</p>
                   <CardDescription>{tier.priceDetail}</CardDescription>
@@ -129,7 +97,7 @@ export default function CreatorsPage() {
                     </div>
                   </div>
                    <Button className={cn(!tier.featured && "bg-foreground/80 hover:bg-foreground")}>
-                    {tier.name === 'Creator Ambassador' ? 'Get Noticed' : 'Get Started'}
+                    Get Started
                   </Button>
                 </CardContent>
               </Card>
