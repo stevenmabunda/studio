@@ -6,7 +6,7 @@ import {
   type GenerateTrendingTopicsOutput,
 } from '@/ai/flows/generate-trending-topics';
 import { db } from '@/lib/firebase/config';
-import { collection, query, where, getDocs, Timestamp, orderBy } from 'firestore';
+import { collection, query, where, getDocs, Timestamp, orderBy } from 'firebase/firestore';
 
 
 export async function getTrendingTopics(
