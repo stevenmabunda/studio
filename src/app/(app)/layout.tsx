@@ -6,7 +6,6 @@ import { useAuth } from '@/hooks/use-auth';
 import { SidebarNav } from '@/components/sidebar-nav';
 import { RightSidebar } from '@/components/right-sidebar';
 import { MobileTopBar } from '@/components/mobile-top-bar';
-import { MobileBottomNav } from '@/components/mobile-bottom-nav';
 import { PublicLayout } from '@/components/public-layout';
 
 export default function AppLayout({ children }: { children: ReactNode }) {
@@ -31,6 +30,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const isPostPage = pathname.startsWith('/post/');
   const isHomePage = pathname === '/home';
   const isCreatorPage = pathname === '/creators';
+  const showMobileTopBar = !isPostPage && !isHomePage;
+
 
   if (isCreatorPage) {
     return (
@@ -50,8 +51,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         </div>
       </header>
       <main className="w-full max-w-[624px] md:border-x pb-16 md:pb-0">
-        {/* Hide generic top bar on home page to use custom one */}
-        {!isPostPage && !isHomePage && <MobileTopBar />}
+        {showMobileTopBar && <MobileTopBar />}
         {children}
       </main>
       <aside className="w-[350px] shrink-0 hidden lg:block">
