@@ -7,6 +7,7 @@ import { SidebarNav } from '@/components/sidebar-nav';
 import { RightSidebar } from '@/components/right-sidebar';
 import { MobileTopBar } from '@/components/mobile-top-bar';
 import { PublicLayout } from '@/components/public-layout';
+import { MobileBottomNav } from '@/components/mobile-bottom-nav';
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
