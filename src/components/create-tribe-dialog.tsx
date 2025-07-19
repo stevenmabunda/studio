@@ -98,7 +98,9 @@ export function CreateTribeDialog({
               onClick={() => fileInputRef.current?.click()}
             >
               {profilePicPreview ? (
-                <Image src={profilePicPreview} alt="Tribe preview" layout="fill" objectFit="cover" className="rounded-md" />
+                <div className="relative w-full h-full">
+                    <Image src={profilePicPreview} alt="Tribe preview" layout="fill" objectFit="cover" className="rounded-md" />
+                </div>
               ) : (
                 <div className="text-center text-muted-foreground">
                   <Camera className="h-8 w-8 mx-auto" />
