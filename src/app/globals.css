@@ -97,6 +97,25 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Prevent horizontal scroll globally */
+  html, body {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+  
+  /* Force text wrap & prevent breaking layout */
+  p, span, div, h1, h2, h3, h4, h5, h6 {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  /* Constrain images/videos inside all containers */
+  img, video, iframe {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
 }
 
 /* Embla Carousel Styles for Video Feed */
