@@ -27,32 +27,9 @@ export function MobileBottomNav() {
   const { addPost } = usePosts();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isVisible, setIsVisible] = useState(true);
-  const lastScrollY = useRef(0);
   const { activeTab } = useTabContext();
   
   const isVideoTabActive = activeTab === 'video' && pathname === '/home';
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      
-      // Hide nav if scrolling down
-      if (currentScrollY > lastScrollY.current && currentScrollY > 10) {
-        setIsVisible(false);
-      } else {
-        // Show nav if scrolling up or at the top of the page
-        setIsVisible(true);
-      }
-      lastScrollY.current = currentScrollY;
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
 
   const handlePost = async (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null }) => {
     try {
@@ -67,8 +44,8 @@ export function MobileBottomNav() {
 
   return (
     <nav className={cn(
-        "md:hidden fixed bottom-0 left-0 right-0 h-16 bg-background/80 backdrop-blur-sm border-t border-border z-40 transition-transform duration-300 ease-in-out",
-        (!isVisible || isVideoTabActive) && "translate-y-full"
+        "md:hidden fixed bottom-0 left-0 right-0 h-16 bg-black border-t border-border z-40 transition-transform duration-300 ease-in-out",
+        isVideoTabActive && "translate-y-full"
     )}>
       <div className="flex justify-around items-center h-full">
         {navItems.map((item) => {
