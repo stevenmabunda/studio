@@ -107,6 +107,7 @@ export default function HomePage() {
            if (window.scrollY < 200) {
               window.scrollTo({ top: 0, behavior: 'smooth' });
            }
+           setForYouPosts(prev => [newPost, ...prev]);
         }
     } catch (error) {
         console.error("Failed to create post:", error);
@@ -122,7 +123,7 @@ export default function HomePage() {
             onClick={handleShowNewPosts}
         />
       <Tabs defaultValue="foryou" className="w-full flex flex-col flex-1" onValueChange={setActiveTab}>
-        <header className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur-sm">
+        <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm">
           <TabsList className="grid w-full grid-cols-4 bg-transparent p-0">
              <div className="flex justify-center">
                 <TabsTrigger
