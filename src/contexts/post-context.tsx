@@ -117,41 +117,43 @@ export function PostProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!db || !user) return;
 
-    // We only listen for one new document at a time to avoid fetching the whole collection.
+    // Listen for new posts.
     const postsQuery = query(collection(db, 'posts'), orderBy('createdAt', 'desc'), limit(1));
     
     const unsubscribe = onSnapshot(postsQuery, (snapshot) => {
-        const newPosts: PostType[] = [];
         snapshot.docChanges().forEach((change) => {
-            // We only care about new posts added
             if (change.type === "added") {
                 const postData = change.doc.data();
                 const now = new Date();
                 const postDate = (postData.createdAt as Timestamp)?.toDate() || now;
-                // Only consider posts created in the last few minutes as "new" for the notification
                 const isRecent = (now.getTime() - postDate.getTime()) < 5 * 60 * 1000;
 
-                const postExistsInForYou = forYouPosts.some(p => p.id === change.doc.id);
-                const postExistsInNew = newForYouPosts.some(p => p.id === change.doc.id);
-                
-                if (isRecent && !postExistsInForYou && !postExistsInNew) {
-                    newPosts.push({
-                        id: change.doc.id,
-                        ...postData,
-                        timestamp: formatTimestamp(postDate),
-                        createdAt: postDate.toISOString()
-                    } as PostType);
-                }
+                // Use a functional update with setForYouPosts to get the most current state
+                // and prevent race conditions.
+                setForYouPosts(currentForYouPosts => {
+                    const postExistsInForYou = currentForYouPosts.some(p => p.id === change.doc.id);
+                    const postExistsInNew = newForYouPosts.some(p => p.id === change.doc.id);
+                    
+                    if (isRecent && !postExistsInForYou && !postExistsInNew) {
+                        const newPost: PostType = {
+                            id: change.doc.id,
+                            ...postData,
+                            timestamp: formatTimestamp(postDate),
+                            createdAt: postDate.toISOString()
+                        } as PostType;
+                        
+                        setNewForYouPosts(prevNewPosts => [newPost, ...prevNewPosts]);
+                    }
+
+                    // Return the state unmodified as we're handling the new post in setNewForYouPosts
+                    return currentForYouPosts;
+                });
             }
         });
-        
-        if (newPosts.length > 0) {
-            setNewForYouPosts(prev => [...newPosts, ...prev]);
-        }
     });
 
     return () => unsubscribe();
-}, [forYouPosts, newForYouPosts, user]);
+  }, [newForYouPosts, user]);
 
 
   const addPost = async ({ text, media, poll, location, tribeId, communityId }: { text: string; media: Media[]; poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }): Promise<PostType | undefined> => {
@@ -487,3 +489,5 @@ export function usePosts() {
   }
   return context;
 }
+
+    
