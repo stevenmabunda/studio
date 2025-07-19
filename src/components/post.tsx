@@ -3,7 +3,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { MessageCircle, Repeat, Heart, Share2, CheckCircle2, MoreHorizontal, Edit, Trash2, Bookmark, MapPin, Copy } from "lucide-react";
+import { MessageCircle, Repeat, Heart, Share2, CheckCircle2, MoreHorizontal, Edit, Trash2, Bookmark, MapPin, Copy, X } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useMemo, useRef, useEffect } from "react";
@@ -49,6 +49,7 @@ import { Textarea } from "./ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { FollowButton } from "./follow-button";
 import { getIsFollowing } from "@/app/(app)/profile/actions";
+import { ScrollArea } from "./ui/scroll-area";
 
 type PostProps = PostType & {
   isStandalone?: boolean;
@@ -153,7 +154,7 @@ export function Post(props: PostProps) {
   const [isShareSheetOpen, setShareSheetOpen] = useState(false);
 
   const [isImageViewerOpen, setIsImageViewerOpen] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<{url: string, index: number} | null>(null);
   
   const [isExpanded, setIsExpanded] = useState(false);
   
@@ -280,9 +281,9 @@ export function Post(props: PostProps) {
     }
   };
 
-  const openImageViewer = (e: React.MouseEvent, imageUrl: string) => {
+  const openImageViewer = (e: React.MouseEvent, imageUrl: string, index: number) => {
     e.stopPropagation();
-    setSelectedImage(imageUrl);
+    setSelectedImage({url: imageUrl, index});
     setIsImageViewerOpen(true);
   };
 
@@ -398,7 +399,7 @@ export function Post(props: PostProps) {
             ) : singleImage ? (
               <div 
                   className="relative w-full max-h-[500px] bg-black cursor-pointer"
-                  onClick={(e) => openImageViewer(e, media[0].url)}
+                  onClick={(e) => openImageViewer(e, media[0].url, 0)}
               >
                   <Image
                       src={media[0].url}
@@ -415,7 +416,7 @@ export function Post(props: PostProps) {
                    <div 
                       key={index} 
                       className={cn("relative cursor-pointer", imageCount === 3 && index === 0 && "row-span-2")}
-                      onClick={(e) => openImageViewer(e, item.url)}
+                      onClick={(e) => openImageViewer(e, item.url, index)}
                   >
                     <Image
                       src={item.url}
@@ -539,24 +540,30 @@ export function Post(props: PostProps) {
           </Dialog>
            <Dialog open={isImageViewerOpen} onOpenChange={setIsImageViewerOpen}>
                 <DialogContent 
-                    className="max-w-4xl h-[90vh] bg-transparent border-none shadow-none p-0"
-                    onClick={e => e.stopPropagation()}
+                    className="max-w-none w-screen h-screen bg-black/90 border-none shadow-none p-0 flex flex-col md:flex-row"
+                    onClick={(e) => e.stopPropagation()}
                 >
-                    <DialogTitle className="sr-only">Enlarged post image</DialogTitle>
-                    {selectedImage && (
-                        <div className="relative w-full h-full flex items-center justify-center">
+                    <DialogTitle className="sr-only">Image Viewer</DialogTitle>
+                    <div className="relative w-full h-full md:w-[calc(100%-400px)] flex items-center justify-center">
+                        {selectedImage && (
                             <Image
-                                src={selectedImage}
-                                alt="Enlarged view"
-                                layout="fill"
-                                objectFit="contain"
-                                className="z-50"
+                                src={selectedImage.url}
+                                alt={`Enlarged view of post image ${selectedImage.index + 1}`}
+                                fill
+                                className="object-contain"
                             />
-                            <DialogClose asChild>
-                                <div className="fixed inset-0 bg-black/80 -z-10" />
-                            </DialogClose>
-                        </div>
-                    )}
+                        )}
+                        <DialogClose asChild>
+                            <Button variant="ghost" size="icon" className="absolute top-2 right-2 text-white h-10 w-10 bg-black/30 hover:bg-black/50 hover:text-white">
+                                <X className="h-6 w-6"/>
+                            </Button>
+                        </DialogClose>
+                    </div>
+                    <aside className="w-full md:w-[400px] bg-background h-full flex flex-col">
+                        <ScrollArea className="flex-1">
+                            {postUiContent}
+                        </ScrollArea>
+                    </aside>
                 </DialogContent>
             </Dialog>
       </div>
