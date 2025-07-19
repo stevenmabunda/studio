@@ -7,7 +7,6 @@ import { Post } from "@/components/post";
 import Image from "next/image";
 import { MapPin, Link as LinkIcon, CalendarDays, Camera, Loader2, ArrowLeft, Heart, Globe, RefreshCw, PlayCircle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { usePosts } from "@/contexts/post-context";
 import { PostSkeleton } from "@/components/post-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -23,7 +22,7 @@ import * as z from "zod";
 import { updateProfile } from "firebase/auth";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useParams, useRouter } from "next/navigation";
-import { getUserProfile, getIsFollowing, toggleFollow, type ProfileData, getLikedPosts, updateUserPosts, getMediaPosts } from "../actions";
+import { getUserProfile, getIsFollowing, toggleFollow, type ProfileData, getLikedPosts, updateUserPosts, getMediaPosts, getUserPosts } from "../actions";
 import { FollowButton } from "@/components/follow-button";
 import type { PostType } from "@/lib/data";
 import { FollowListDialog } from "@/components/follow-list-dialog";
@@ -43,14 +42,15 @@ const profileFormSchema = z.object({
 
 export default function ProfilePage() {
   const { user: currentUser, loading: authLoading } = useAuth();
-  const { posts, loading: postsLoading } = usePosts();
   const { toast } = useToast();
   const params = useParams();
   const router = useRouter();
   const profileId = params.id as string;
 
   const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [userPosts, setUserPosts] = useState<PostType[]>([]);
   const [profileLoading, setProfileLoading] = useState(true);
+  const [postsLoading, setPostsLoading] = useState(true);
   const [likedPosts, setLikedPosts] = useState<PostType[]>([]);
   const [likedPostsLoading, setLikedPostsLoading] = useState(false);
   const [mediaPosts, setMediaPosts] = useState<PostType[]>([]);
@@ -64,18 +64,24 @@ export default function ProfilePage() {
   const hasFetchedLikedPosts = useRef(false);
   const hasFetchedMediaPosts = useRef(false);
 
-  const fetchProfileAndFollowStatus = useCallback(async () => {
+  const fetchProfileData = useCallback(async () => {
     if (!profileId) return;
     setProfileLoading(true);
     setFollowLoading(true);
+    setPostsLoading(true);
     try {
-        const fetchedProfile = await getUserProfile(profileId);
+        const [fetchedProfile, fetchedPosts] = await Promise.all([
+            getUserProfile(profileId),
+            getUserPosts(profileId)
+        ]);
+
         if (fetchedProfile) {
             setProfile(fetchedProfile);
         } else {
            toast({ variant: 'destructive', title: "Error", description: "Profile not found." });
            router.push('/home'); // Redirect if profile doesn't exist
         }
+        setUserPosts(fetchedPosts);
 
         if (currentUser && currentUser.uid !== profileId) {
             const followStatus = await getIsFollowing(currentUser.uid, profileId);
@@ -83,11 +89,12 @@ export default function ProfilePage() {
         }
 
     } catch (error) {
-        console.error("Error fetching user profile:", error);
-        toast({ variant: 'destructive', title: "Error", description: "Could not fetch profile." });
+        console.error("Error fetching user profile data:", error);
+        toast({ variant: 'destructive', title: "Error", description: "Could not fetch profile data." });
     } finally {
         setProfileLoading(false);
         setFollowLoading(false);
+        setPostsLoading(false);
     }
   }, [profileId, toast, router, currentUser]);
 
@@ -122,11 +129,11 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (!authLoading) {
-        fetchProfileAndFollowStatus();
+        fetchProfileData();
     }
-  }, [authLoading, fetchProfileAndFollowStatus]);
+  }, [authLoading, fetchProfileData]);
 
-  if (authLoading || profileLoading || !profile || !currentUser) {
+  if (authLoading || profileLoading || !currentUser) {
       return (
         <div>
             <header className="sticky top-0 z-10 flex items-center gap-4 border-b bg-background/80 p-4 backdrop-blur-sm">
@@ -152,8 +159,22 @@ export default function ProfilePage() {
       );
   }
   
-  const userPosts = posts.filter(post => post.authorId === profileId);
-
+  if (!profile) {
+    return (
+        <div>
+            <header className="sticky top-0 z-10 flex items-center gap-4 border-b bg-background/80 p-4 backdrop-blur-sm">
+                 <Button variant="ghost" size="icon" className="h-8 w-8 -ml-2" onClick={() => router.back()}>
+                    <ArrowLeft />
+                </Button>
+                <h1 className="text-xl font-bold">Profile not found</h1>
+            </header>
+            <div className="p-8 text-center text-muted-foreground">
+                <p>This user may not exist.</p>
+            </div>
+        </div>
+    )
+  }
+  
   return (
     <div>
        <header className="sticky top-0 z-10 flex items-center gap-4 border-b bg-background/80 p-4 backdrop-blur-sm">
@@ -240,12 +261,12 @@ export default function ProfilePage() {
           </FollowListDialog>
         </div>
       </div>
-      {isMyProfile && profile && (
+      {isMyProfile && (
         <EditProfileDialog 
             isOpen={isEditDialogOpen}
             onOpenChange={setIsEditDialogOpen}
             profile={profile}
-            onProfileUpdate={fetchProfileAndFollowStatus}
+            onProfileUpdate={fetchProfileData}
         />
       )}
       <Tabs defaultValue="posts" className="w-full border-t" onValueChange={handleTabChange}>
@@ -366,7 +387,7 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
             setAvatarPreview(profile.photoURL);
             setBannerPreview(profile.bannerUrl);
         }
-    }, [profile, form]);
+    }, [profile, form, isOpen]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'banner') => {
         const file = e.target.files?.[0];
@@ -520,3 +541,4 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
         </Dialog>
     );
 }
+

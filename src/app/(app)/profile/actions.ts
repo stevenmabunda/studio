@@ -87,6 +87,34 @@ export async function getUserProfile(
   };
 }
 
+export async function getUserPosts(userId: string): Promise<PostType[]> {
+    if (!db) return [];
+
+    const postsRef = collection(db, 'posts');
+    const q = query(postsRef, where('authorId', '==', userId), orderBy('createdAt', 'desc'));
+
+    const querySnapshot = await getDocs(q);
+
+    return querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        const createdAt = (data.createdAt as Timestamp)?.toDate();
+        return {
+            id: doc.id,
+            authorId: data.authorId,
+            authorName: data.authorName,
+            authorHandle: data.authorHandle,
+            authorAvatar: data.authorAvatar,
+            content: data.content,
+            comments: data.comments,
+            reposts: data.reposts,
+            likes: data.likes,
+            media: data.media,
+            poll: data.poll,
+            timestamp: createdAt ? formatTimestamp(createdAt) : 'now',
+        } as PostType;
+    });
+}
+
 export async function getIsFollowing(
   currentUserId: string,
   profileId: string
