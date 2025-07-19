@@ -18,6 +18,7 @@ import { getRecentPosts } from './actions';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export default function HomePage() {
   const { 
@@ -42,6 +43,9 @@ export default function HomePage() {
   const [lastPostId, setLastPostId] = useState<string | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMorePosts, setHasMorePosts] = useState(true);
+
+  const [isNavVisible, setIsNavVisible] = useState(true);
+  const lastScrollY = useRef(0);
 
 
   const fetchInitialPosts = useCallback(() => {
@@ -86,15 +90,25 @@ export default function HomePage() {
 
   useEffect(() => {
     const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
       if (activeTab !== 'foryou') {
         setShowNotification(false);
         return;
       }
-      const isScrolled = window.scrollY > 200;
-      if (isScrolled) {
+      
+      const isScrolledDown = currentScrollY > lastScrollY.current;
+      if (isScrolledDown && currentScrollY > 10) {
+        setIsNavVisible(false);
+      } else {
+        setIsNavVisible(true);
+      }
+      lastScrollY.current = currentScrollY;
+      
+      const isScrolledPastThreshold = window.scrollY > 200;
+      if (isScrolledPastThreshold) {
         setHasScrolledFromTop(true);
       } else {
-        // If user scrolls back to top, hide notification
         setShowNotification(false);
         setHasScrolledFromTop(false);
       }
@@ -160,7 +174,10 @@ export default function HomePage() {
             onClick={handleShowNewPosts}
         />
       <Tabs defaultValue="foryou" className="w-full flex flex-col flex-1" onValueChange={setActiveTab}>
-        <header className="sticky top-0 z-10 bg-black/80 backdrop-blur-sm md:top-0 md:bg-background/80">
+         <header className={cn(
+          "sticky top-0 z-10 bg-black transition-transform duration-300 ease-in-out",
+          !isNavVisible && "-translate-y-full"
+          )}>
           {/* Mobile Header: Hidden on md and up */}
           <div className="md:hidden">
             <div className="flex justify-between items-center h-14 px-4">
@@ -168,37 +185,37 @@ export default function HomePage() {
             </div>
           </div>
           <TabsList className="w-full justify-start overflow-x-auto no-scrollbar bg-transparent p-0">
-             <div className="flex-1 flex justify-center">
-                <TabsTrigger
+            <div className="flex-1 flex justify-center">
+              <TabsTrigger
                 value="foryou"
                 className="shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
-                >
+              >
                 For You
-                </TabsTrigger>
+              </TabsTrigger>
             </div>
-             <div className="flex-1 flex justify-center">
-                <TabsTrigger
+            <div className="flex-1 flex justify-center">
+              <TabsTrigger
                 value="discover"
                 className="shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
-                >
+              >
                 Discover
-                </TabsTrigger>
+              </TabsTrigger>
             </div>
-             <div className="flex-1 flex justify-center">
-                <TabsTrigger
+            <div className="flex-1 flex justify-center">
+              <TabsTrigger
                 value="live"
                 className="shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
-                >
+              >
                 Live
-                </TabsTrigger>
+              </TabsTrigger>
             </div>
-             <div className="flex-1 flex justify-center">
-                <TabsTrigger
+            <div className="flex-1 flex justify-center">
+              <TabsTrigger
                 value="video"
                 className="shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
-                >
+              >
                 Video
-                </TabsTrigger>
+              </TabsTrigger>
             </div>
           </TabsList>
         </header>
