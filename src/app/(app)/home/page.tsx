@@ -102,13 +102,12 @@ export default function HomePage() {
     try {
         const newPost = await addPost(data);
         if (newPost) {
-          // Manually add the new post to the top of the feed if we're at the top
-          if (window.scrollY < 200) {
-            setForYouPosts(prev => [newPost, ...prev]);
-          }
+           toast({ description: "Your post has been published!" });
+           // Scroll to top only if the user is already near the top
+           if (window.scrollY < 200) {
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+           }
         }
-        toast({ description: "Your post has been published!" });
-        window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
         console.error("Failed to create post:", error);
         toast({ variant: 'destructive', description: "Something went wrong. Please try again." });
