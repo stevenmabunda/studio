@@ -39,9 +39,9 @@ export function PinnedContent() {
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-bold px-4">Pinned for you</h2>
-      <div className="flex space-x-4 overflow-x-auto pb-4 px-4 no-scrollbar">
+      <div className="flex space-x-4 overflow-x-auto pb-4 px-4 no-scrollbar scroll-snap-x-mandatory">
         {pinnedItems.map((item, index) => (
-          <div key={index} className="flex-shrink-0 w-40">
+          <div key={index} className="flex-shrink-0 w-[60vw] md:w-40 scroll-snap-align-start">
             <Card className="overflow-hidden rounded-lg group cursor-pointer">
               <div className="relative h-52">
                 <Image
