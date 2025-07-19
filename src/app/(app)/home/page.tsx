@@ -178,14 +178,13 @@ export default function HomePage() {
           "sticky top-0 z-10 bg-black transition-transform duration-300 ease-in-out",
           !isNavVisible && "-translate-y-full"
           )}>
-          {/* Mobile Header: Hidden on md and up */}
           <div className="md:hidden">
             <div className="flex justify-between items-center h-14 px-4">
               <h1 className="text-2xl font-bold text-white">BHOLO</h1>
             </div>
           </div>
-          <TabsList className="w-full justify-start overflow-x-auto no-scrollbar bg-transparent p-0">
-            <div className="flex-1 flex justify-center">
+          <TabsList className="w-full justify-start bg-transparent p-0">
+            <div className="flex flex-1 justify-center">
               <TabsTrigger
                 value="foryou"
                 className="shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
@@ -193,7 +192,7 @@ export default function HomePage() {
                 For You
               </TabsTrigger>
             </div>
-            <div className="flex-1 flex justify-center">
+            <div className="flex flex-1 justify-center">
               <TabsTrigger
                 value="discover"
                 className="shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
@@ -201,7 +200,7 @@ export default function HomePage() {
                 Discover
               </TabsTrigger>
             </div>
-            <div className="flex-1 flex justify-center">
+            <div className="flex flex-1 justify-center">
               <TabsTrigger
                 value="live"
                 className="shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
@@ -209,7 +208,7 @@ export default function HomePage() {
                 Live
               </TabsTrigger>
             </div>
-            <div className="flex-1 flex justify-center">
+            <div className="flex flex-1 justify-center">
               <TabsTrigger
                 value="video"
                 className="shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
