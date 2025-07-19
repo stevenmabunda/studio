@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -10,7 +11,6 @@ import { CreatePost, type Media } from '@/components/create-post';
 import { usePosts } from '@/contexts/post-context';
 import { useToast } from '@/hooks/use-toast';
 import type { PostType } from '@/lib/data';
-import { useTabContext } from '@/contexts/tab-context';
 import { ScrollArea } from './ui/scroll-area';
 
 const navItems = [
@@ -26,8 +26,6 @@ export function MobileBottomNav() {
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
-  const isVideoTabActive = pathname === '/home';
-
   const handlePost = async (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null }) => {
     try {
         await addPost(data);
@@ -41,7 +39,7 @@ export function MobileBottomNav() {
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-black border-t border-border z-40">
-      <div className="flex justify-around items-center h-full">
+      <div className="flex justify-evenly items-center h-full">
         {navItems.map((item) => {
           if (item.href === 'POST_ACTION') {
             return (
