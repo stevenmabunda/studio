@@ -16,6 +16,75 @@ import { LiveMatches } from '@/components/live-matches';
 import { NewPostsNotification } from '@/components/new-posts-notification';
 import { getRecentPosts } from './actions';
 import { useAuth } from '@/hooks/use-auth';
+import { SidebarTrigger } from '@/components/ui/sidebar';
+import Link from 'next/link';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Bell, Mail } from 'lucide-react';
+
+function MobileHomeHeader() {
+  const { user } = useAuth();
+  return (
+    <div className="md:hidden sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur-sm">
+      <div className="flex h-14 items-center justify-between px-4">
+        <SidebarTrigger asChild>
+            <button className="h-8 w-8 rounded-full overflow-hidden">
+                <Avatar className="h-full w-full">
+                    <AvatarImage src={user?.photoURL || undefined} data-ai-hint="user avatar" />
+                    <AvatarFallback>{user?.displayName?.charAt(0) || 'U'}</AvatarFallback>
+                </Avatar>
+            </button>
+        </SidebarTrigger>
+        
+        <Link href="/home" aria-label="Home">
+            <span className="text-2xl font-bold text-white">BHOLO</span>
+        </Link>
+
+        <div className="flex items-center gap-1">
+            <Link href="/notifications" passHref>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <Bell className="h-5 w-5" />
+                    <span className="sr-only">Notifications</span>
+                </Button>
+            </Link>
+            <Link href="/messages" passHref>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <Mail className="h-5 w-5" />
+                    <span className="sr-only">Messages</span>
+                </Button>
+            </Link>
+        </div>
+      </div>
+      <TabsList className="flex w-full overflow-x-auto bg-transparent p-0 no-scrollbar sm:grid sm:grid-cols-4 border-t">
+        <TabsTrigger
+          value="foryou"
+          className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold data-[state=active]:border-primary data-[state=active]:shadow-none px-4"
+        >
+          For You
+        </TabsTrigger>
+        <TabsTrigger
+          value="discover"
+          className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold data-[state=active]:border-primary data-[state=active]:shadow-none px-4"
+        >
+          Discover
+        </TabsTrigger>
+          <TabsTrigger
+          value="live"
+          className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold data-[state=active]:border-primary data-[state=active]:shadow-none px-4"
+        >
+          Live
+        </TabsTrigger>
+        <TabsTrigger
+          value="video"
+          className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold data-[state=active]:border-primary data-[state=active]:shadow-none px-4"
+        >
+          Video
+        </TabsTrigger>
+      </TabsList>
+    </div>
+  );
+}
+
 
 export default function HomePage() {
   const { 
@@ -123,7 +192,11 @@ export default function HomePage() {
             onClick={handleShowNewPosts}
         />
       <Tabs defaultValue="foryou" className="w-full flex flex-col flex-1" onValueChange={setActiveTab}>
-        <header className="sticky top-14 md:top-0 z-10 border-b border-border bg-background/95 backdrop-blur-sm">
+        {/* Mobile Header */}
+        <MobileHomeHeader />
+
+        {/* Desktop Header */}
+        <header className="hidden md:block sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur-sm">
           <TabsList className="flex w-full overflow-x-auto bg-transparent p-0 no-scrollbar sm:grid sm:grid-cols-4">
             <TabsTrigger
               value="foryou"
