@@ -9,7 +9,7 @@ import {
 import { getLiveMatchesFromApi } from '@/services/live-scores-service';
 import type { MatchType, PostType } from '@/lib/data';
 import { db } from '@/lib/firebase/config';
-import { collection, getDocs, query, where, orderBy, type Timestamp, limit } from 'firebase/firestore';
+import { collection, getDocs, query, where, orderBy, type Timestamp, limit, startAfter, doc, getDoc } from 'firebase/firestore';
 import { formatTimestamp } from '@/lib/utils';
 
 
@@ -97,18 +97,26 @@ export async function getFollowingPosts(userId: string): Promise<PostType[]> {
     }
 }
 
-export async function getRecentPosts(options: { limit?: number } = {}): Promise<PostType[]> {
+export async function getRecentPosts(options: { limit?: number; lastPostId?: string } = {}): Promise<PostType[]> {
     if (!db) {
         return [];
     }
 
     try {
         const postsRef = collection(db, 'posts');
-        const q = query(
-            postsRef,
+        const queryConstraints = [
             orderBy('createdAt', 'desc'),
-            limit(options.limit || 50) 
-        );
+            limit(options.limit || 20)
+        ];
+
+        if (options.lastPostId) {
+            const lastPostDoc = await getDoc(doc(db, 'posts', options.lastPostId));
+            if (lastPostDoc.exists()) {
+                queryConstraints.push(startAfter(lastPostDoc));
+            }
+        }
+        
+        const q = query(postsRef, ...queryConstraints);
 
         const querySnapshot = await getDocs(q);
 

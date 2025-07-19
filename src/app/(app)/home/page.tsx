@@ -16,6 +16,8 @@ import { LiveMatches } from '@/components/live-matches';
 import { NewPostsNotification } from '@/components/new-posts-notification';
 import { getRecentPosts } from './actions';
 import { useAuth } from '@/hooks/use-auth';
+import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 
 export default function HomePage() {
   const { 
@@ -36,14 +38,51 @@ export default function HomePage() {
   
   const [showNotification, setShowNotification] = useState(false);
   const [hasScrolledFromTop, setHasScrolledFromTop] = useState(false);
+  
+  const [lastPostId, setLastPostId] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMorePosts, setHasMorePosts] = useState(true);
 
-  // Fetch initial posts here instead of the context
-  useEffect(() => {
+
+  const fetchInitialPosts = useCallback(() => {
     setLoadingForYou(true);
-    getRecentPosts()
-      .then(setForYouPosts)
+    getRecentPosts({ limit: 20 })
+      .then(initialPosts => {
+        setForYouPosts(initialPosts);
+        if (initialPosts.length < 20) {
+            setHasMorePosts(false);
+        } else {
+            setLastPostId(initialPosts[initialPosts.length - 1]?.id);
+            setHasMorePosts(true);
+        }
+      })
       .finally(() => setLoadingForYou(false));
   }, [setLoadingForYou, setForYouPosts]);
+
+  useEffect(() => {
+    fetchInitialPosts();
+  }, [fetchInitialPosts]);
+
+  const loadMorePosts = useCallback(async () => {
+    if (loadingMore || !hasMorePosts || !lastPostId) return;
+
+    setLoadingMore(true);
+    try {
+        const morePosts = await getRecentPosts({ limit: 20, lastPostId });
+        if (morePosts.length > 0) {
+            setForYouPosts(prev => [...prev, ...morePosts]);
+            setLastPostId(morePosts[morePosts.length - 1].id);
+        }
+        if (morePosts.length < 20) {
+            setHasMorePosts(false);
+        }
+    } catch (error) {
+        console.error("Failed to load more posts:", error);
+        toast({ variant: 'destructive', description: "Could not load more posts." });
+    } finally {
+        setLoadingMore(false);
+    }
+  }, [loadingMore, hasMorePosts, lastPostId, toast, setForYouPosts]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -100,7 +139,7 @@ export default function HomePage() {
   
   const handlePost = async (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null }) => {
     try {
-        const newPost = await addPost(data);
+        await addPost(data);
         // Let the real-time listener handle adding the post to the feed
         toast({ description: "Your post has been published!" });
         // Scroll to top only if the user is already near the top
@@ -121,12 +160,18 @@ export default function HomePage() {
             onClick={handleShowNewPosts}
         />
       <Tabs defaultValue="foryou" className="w-full flex flex-col flex-1" onValueChange={setActiveTab}>
-        <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm">
+        <header className="sticky top-0 z-10 bg-black/80 backdrop-blur-sm md:top-0 md:bg-background/80">
+          {/* Mobile Header: Hidden on md and up */}
+          <div className="md:hidden">
+            <div className="flex justify-between items-center h-14 px-4">
+              <h1 className="text-2xl font-bold text-white">BHOLO</h1>
+            </div>
+          </div>
           <TabsList className="w-full justify-start overflow-x-auto no-scrollbar bg-transparent p-0">
              <div className="flex-1 flex justify-center">
                 <TabsTrigger
                 value="foryou"
-                className="shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-primary data-[state=active]:border-primary data-[state=active]:shadow-none px-4"
+                className="shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
                 >
                 For You
                 </TabsTrigger>
@@ -134,7 +179,7 @@ export default function HomePage() {
              <div className="flex-1 flex justify-center">
                 <TabsTrigger
                 value="discover"
-                className="shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-primary data-[state=active]:border-primary data-[state=active]:shadow-none px-4"
+                className="shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
                 >
                 Discover
                 </TabsTrigger>
@@ -142,7 +187,7 @@ export default function HomePage() {
              <div className="flex-1 flex justify-center">
                 <TabsTrigger
                 value="live"
-                className="shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-primary data-[state=active]:border-primary data-[state=active]:shadow-none px-4"
+                className="shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
                 >
                 Live
                 </TabsTrigger>
@@ -150,7 +195,7 @@ export default function HomePage() {
              <div className="flex-1 flex justify-center">
                 <TabsTrigger
                 value="video"
-                className="shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-primary data-[state=active]:border-primary data-[state=active]:shadow-none px-4"
+                className="shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
                 >
                 Video
                 </TabsTrigger>
@@ -178,6 +223,16 @@ export default function HomePage() {
                 </div>
               )}
             </div>
+            {hasMorePosts && !loadingForYou && (
+                <div className="py-8 text-center">
+                    <Button onClick={loadMorePosts} disabled={loadingMore}>
+                        {loadingMore ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Load More'}
+                    </Button>
+                </div>
+            )}
+             {!hasMorePosts && !loadingForYou && forYouPosts.length > 0 && (
+                <p className="py-8 text-center text-muted-foreground">You've reached the end!</p>
+            )}
           </TabsContent>
           <TabsContent value="discover" className="h-full">
             <DiscoverFeed />
