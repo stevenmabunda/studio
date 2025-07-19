@@ -169,7 +169,7 @@ export default function ProfilePage() {
         <Image
           src={profile.bannerUrl}
           alt="Profile banner"
-          layout="fill"
+          fill
           objectFit="cover"
           data-ai-hint="stadium lights"
         />
@@ -240,7 +240,7 @@ export default function ProfilePage() {
           </FollowListDialog>
         </div>
       </div>
-      {isMyProfile && (
+      {isMyProfile && profile && (
         <EditProfileDialog 
             isOpen={isEditDialogOpen}
             onOpenChange={setIsEditDialogOpen}
@@ -286,7 +286,7 @@ export default function ProfilePage() {
                             <Image
                                 src={media.url}
                                 alt={`Media from post ${post.id}`}
-                                layout="fill"
+                                fill
                                 objectFit="cover"
                                 className="transition-opacity group-hover:opacity-80"
                             />
@@ -355,15 +355,17 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
     });
     
     useEffect(() => {
-        form.reset({
-            displayName: profile.displayName || '',
-            bio: profile.bio || '',
-            location: profile.location || '',
-            country: profile.country || '',
-            favouriteClub: profile.favouriteClub || '',
-        });
-        setAvatarPreview(profile.photoURL);
-        setBannerPreview(profile.bannerUrl);
+        if (profile) {
+            form.reset({
+                displayName: profile.displayName || '',
+                bio: profile.bio || '',
+                location: profile.location || '',
+                country: profile.country || '',
+                favouriteClub: profile.favouriteClub || '',
+            });
+            setAvatarPreview(profile.photoURL);
+            setBannerPreview(profile.bannerUrl);
+        }
     }, [profile, form]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'banner') => {
@@ -459,7 +461,7 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
                 </DialogHeader>
 
                 <div className="relative h-32 w-full bg-muted sm:h-40">
-                    <Image src={bannerPreview} alt="Banner preview" layout="fill" objectFit="cover" className="rounded-md" />
+                    <Image src={bannerPreview} alt="Banner preview" fill objectFit="cover" className="rounded-md" />
                     <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
                          <Button size="icon" variant="ghost" className="text-white hover:bg-black/50" onClick={() => bannerInputRef.current?.click()}>
                             <Camera className="h-6 w-6" />
