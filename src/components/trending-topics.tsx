@@ -13,20 +13,33 @@ export function TrendingTopics() {
   const [topics, setTopics] = useState<TrendingKeyword[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchTopics = async () => {
-    setLoading(true);
+  const fetchTopics = async (isInitialLoad = false) => {
+    if (isInitialLoad) {
+      setLoading(true);
+    }
     try {
       const result = await getTrendingKeywords({ numberOfTopics: 5 });
       setTopics(result);
     } catch (error) {
       console.error("Failed to fetch trending topics:", error);
     } finally {
-      setLoading(false);
+      if (isInitialLoad) {
+        setLoading(false);
+      }
     }
   };
 
   useEffect(() => {
-    fetchTopics();
+    // Fetch immediately on mount
+    fetchTopics(true);
+
+    // Then, set up an interval to fetch every hour
+    const intervalId = setInterval(() => {
+      fetchTopics(false); // Subsequent fetches are not initial loads
+    }, 60 * 60 * 1000); // 1 hour in milliseconds
+
+    // Clean up the interval when the component unmounts
+    return () => clearInterval(intervalId);
   }, []);
 
   return (
