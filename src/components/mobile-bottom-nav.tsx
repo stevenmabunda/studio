@@ -1,11 +1,10 @@
-
 'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Plus, Search, Users, MessageSquare } from 'lucide-react';
+import { Home, Plus, Search, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { CreatePost, type Media } from '@/components/create-post';
 import { usePosts } from '@/contexts/post-context';
@@ -19,7 +18,6 @@ const navItems = [
   { href: '/explore', icon: Search, label: 'Explore' },
   { href: 'POST_ACTION', icon: Plus, label: 'Post' },
   { href: '/tribes', icon: Users, label: 'Tribes' },
-  { href: '/messages', icon: MessageSquare, label: 'Messages' },
 ];
 
 export function MobileBottomNav() {
@@ -27,9 +25,8 @@ export function MobileBottomNav() {
   const { addPost } = usePosts();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { activeTab } = useTabContext();
   
-  const isVideoTabActive = activeTab === 'video' && pathname === '/home';
+  const isVideoTabActive = pathname === '/home';
 
   const handlePost = async (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null }) => {
     try {
