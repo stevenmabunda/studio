@@ -100,14 +100,11 @@ export default function HomePage() {
   
   const handlePost = async (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null }) => {
     try {
-        const newPost = await addPost(data);
-        if (newPost) {
-           toast({ description: "Your post has been published!" });
-           // Scroll to top only if the user is already near the top
-           if (window.scrollY < 200) {
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-           }
-           setForYouPosts(prev => [newPost, ...prev]);
+        await addPost(data);
+        toast({ description: "Your post has been published!" });
+        // Scroll to top only if the user is already near the top
+        if (window.scrollY < 200) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     } catch (error) {
         console.error("Failed to create post:", error);
