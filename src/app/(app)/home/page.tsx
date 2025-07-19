@@ -100,7 +100,13 @@ export default function HomePage() {
   
   const handlePost = async (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null }) => {
     try {
-        await addPost(data);
+        const newPost = await addPost(data);
+        if (newPost) {
+          // Manually add the new post to the top of the feed if we're at the top
+          if (window.scrollY < 200) {
+            setForYouPosts(prev => [newPost, ...prev]);
+          }
+        }
         toast({ description: "Your post has been published!" });
         window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
