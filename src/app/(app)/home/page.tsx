@@ -178,12 +178,7 @@ export default function HomePage() {
           "sticky top-0 z-10 bg-black transition-transform duration-300 ease-in-out",
           !isNavVisible && "-translate-y-full"
           )}>
-          <div className="md:hidden">
-            <div className="flex justify-between items-center h-14 px-4">
-              <h1 className="text-2xl font-bold text-white">BHOLO</h1>
-            </div>
-          </div>
-          <TabsList className="w-full justify-start bg-transparent p-0">
+          <TabsList className="w-full justify-start bg-transparent p-0 overflow-x-auto no-scrollbar">
             <div className="flex flex-1 justify-center">
               <TabsTrigger
                 value="foryou"

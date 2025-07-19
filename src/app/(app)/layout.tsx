@@ -31,7 +31,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const isPostPage = pathname.startsWith('/post/');
   const isCreatorPage = pathname === '/creators';
   const isHomePage = pathname === '/home';
-  const showMobileTopBar = !isPostPage;
+  const showMobileTopBar = !isPostPage && !isHomePage;
 
 
   if (isCreatorPage) {
@@ -51,7 +51,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           <SidebarNav />
         </div>
       </header>
-      <main className="w-full max-w-[624px] md:border-x pb-16 md:pb-0">
+      <main className="w-full max-w-[624px] md:border-x">
         {showMobileTopBar && <MobileTopBar />}
         {children}
       </main>
