@@ -31,7 +31,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const isPostPage = pathname.startsWith('/post/');
   const isCreatorPage = pathname === '/creators';
   const isHomePage = pathname === '/home';
-  const showMobileTopBar = !isPostPage && !isHomePage;
+  const showMobileTopBar = !isPostPage;
 
 
   if (isCreatorPage) {
