@@ -172,9 +172,10 @@ export async function getJoinedTribeIds(userId: string): Promise<string[]> {
   const tribeIds = new Set<string>();
   snapshot.forEach(doc => {
       // The document ID of a member doc is the userId.
-      if (doc.id === userId && doc.ref.parent.parent?.path.startsWith('tribes/')) {
+      const parentDoc = doc.ref.parent.parent;
+      if (doc.id === userId && parentDoc && parentDoc.path.startsWith('tribes/')) {
         // The parent of a member doc is the tribe doc.
-        const tribeId = doc.ref.parent.parent?.id;
+        const tribeId = parentDoc.id;
         if (tribeId) {
             tribeIds.add(tribeId);
         }
