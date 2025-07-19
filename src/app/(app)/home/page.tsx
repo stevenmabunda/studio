@@ -205,7 +205,7 @@ export default function HomePage() {
 
         {/* Desktop Header */}
         <header className="hidden md:block sticky top-0 z-10 bg-black">
-          <TabsList className="grid w-full grid-cols-4 bg-transparent">
+          <TabsList className="grid w-full grid-cols-4 bg-transparent p-0">
              <div className="flex justify-center">
                 <TabsTrigger
                 value="foryou"
