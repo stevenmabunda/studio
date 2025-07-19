@@ -59,7 +59,7 @@ function MobileHomeHeader() {
         <div className="flex justify-center">
             <TabsTrigger
             value="foryou"
-            className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold data-[state=active]:border-primary data-[state=active]:shadow-none px-4"
+            className="shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
             >
             For You
             </TabsTrigger>
@@ -67,7 +67,7 @@ function MobileHomeHeader() {
         <div className="flex justify-center">
             <TabsTrigger
             value="discover"
-            className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold data-[state=active]:border-primary data-[state=active]:shadow-none px-4"
+            className="shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
             >
             Discover
             </TabsTrigger>
@@ -75,7 +75,7 @@ function MobileHomeHeader() {
         <div className="flex justify-center">
             <TabsTrigger
             value="live"
-            className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold data-[state=active]:border-primary data-[state=active]:shadow-none px-4"
+            className="shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
             >
             Live
             </TabsTrigger>
@@ -83,7 +83,7 @@ function MobileHomeHeader() {
         <div className="flex justify-center">
             <TabsTrigger
             value="video"
-            className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold data-[state=active]:border-primary data-[state=active]:shadow-none px-4"
+            className="shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
             >
             Video
             </TabsTrigger>
@@ -209,7 +209,7 @@ export default function HomePage() {
              <div className="flex justify-center">
                 <TabsTrigger
                 value="foryou"
-                className="shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold data-[state=active]:border-primary data-[state=active]:shadow-none px-4"
+                className="shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
                 >
                 For You
                 </TabsTrigger>
@@ -217,7 +217,7 @@ export default function HomePage() {
              <div className="flex justify-center">
                 <TabsTrigger
                 value="discover"
-                className="shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold data-[state=active]:border-primary data-[state=active]:shadow-none px-4"
+                className="shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
                 >
                 Discover
                 </TabsTrigger>
@@ -225,7 +225,7 @@ export default function HomePage() {
              <div className="flex justify-center">
                 <TabsTrigger
                 value="live"
-                className="shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold data-[state=active]:border-primary data-[state=active]:shadow-none px-4"
+                className="shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
                 >
                 Live
                 </TabsTrigger>
@@ -233,7 +233,7 @@ export default function HomePage() {
              <div className="flex justify-center">
                 <TabsTrigger
                 value="video"
-                className="shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold data-[state=active]:border-primary data-[state=active]:shadow-none px-4"
+                className="shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
                 >
                 Video
                 </TabsTrigger>
