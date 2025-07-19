@@ -27,11 +27,10 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     );
   }
 
-  // Hide the generic mobile top bar on pages that have their own custom header, like the post detail page or home page.
+  // Hide the generic mobile top bar on pages that have their own custom header, like the post detail page.
   const isPostPage = pathname.startsWith('/post/');
-  const isHomePage = pathname === '/home';
   const isCreatorPage = pathname === '/creators';
-  const showMobileTopBar = !isPostPage && !isHomePage;
+  const showMobileTopBar = !isPostPage;
 
 
   if (isCreatorPage) {
