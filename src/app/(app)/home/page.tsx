@@ -100,7 +100,10 @@ export default function HomePage() {
   
   const handlePost = async (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null }) => {
     try {
-        await addPost(data);
+        const newPost = await addPost(data);
+        if (newPost) {
+           setForYouPosts(prev => [newPost, ...prev]);
+        }
         toast({ description: "Your post has been published!" });
         // Scroll to top only if the user is already near the top
         if (window.scrollY < 200) {
@@ -121,8 +124,8 @@ export default function HomePage() {
         />
       <Tabs defaultValue="foryou" className="w-full flex flex-col flex-1" onValueChange={setActiveTab}>
         <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm">
-          <TabsList className="grid w-full grid-cols-4 bg-transparent p-0">
-             <div className="flex justify-center">
+          <TabsList className="w-full justify-start overflow-x-auto no-scrollbar bg-transparent p-0">
+             <div className="flex-1 flex justify-center">
                 <TabsTrigger
                 value="foryou"
                 className="shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-primary data-[state=active]:border-primary data-[state=active]:shadow-none px-4"
@@ -130,7 +133,7 @@ export default function HomePage() {
                 For You
                 </TabsTrigger>
             </div>
-             <div className="flex justify-center">
+             <div className="flex-1 flex justify-center">
                 <TabsTrigger
                 value="discover"
                 className="shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-primary data-[state=active]:border-primary data-[state=active]:shadow-none px-4"
@@ -138,7 +141,7 @@ export default function HomePage() {
                 Discover
                 </TabsTrigger>
             </div>
-             <div className="flex justify-center">
+             <div className="flex-1 flex justify-center">
                 <TabsTrigger
                 value="live"
                 className="shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-primary data-[state=active]:border-primary data-[state=active]:shadow-none px-4"
@@ -146,7 +149,7 @@ export default function HomePage() {
                 Live
                 </TabsTrigger>
             </div>
-             <div className="flex justify-center">
+             <div className="flex-1 flex justify-center">
                 <TabsTrigger
                 value="video"
                 className="shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-primary data-[state=active]:border-primary data-[state=active]:shadow-none px-4"
