@@ -26,47 +26,46 @@ export async function getMostViewedPosts(): Promise<PostType[]> {
       return [];
     }
 
-    // 3. Map documents to PostType objects.
-    let posts = querySnapshot.docs.map(doc => {
-      const data = doc.data();
-      const createdAt = (data.createdAt as Timestamp)?.toDate();
-      return {
-          id: doc.id,
-          authorId: data.authorId,
-          authorName: data.authorName,
-          authorHandle: data.authorHandle,
-          authorAvatar: data.authorAvatar,
-          content: data.content,
-          comments: data.comments,
-          reposts: data.reposts,
-          likes: data.likes,
-          views: data.views,
-          media: data.media,
-          poll: data.poll,
-          timestamp: createdAt ? formatTimestamp(createdAt) : 'now',
-      } as PostType;
-    });
+    // 3. Map documents to PostType objects and filter for posts with images.
+    let imagePosts = querySnapshot.docs
+      .map(doc => {
+        const data = doc.data();
+        const createdAt = (data.createdAt as Timestamp)?.toDate();
+        return {
+            id: doc.id,
+            authorId: data.authorId,
+            authorName: data.authorName,
+            authorHandle: data.authorHandle,
+            authorAvatar: data.authorAvatar,
+            content: data.content,
+            comments: data.comments,
+            reposts: data.reposts,
+            likes: data.likes,
+            views: data.views,
+            media: data.media,
+            poll: data.poll,
+            timestamp: createdAt ? formatTimestamp(createdAt) : 'now',
+        } as PostType;
+      })
+      .filter(p => p.media && p.media.length > 0 && p.media.some(m => m.type === 'image'));
+
+    if (imagePosts.length === 0) {
+        return [];
+    }
     
-    // 4. Sort all recent posts by views in descending order.
-    posts.sort((a, b) => (b.views || 0) - (a.views || 0));
+    // 4. Sort all recent image posts by views in descending order.
+    imagePosts.sort((a, b) => (b.views || 0) - (a.views || 0));
 
     // 5. Take the top 15 posts.
-    const topPosts = posts.slice(0, 15);
+    const topPosts = imagePosts.slice(0, 15);
 
     if (topPosts.length === 0) {
       return [];
     }
 
-    // 6. Randomly select one to be the hero from the top 5, ensuring it has an image.
-    const heroCandidates = topPosts
-      .slice(0, 5)
-      .filter(p => p.media && p.media.length > 0 && p.media.some(m => m.type === 'image'));
-
-    if (heroCandidates.length === 0) {
-        // No suitable hero post, return the top posts as a flat list.
-        return topPosts;
-    }
-
+    // 6. Randomly select one to be the hero from the top 5. We already know they all have images.
+    const heroCandidates = topPosts.slice(0, 5);
+    
     const heroIndex = Math.floor(Math.random() * heroCandidates.length);
     const heroPost = heroCandidates[heroIndex];
 
