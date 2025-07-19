@@ -287,15 +287,15 @@ export async function getMediaPosts(userId?: string): Promise<PostType[]> {
 
   const postsRef = collection(db, 'posts');
   let q;
-  // If a userId is provided, query for that user's media posts.
-  // Otherwise, fetch all media posts.
+  
   if (userId) {
+    // If a userId is provided, query for that user's media posts, but don't sort by 'createdAt' in the query.
     q = query(
       postsRef, 
-      where('authorId', '==', userId),
-      orderBy('createdAt', 'desc')
+      where('authorId', '==', userId)
     );
   } else {
+    // If no userId, fetch all posts and sort by creation date.
     q = query(postsRef, orderBy('createdAt', 'desc'));
   }
 
@@ -329,8 +329,8 @@ export async function getMediaPosts(userId?: string): Promise<PostType[]> {
       })
       .filter(post => post.media && post.media.length > 0); // Filter for posts that have media
 
-    // Sort by creation date descending in-memory if not already ordered by query
-    if (!userId) {
+    // Sort by creation date descending in-memory if we didn't sort in the query
+    if (userId) {
         mediaPosts.sort((a, b) => {
             const timeA = a.createdAt?.getTime() || 0;
             const timeB = b.createdAt?.getTime() || 0;
@@ -338,7 +338,7 @@ export async function getMediaPosts(userId?: string): Promise<PostType[]> {
         });
     }
 
-    return mediaPosts;
+    return mediaPosts.map(({ createdAt, ...rest }) => rest);
 
   } catch (error) {
     console.error("Error fetching media posts:", error);
