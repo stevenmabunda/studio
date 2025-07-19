@@ -101,9 +101,7 @@ export default function HomePage() {
   const handlePost = async (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null }) => {
     try {
         const newPost = await addPost(data);
-        if (newPost) {
-           setForYouPosts(prev => [newPost, ...prev]);
-        }
+        // Let the real-time listener handle adding the post to the feed
         toast({ description: "Your post has been published!" });
         // Scroll to top only if the user is already near the top
         if (window.scrollY < 200) {
