@@ -223,6 +223,7 @@ export function VideoPost({ post, isMuted, onToggleMute, isPlaying, onVisibility
           loop
           muted={isMuted}
           playsInline
+          autoPlay
           className="max-h-full max-w-full object-contain"
         />
 
