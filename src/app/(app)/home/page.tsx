@@ -25,7 +25,7 @@ import { Bell, Mail } from 'lucide-react';
 function MobileHomeHeader() {
   const { user } = useAuth();
   return (
-    <div className="md:hidden sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur-sm">
+    <div className="md:hidden sticky top-0 z-10 bg-black">
       <div className="flex h-14 items-center justify-between px-4">
         <SidebarTrigger asChild>
             <button className="h-8 w-8 rounded-full overflow-hidden">
@@ -204,8 +204,8 @@ export default function HomePage() {
         <MobileHomeHeader />
 
         {/* Desktop Header */}
-        <header className="hidden md:block sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur-sm">
-          <TabsList className="grid w-full grid-cols-4">
+        <header className="hidden md:block sticky top-0 z-10 bg-black">
+          <TabsList className="grid w-full grid-cols-4 bg-transparent">
              <div className="flex justify-center">
                 <TabsTrigger
                 value="foryou"
@@ -242,7 +242,7 @@ export default function HomePage() {
         </header>
         <main className="flex-1">
           <TabsContent value="foryou" className="h-full">
-            <div className="hidden md:block">
+            <div className="hidden md:block border-b">
               <CreatePost onPost={handlePost} />
             </div>
             <div className="divide-y divide-border">
