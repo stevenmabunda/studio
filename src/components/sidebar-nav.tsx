@@ -40,6 +40,7 @@ const navItems = [
   { href: '/notifications', label: 'Notifications', icon: Bell },
   { href: '/messages', label: 'Messages', icon: MessageSquare },
   { href: '/bookmarks', label: 'Bookmarks', icon: Bookmark },
+  { href: '/profile', label: 'My Profile', icon: User },
   { href: '/creators', label: 'Become a Creator', icon: Star },
 ];
 
@@ -96,7 +97,7 @@ export function SidebarNav() {
                 isActive={pathname.startsWith(item.href) && (item.href !== '/profile' || pathname === '/profile' || pathname.startsWith('/profile/'))}
                 className="text-lg h-14"
               >
-                <Link href={item.href}>
+                <Link href={item.href === '/profile' && user ? `/profile/${user.uid}` : item.href}>
                   <item.icon className="h-7 w-7" />
                   <span className={pathname.startsWith(item.href) ? 'font-bold' : 'font-normal'}>{item.label}</span>
                 </Link>
