@@ -191,7 +191,7 @@ export default function ProfilePage() {
           src={profile.bannerUrl}
           alt="Profile banner"
           fill
-          objectFit="cover"
+          className="object-cover object-top"
           data-ai-hint="stadium lights"
         />
       </div>
