@@ -19,6 +19,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 export default function HomePage() {
   const { 
@@ -90,28 +91,26 @@ export default function HomePage() {
 
   useEffect(() => {
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
+        const currentScrollY = window.scrollY;
+        if (activeTab !== 'foryou') {
+            setShowNotification(false);
+            return;
+        }
 
-      if (activeTab !== 'foryou') {
-        setShowNotification(false);
-        return;
-      }
-      
-      const isScrolledDown = currentScrollY > lastScrollY.current;
-      if (isScrolledDown && currentScrollY > 10) {
-        setIsNavVisible(false);
-      } else {
-        setIsNavVisible(true);
-      }
-      lastScrollY.current = currentScrollY;
-      
-      const isScrolledPastThreshold = window.scrollY > 200;
-      if (isScrolledPastThreshold) {
-        setHasScrolledFromTop(true);
-      } else {
-        setShowNotification(false);
-        setHasScrolledFromTop(false);
-      }
+        if (currentScrollY > lastScrollY.current && currentScrollY > 10) {
+            setIsNavVisible(false);
+        } else {
+            setIsNavVisible(true);
+        }
+        lastScrollY.current = currentScrollY;
+
+        const isScrolledPastThreshold = window.scrollY > 200;
+        if (isScrolledPastThreshold) {
+            setHasScrolledFromTop(true);
+        } else {
+            setShowNotification(false);
+            setHasScrolledFromTop(false);
+        }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -175,43 +174,40 @@ export default function HomePage() {
         />
       <Tabs defaultValue="foryou" className="w-full flex flex-col flex-1" onValueChange={setActiveTab}>
          <header className={cn(
-          "sticky top-0 z-10 bg-black transition-transform duration-300 ease-in-out",
-          !isNavVisible && "-translate-y-full"
-          )}>
-          <TabsList className="w-full justify-start bg-transparent p-0 overflow-x-auto no-scrollbar">
-            <div className="flex flex-1 justify-center">
-              <TabsTrigger
-                value="foryou"
-                className="shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
-              >
-                For You
-              </TabsTrigger>
-            </div>
-            <div className="flex flex-1 justify-center">
-              <TabsTrigger
-                value="discover"
-                className="shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
-              >
-                Discover
-              </TabsTrigger>
-            </div>
-            <div className="flex flex-1 justify-center">
-              <TabsTrigger
-                value="live"
-                className="shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
-              >
-                Live
-              </TabsTrigger>
-            </div>
-            <div className="flex flex-1 justify-center">
-              <TabsTrigger
-                value="video"
-                className="shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
-              >
-                Video
-              </TabsTrigger>
-            </div>
-          </TabsList>
+            "sticky top-0 z-10 bg-black transition-transform duration-300 ease-in-out",
+            !isNavVisible && "-translate-y-full"
+            )}>
+              <div className="flex h-14 items-center justify-between border-b border-border bg-background/95 px-4 backdrop-blur-sm md:hidden">
+                <Link href="/home" aria-label="Home">
+                  <span className="text-2xl font-bold text-white">BHOLO</span>
+                </Link>
+              </div>
+            <TabsList className="flex w-full justify-evenly bg-transparent p-0 overflow-x-auto no-scrollbar">
+                <TabsTrigger
+                    value="foryou"
+                    className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
+                >
+                    For You
+                </TabsTrigger>
+                <TabsTrigger
+                    value="discover"
+                    className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
+                >
+                    Discover
+                </TabsTrigger>
+                <TabsTrigger
+                    value="live"
+                    className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
+                >
+                    Live
+                </TabsTrigger>
+                <TabsTrigger
+                    value="video"
+                    className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
+                >
+                    Video
+                </TabsTrigger>
+            </TabsList>
         </header>
         <main className="flex-1">
           <TabsContent value="foryou" className="h-full">

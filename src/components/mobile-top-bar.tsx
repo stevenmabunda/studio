@@ -17,22 +17,19 @@ export function MobileTopBar() {
 
     useEffect(() => {
         const handleScroll = () => {
-        const currentScrollY = window.scrollY;
-        
-        // Hide nav if scrolling down
-        if (currentScrollY > lastScrollY.current && currentScrollY > 10) {
-            setIsVisible(false);
-        } else {
-            // Show nav if scrolling up or at the top of the page
-            setIsVisible(true);
-        }
-        lastScrollY.current = currentScrollY;
+            const currentScrollY = window.scrollY;
+            if (currentScrollY > lastScrollY.current && currentScrollY > 10) {
+                setIsVisible(false);
+            } else {
+                setIsVisible(true);
+            }
+            lastScrollY.current = currentScrollY;
         };
 
         window.addEventListener('scroll', handleScroll, { passive: true });
 
         return () => {
-        window.removeEventListener('scroll', handleScroll);
+            window.removeEventListener('scroll', handleScroll);
         };
     }, []);
 
