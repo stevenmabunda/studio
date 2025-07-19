@@ -123,7 +123,7 @@ export default function HomePage() {
             onClick={handleShowNewPosts}
         />
       <Tabs defaultValue="foryou" className="w-full flex flex-col flex-1" onValueChange={setActiveTab}>
-        <header className="sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur-sm">
+        <header className="sticky top-14 md:top-0 z-10 border-b border-border bg-background/95 backdrop-blur-sm">
           <TabsList className="flex w-full overflow-x-auto bg-transparent p-0 no-scrollbar sm:grid sm:grid-cols-4">
             <TabsTrigger
               value="foryou"
