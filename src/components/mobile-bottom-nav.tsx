@@ -43,10 +43,7 @@ export function MobileBottomNav() {
   };
 
   return (
-    <nav className={cn(
-        "md:hidden fixed bottom-0 left-0 right-0 h-16 bg-black border-t border-border z-40 transition-transform duration-300 ease-in-out",
-        isVideoTabActive && "translate-y-full"
-    )}>
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-black border-t border-border z-40">
       <div className="flex justify-around items-center h-full">
         {navItems.map((item) => {
           if (item.href === 'POST_ACTION') {
