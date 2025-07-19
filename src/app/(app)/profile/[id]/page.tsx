@@ -350,7 +350,7 @@ export default function ProfilePage() {
 }
 
 // Edit Profile Dialog Component
-function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: { isOpen: boolean, onOpenChange: (open: boolean) => void, profile: ProfileData, onProfileUpdate: () => void }) {
+function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: { isOpen: boolean, onOpenChange: (open: boolean) => void, profile: ProfileData | null, onProfileUpdate: () => void }) {
     const { user } = useAuth();
     const { toast } = useToast();
     const [isSaving, setIsSaving] = useState(false);
@@ -358,8 +358,8 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
 
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
     const [bannerFile, setBannerFile] = useState<File | null>(null);
-    const [avatarPreview, setAvatarPreview] = useState<string>(profile.photoURL);
-    const [bannerPreview, setBannerPreview] = useState<string>(profile.bannerUrl);
+    const [avatarPreview, setAvatarPreview] = useState<string>(profile?.photoURL || '');
+    const [bannerPreview, setBannerPreview] = useState<string>(profile?.bannerUrl || '');
 
     const avatarInputRef = useRef<HTMLInputElement>(null);
     const bannerInputRef = useRef<HTMLInputElement>(null);
@@ -367,11 +367,11 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
     const form = useForm({
         resolver: zodResolver(profileFormSchema),
         defaultValues: {
-            displayName: profile.displayName || '',
-            bio: profile.bio || '',
-            location: profile.location || '',
-            country: profile.country || '',
-            favouriteClub: profile.favouriteClub || '',
+            displayName: profile?.displayName || '',
+            bio: profile?.bio || '',
+            location: profile?.location || '',
+            country: profile?.country || '',
+            favouriteClub: profile?.favouriteClub || '',
         },
     });
     
@@ -428,7 +428,7 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
     }
 
     const onSubmit = async (data: z.infer<typeof profileFormSchema>) => {
-        if (!user || !db) return;
+        if (!user || !db || !profile) return;
         setIsSaving(true);
         try {
             let newAvatarUrl = profile.photoURL;
@@ -470,6 +470,8 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
             setIsSaving(false);
         }
     };
+
+    if (!profile) return null;
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -541,4 +543,3 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
         </Dialog>
     );
 }
-

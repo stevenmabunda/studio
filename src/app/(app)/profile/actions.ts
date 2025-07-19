@@ -91,11 +91,12 @@ export async function getUserPosts(userId: string): Promise<PostType[]> {
     if (!db) return [];
 
     const postsRef = collection(db, 'posts');
-    const q = query(postsRef, where('authorId', '==', userId), orderBy('createdAt', 'desc'));
+    // Removed orderBy to avoid needing a composite index. We will sort in code.
+    const q = query(postsRef, where('authorId', '==', userId));
 
     const querySnapshot = await getDocs(q);
 
-    return querySnapshot.docs.map(doc => {
+    const posts = querySnapshot.docs.map(doc => {
         const data = doc.data();
         const createdAt = (data.createdAt as Timestamp)?.toDate();
         return {
@@ -111,8 +112,19 @@ export async function getUserPosts(userId: string): Promise<PostType[]> {
             media: data.media,
             poll: data.poll,
             timestamp: createdAt ? formatTimestamp(createdAt) : 'now',
-        } as PostType;
+            createdAt: createdAt // Keep original timestamp for sorting
+        } as PostType & { createdAt?: Date };
     });
+
+    // Sort posts by creation date descending
+    posts.sort((a, b) => {
+        const timeA = a.createdAt?.getTime() || 0;
+        const timeB = b.createdAt?.getTime() || 0;
+        return timeB - timeA;
+    });
+
+    // Remove the temporary createdAt from the final returned object if desired, although it's fine to keep.
+    return posts.map(({ createdAt, ...rest }) => rest);
 }
 
 export async function getIsFollowing(
