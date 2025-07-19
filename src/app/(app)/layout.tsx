@@ -50,6 +50,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         </div>
       </header>
       <main className="w-full max-w-[624px] md:border-x pb-16 md:pb-0">
+        {/* Hide generic top bar on home page to use custom one */}
         {!isPostPage && !isHomePage && <MobileTopBar />}
         {children}
       </main>

@@ -55,7 +55,7 @@ function MobileHomeHeader() {
             </Link>
         </div>
       </div>
-      <TabsList className="flex w-full overflow-x-auto bg-transparent p-0 no-scrollbar sm:grid sm:grid-cols-4 border-t">
+      <TabsList className="grid w-full grid-cols-4 bg-transparent p-0">
         <TabsTrigger
           value="foryou"
           className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold data-[state=active]:border-primary data-[state=active]:shadow-none px-4"
@@ -197,7 +197,7 @@ export default function HomePage() {
 
         {/* Desktop Header */}
         <header className="hidden md:block sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur-sm">
-          <TabsList className="flex w-full overflow-x-auto bg-transparent p-0 no-scrollbar sm:grid sm:grid-cols-4">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger
               value="foryou"
               className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold data-[state=active]:border-primary data-[state=active]:shadow-none px-4"
