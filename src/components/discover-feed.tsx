@@ -9,6 +9,7 @@ import { Skeleton } from "./ui/skeleton";
 import type { PostType } from "@/lib/data";
 import { Eye, MessageCircle, Heart } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { WhoToFollow } from "./who-to-follow";
 
 function HeadlineSkeleton() {
     return (
@@ -141,8 +142,8 @@ export function DiscoverFeed() {
           }
         </div>
       ))}
-      <div className="p-4 hover:bg-accent cursor-pointer border-t">
-         <Button variant="link" className="p-0 text-primary text-sm">Show more</Button>
+      <div className="p-4 border-t">
+        <WhoToFollow />
       </div>
     </div>
   );

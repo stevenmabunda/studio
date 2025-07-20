@@ -56,8 +56,8 @@ export async function getMostViewedPosts(): Promise<PostType[]> {
     // 4. Sort all recent image posts by views in descending order.
     imagePosts.sort((a, b) => (b.views || 0) - (a.views || 0));
 
-    // 5. Take the top 15 posts.
-    const topPosts = imagePosts.slice(0, 15);
+    // 5. Take the top 25 posts.
+    const topPosts = imagePosts.slice(0, 25);
 
     if (topPosts.length === 0) {
       return [];
