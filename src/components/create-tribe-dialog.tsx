@@ -37,16 +37,16 @@ export function CreateTribeDialog({
   const { user } = useAuth();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [profilePicFile, setProfilePicFile] = useState<File | null>(null);
-  const [profilePicPreview, setProfilePicPreview] = useState<string | null>(null);
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setProfilePicFile(file);
-      setProfilePicPreview(URL.createObjectURL(file));
+      setBannerFile(file);
+      setBannerPreview(URL.createObjectURL(file));
     }
   };
 
@@ -56,12 +56,14 @@ export function CreateTribeDialog({
       toast({ variant: 'destructive', description: 'You must be logged in.' });
       return;
     }
+    if (!bannerFile) {
+        toast({ variant: 'destructive', description: 'A tribe banner image is required.' });
+        return;
+    }
 
     setIsSubmitting(true);
     const formData = new FormData(event.currentTarget);
-    if (profilePicFile) {
-      formData.append('profilePic', profilePicFile);
-    }
+    formData.append('banner', bannerFile);
 
     try {
       const result = await createTribe(user.uid, formData);
@@ -70,8 +72,8 @@ export function CreateTribeDialog({
         onOpenChange(false);
         onTribeCreated?.(); // Callback to refresh the list
         // Reset form state
-        setProfilePicFile(null);
-        setProfilePicPreview(null);
+        setBannerFile(null);
+        setBannerPreview(null);
         formRef.current?.reset();
       } else {
         toast({ variant: 'destructive', description: result.error || 'Failed to create tribe.' });
@@ -97,9 +99,9 @@ export function CreateTribeDialog({
               className="relative h-32 w-full bg-muted rounded-md flex items-center justify-center cursor-pointer hover:bg-muted/80"
               onClick={() => fileInputRef.current?.click()}
             >
-              {profilePicPreview ? (
+              {bannerPreview ? (
                 <div className="relative w-full h-full">
-                    <Image src={profilePicPreview} alt="Tribe preview" layout="fill" objectFit="cover" className="rounded-md" />
+                    <Image src={bannerPreview} alt="Tribe preview" layout="fill" objectFit="cover" className="rounded-md" />
                 </div>
               ) : (
                 <div className="text-center text-muted-foreground">
@@ -109,6 +111,7 @@ export function CreateTribeDialog({
               )}
                <input
                 type="file"
+                name="banner"
                 accept="image/*"
                 ref={fileInputRef}
                 onChange={handleFileChange}
