@@ -77,84 +77,86 @@ export function SidebarNav() {
   const userHandle = user?.email?.split('@')[0] || 'user';
 
   return (
-    <Sidebar className="h-full">
-      <SidebarHeader>
-        <div className="flex h-14 items-center justify-start px-4">
-            <Link href="/home" className="font-bold text-white text-2xl group-data-[collapsible=icon]:hidden" aria-label="BHOLO">
-                BHOLO
-            </Link>
-            <Link href="/home" className="hidden font-bold text-white text-3xl group-data-[collapsible=icon]:block" aria-label="BHOLO">
-                B
-            </Link>
-        </div>
-      </SidebarHeader>
-      <SidebarContent>
-        <SidebarMenu>
-          {navItems.map((item) => (
-            <SidebarMenuItem key={item.href}>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname.startsWith(item.href) && (item.href !== '/profile' || pathname === '/profile' || pathname.startsWith('/profile/'))}
-                className="text-lg h-14"
-              >
-                <Link href={item.href === '/profile' && user ? `/profile/${user.uid}` : item.href}>
-                  <item.icon className="h-7 w-7" />
-                  <span className={pathname.startsWith(item.href) ? 'font-bold' : 'font-normal'}>{item.label}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-        <div className="px-2 mt-4 md:block hidden">
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="w-full h-14 text-lg rounded-full">Kick-It!</Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[625px]">
-                <DialogHeader>
-                  <DialogTitle>Create a new post</DialogTitle>
-                </DialogHeader>
-                <div className='-mx-6'>
-                    <CreatePost onPost={handlePost} />
-                </div>
-              </DialogContent>
-            </Dialog>
-        </div>
-      </SidebarContent>
-       <SidebarFooter>
-         {user && (
-            <div className="w-full p-2">
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="w-full justify-start p-3 h-auto rounded-xl bg-sidebar-accent/50 hover:bg-sidebar-accent/75 transition-colors">
-                            <div className="flex items-center gap-3 w-full">
-                                <Avatar className="h-10 w-10">
-                                    <AvatarImage src={user.photoURL || 'https://placehold.co/40x40.png'} alt="User Avatar" data-ai-hint="user avatar" />
-                                    <AvatarFallback>{user.displayName?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
-                                </Avatar>
-                                <div className="flex-1 overflow-hidden text-left">
-                                    <p className="truncate font-bold">{user.displayName || 'User'}</p>
-                                    <p className="truncate text-sm text-muted-foreground">@{userHandle}</p>
-                                </div>
-                                <MoreHorizontal className="h-5 w-5 ml-auto" />
-                            </div>
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-64 mb-2" side="top" align="start">
-                        <DropdownMenuItem onSelect={() => router.push(`/profile/${user.uid}`)}>
-                            <User className="mr-2 h-4 w-4" />
-                            <span>My Account</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={handleLogout}>
-                            <LogOut className="mr-2 h-4 w-4" />
-                            <span>Log out</span>
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            </div>
-         )}
-      </SidebarFooter>
-    </Sidebar>
+    <div className="h-screen flex flex-col">
+      <Sidebar className="h-full">
+        <SidebarHeader>
+          <div className="flex h-14 items-center justify-start px-4">
+              <Link href="/home" className="font-bold text-white text-2xl group-data-[collapsible=icon]:hidden" aria-label="BHOLO">
+                  BHOLO
+              </Link>
+              <Link href="/home" className="hidden font-bold text-white text-3xl group-data-[collapsible=icon]:block" aria-label="BHOLO">
+                  B
+              </Link>
+          </div>
+        </SidebarHeader>
+        <SidebarContent>
+          <SidebarMenu>
+            {navItems.map((item) => (
+              <SidebarMenuItem key={item.href}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname.startsWith(item.href) && (item.href !== '/profile' || pathname === '/profile' || pathname.startsWith('/profile/'))}
+                  className="text-lg h-14"
+                >
+                  <Link href={item.href === '/profile' && user ? `/profile/${user.uid}` : item.href}>
+                    <item.icon className="h-7 w-7" />
+                    <span className={pathname.startsWith(item.href) ? 'font-bold' : 'font-normal'}>{item.label}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+          <div className="px-2 mt-4 md:block hidden">
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="w-full h-14 text-lg rounded-full">Kick-It!</Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[625px]">
+                  <DialogHeader>
+                    <DialogTitle>Create a new post</DialogTitle>
+                  </DialogHeader>
+                  <div className='-mx-6'>
+                      <CreatePost onPost={handlePost} />
+                  </div>
+                </DialogContent>
+              </Dialog>
+          </div>
+        </SidebarContent>
+         <SidebarFooter>
+           {user && (
+              <div className="w-full p-2">
+                  <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="w-full justify-start p-3 h-auto rounded-xl bg-sidebar-accent/50 hover:bg-sidebar-accent/75 transition-colors">
+                              <div className="flex items-center gap-3 w-full">
+                                  <Avatar className="h-10 w-10">
+                                      <AvatarImage src={user.photoURL || 'https://placehold.co/40x40.png'} alt="User Avatar" data-ai-hint="user avatar" />
+                                      <AvatarFallback>{user.displayName?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
+                                  </Avatar>
+                                  <div className="flex-1 overflow-hidden text-left">
+                                      <p className="truncate font-bold">{user.displayName || 'User'}</p>
+                                      <p className="truncate text-sm text-muted-foreground">@{userHandle}</p>
+                                  </div>
+                                  <MoreHorizontal className="h-5 w-5 ml-auto" />
+                              </div>
+                          </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="w-64 mb-2" side="top" align="start">
+                          <DropdownMenuItem onSelect={() => router.push(`/profile/${user.uid}`)}>
+                              <User className="mr-2 h-4 w-4" />
+                              <span>My Account</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={handleLogout}>
+                              <LogOut className="mr-2 h-4 w-4" />
+                              <span>Log out</span>
+                          </DropdownMenuItem>
+                      </DropdownMenuContent>
+                  </DropdownMenu>
+              </div>
+           )}
+        </SidebarFooter>
+      </Sidebar>
+    </div>
   );
 }

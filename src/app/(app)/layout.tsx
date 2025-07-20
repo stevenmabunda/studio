@@ -27,13 +27,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     );
   }
 
-  // Hide the generic mobile top bar on pages that have their own custom header, like the post detail page.
-  const isPostPage = pathname.startsWith('/post/');
   const isCreatorPage = pathname === '/creators';
-  const isHomePage = pathname === '/home';
-  const showMobileTopBar = !isPostPage && !isHomePage;
-
-
   if (isCreatorPage) {
     return (
       <div className="flex w-full justify-center">
@@ -44,21 +38,24 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     );
   }
 
+  // Hide the generic mobile top bar on pages that have their own custom header, like the post detail page.
+  const isPostPage = pathname.startsWith('/post/');
+  const isHomePage = pathname === '/home';
+  const showMobileTopBar = !isPostPage && !isHomePage;
+
   return (
-    <div className="flex w-full justify-center">
-      <header className="w-[275px] shrink-0 hidden md:block">
-        <div className="sticky top-0 h-screen">
-          <SidebarNav />
-        </div>
+    <div className="w-full justify-center lg:grid lg:grid-cols-[275px_1fr] xl:grid-cols-[275px_1fr_350px]">
+      <header className="hidden lg:block">
+        <SidebarNav />
       </header>
-      <main className="w-full max-w-[624px] md:border-x min-h-screen">
-        {showMobileTopBar && <MobileTopBar />}
-        {children}
-      </main>
-      <aside className="w-[350px] shrink-0 hidden lg:block">
-        <div className="sticky top-0 h-screen">
-          <RightSidebar />
-        </div>
+      <div className="flex flex-col md:grid md:grid-cols-[1fr] md:h-screen">
+          <main className="w-full max-w-[624px] md:border-x min-h-screen md:overflow-y-auto md:max-w-full">
+            {showMobileTopBar && <MobileTopBar />}
+            {children}
+          </main>
+      </div>
+      <aside className="hidden xl:block">
+        <RightSidebar />
       </aside>
 
       {/* Mobile-only elements */}
