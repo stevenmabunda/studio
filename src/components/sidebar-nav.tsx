@@ -77,8 +77,8 @@ export function SidebarNav() {
   const userHandle = user?.email?.split('@')[0] || 'user';
 
   return (
-    <div className="h-screen flex flex-col sticky top-0">
-      <Sidebar className="h-full">
+    <div className="h-full flex-col sticky top-0 flex w-[275px]">
+      <Sidebar className="h-full overflow-y-auto">
         <SidebarHeader>
           <div className="flex h-14 items-center justify-start px-4">
               <Link href="/home" className="font-bold text-white text-2xl group-data-[collapsible=icon]:hidden" aria-label="BHOLO">
@@ -122,7 +122,7 @@ export function SidebarNav() {
               </Dialog>
           </div>
         </SidebarContent>
-         <SidebarFooter>
+         <SidebarFooter className="mt-auto">
            {user && (
               <div className="w-full p-2">
                   <DropdownMenu>
