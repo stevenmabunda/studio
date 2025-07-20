@@ -4,13 +4,14 @@
 import Link from 'next/link';
 import { Button } from './ui/button';
 import { MessageCircle, Users, BarChart2, Newspaper } from 'lucide-react';
+import Image from 'next/image';
 
 export function AuthSidebar() {
     return (
         <aside className="sticky top-0 h-screen w-full flex-shrink-0 p-4 flex flex-col gap-6">
             <div className="flex flex-col h-14 justify-center">
-                <Link href="/home" className="font-bold text-white text-3xl" aria-label="BHOLO">
-                    BHOLO
+                <Link href="/home" className="w-24" aria-label="BHOLO">
+                    <Image src="/logo.png" alt="BHOLO Logo" width={100} height={40} />
                 </Link>
                 <p className="text-muted-foreground -mt-1">The Football Social Network</p>
             </div>

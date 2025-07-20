@@ -4,6 +4,7 @@
 import { createContext, useState, useEffect, type ReactNode } from 'react';
 import { onAuthStateChanged, type User } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
+import Image from 'next/image';
 
 type AuthContextType = {
   user: User | null;
@@ -38,7 +39,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return (
         <div className="flex items-center justify-center h-screen bg-background">
             <div className="flex flex-col items-center gap-4">
-                <h1 className="text-6xl font-extrabold tracking-tight text-white animate-pulse">BHOLO</h1>
+                <div className="w-48 animate-pulse">
+                   <Image src="/logo.png" alt="BHOLO Logo" width={200} height={80} priority />
+                </div>
                 <p className="text-muted-foreground animate-pulse">Loading BHOLO...</p>
             </div>
       </div>

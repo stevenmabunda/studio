@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useToast } from '@/hooks/use-toast';
 import type { PostType } from '@/lib/data';
-
+import Image from 'next/image';
 
 const navItems = [
   { href: '/home', label: 'Home', icon: Home },
@@ -81,11 +81,11 @@ export function SidebarNav() {
       <Sidebar className="h-full overflow-y-auto">
         <SidebarHeader>
           <div className="flex h-14 items-center justify-start px-4">
-              <Link href="/home" className="font-bold text-white text-2xl group-data-[collapsible=icon]:hidden" aria-label="BHOLO">
-                  BHOLO
+              <Link href="/home" className="group-data-[collapsible=icon]:hidden w-24" aria-label="BHOLO">
+                  <Image src="/logo.png" alt="BHOLO Logo" width={100} height={40} />
               </Link>
-              <Link href="/home" className="hidden font-bold text-white text-3xl group-data-[collapsible=icon]:block" aria-label="BHOLO">
-                  B
+              <Link href="/home" className="hidden group-data-[collapsible=icon]:block w-8 h-8" aria-label="BHOLO">
+                   <Image src="/logo.png" alt="BHOLO Icon" width={32} height={32} />
               </Link>
           </div>
         </SidebarHeader>

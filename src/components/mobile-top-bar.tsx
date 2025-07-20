@@ -9,6 +9,7 @@ import { Mail, Bell } from "lucide-react";
 import { Button } from "./ui/button";
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 export function MobileTopBar() {
     const { user } = useAuth();
@@ -47,8 +48,8 @@ export function MobileTopBar() {
                 </button>
             </SidebarTrigger>
             
-            <Link href="/home" aria-label="Home">
-                <span className="text-2xl font-bold text-white">BHOLO</span>
+            <Link href="/home" aria-label="Home" className="absolute left-1/2 -translate-x-1/2 h-8">
+                 <Image src="/logo.png" alt="BHOLO Logo" width={80} height={32} className="h-full w-auto" />
             </Link>
 
             <div className="flex items-center gap-1">
