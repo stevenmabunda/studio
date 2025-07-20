@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { useScrollContext } from '@/contexts/scroll-context';
 
 export default function HomePage() {
   const { 
@@ -37,6 +38,7 @@ export default function HomePage() {
   const { toast } = useToast();
   const { activeTab, setActiveTab } = useTabContext();
   const { user } = useAuth();
+  const { getScrollPosition, setScrollPosition } = useScrollContext();
   
   const [showNotification, setShowNotification] = useState(false);
   const [hasScrolledFromTop, setHasScrolledFromTop] = useState(false);
@@ -101,10 +103,19 @@ export default function HomePage() {
   useEffect(() => {
     fetchInitialPosts();
   }, [fetchInitialPosts]);
+  
+  useEffect(() => {
+    const savedPosition = getScrollPosition('/home');
+    if (savedPosition) {
+      setTimeout(() => window.scrollTo(0, savedPosition), 0);
+    }
+  }, [getScrollPosition]);
 
   useEffect(() => {
     const handleScroll = () => {
         const currentScrollY = window.scrollY;
+        setScrollPosition('/home', currentScrollY);
+        
         if (activeTab !== 'foryou') {
             setShowNotification(false);
             return;
@@ -128,7 +139,7 @@ export default function HomePage() {
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [activeTab]);
+  }, [activeTab, setScrollPosition]);
 
   useEffect(() => {
     if (newForYouPosts.length > 0 && hasScrolledFromTop && activeTab === 'foryou') {
