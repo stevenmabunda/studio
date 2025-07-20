@@ -65,36 +65,34 @@ export function MobileHeader() {
                 <div className="h-8 w-8"></div>
             </div>
             <div id="top-nav">
-                <TabsList className="flex w-full justify-evenly border-b bg-transparent p-0 overflow-x-auto no-scrollbar">
-                    <TabsTrigger
-                        value="foryou"
-                        className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
-                        onClick={() => setActiveTab('foryou')}
-                    >
-                        For You
-                    </TabsTrigger>
-                    <TabsTrigger
-                        value="discover"
-                        className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
-                        onClick={() => setActiveTab('discover')}
-                    >
-                        Discover
-                    </TabsTrigger>
-                    <TabsTrigger
-                        value="live"
-                        className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
-                        onClick={() => setActiveTab('live')}
-                    >
-                        Live
-                    </TabsTrigger>
-                    <TabsTrigger
-                        value="video"
-                        className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
-                         onClick={() => setActiveTab('video')}
-                    >
-                        Video
-                    </TabsTrigger>
-                </TabsList>
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                    <TabsList className="flex w-full justify-evenly border-b bg-transparent p-0 overflow-x-auto no-scrollbar">
+                        <TabsTrigger
+                            value="foryou"
+                            className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
+                        >
+                            For You
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="discover"
+                            className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
+                        >
+                            Discover
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="live"
+                            className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
+                        >
+                            Live
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="video"
+                            className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
+                        >
+                            Video
+                        </TabsTrigger>
+                    </TabsList>
+                </Tabs>
             </div>
         </div>
     );
