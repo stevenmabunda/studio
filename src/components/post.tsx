@@ -55,7 +55,6 @@ import { CreateComment, type ReplyMedia } from "./create-comment";
 import { db } from "@/lib/firebase/config";
 import { collection, onSnapshot, orderBy, query, type Timestamp } from "firebase/firestore";
 import { Skeleton } from "./ui/skeleton";
-import { useScrollContext } from "@/contexts/scroll-context";
 
 type PostProps = PostType & {
   isStandalone?: boolean;
@@ -223,7 +222,6 @@ export function Post(props: PostProps) {
   const { editPost, deletePost, likePost, repostPost, bookmarkPost, bookmarkedPostIds, addComment } = usePosts();
   const { toast } = useToast();
   const isMobile = useIsMobile();
-  const { setScrollPosition } = useScrollContext();
 
   const [comments, setComments] = useState<CommentType[]>([]);
   const [loadingComments, setLoadingComments] = useState(false);
@@ -613,7 +611,7 @@ export function Post(props: PostProps) {
 
   const handlePostClick = () => {
       if (!isStandalone) {
-          setScrollPosition(window.location.pathname, window.scrollY);
+          sessionStorage.setItem('timelineScroll', window.scrollY.toString());
           router.push(`/post/${id}`);
       }
   }

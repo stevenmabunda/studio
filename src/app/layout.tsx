@@ -6,7 +6,6 @@ import { AuthProvider } from '@/contexts/auth-context';
 import { PostProvider } from '@/contexts/post-context';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { TabProvider } from '@/contexts/tab-context';
-import { ScrollProvider } from '@/contexts/scroll-context';
 
 export const metadata: Metadata = {
   title: 'BHOLO',
@@ -31,9 +30,7 @@ export default function RootLayout({
           <PostProvider>
             <SidebarProvider>
               <TabProvider>
-                <ScrollProvider>
                   {children}
-                </ScrollProvider>
               </TabProvider>
             </SidebarProvider>
           </PostProvider>
