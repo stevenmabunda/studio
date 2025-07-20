@@ -106,17 +106,20 @@ export default function HomePage() {
     // Restore scroll position when returning to the page
     const postId = sessionStorage.getItem('scrollToPostId');
     if (postId) {
-        const postElement = document.querySelector(`[data-post-id="${postId}"]`);
-        if (postElement) {
-            postElement.scrollIntoView({ block: 'start' });
-        } else {
-            const scrollY = sessionStorage.getItem('scrollY');
-            if (scrollY) {
-                window.scrollTo(0, parseInt(scrollY, 10));
+        // A small delay can help ensure the content is rendered before scrolling
+        setTimeout(() => {
+            const postElement = document.querySelector(`[data-post-id="${postId}"]`);
+            if (postElement) {
+                postElement.scrollIntoView({ block: 'start' });
+            } else {
+                const scrollY = sessionStorage.getItem('scrollY');
+                if (scrollY) {
+                    window.scrollTo(0, parseInt(scrollY, 10));
+                }
             }
-        }
-        sessionStorage.removeItem('scrollToPostId');
-        sessionStorage.removeItem('scrollY');
+            sessionStorage.removeItem('scrollToPostId');
+            sessionStorage.removeItem('scrollY');
+        }, 50);
     }
   }, []);
 
