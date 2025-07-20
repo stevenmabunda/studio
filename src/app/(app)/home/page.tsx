@@ -210,7 +210,7 @@ export default function HomePage() {
                 </TabsTrigger>
             </TabsList>
         </header>
-        <main className="flex-1 md:pt-0 pt-[100px]">
+        <main className="flex-1 md:pt-0 pt-[124px]">
           <TabsContent value="foryou" className="h-full">
             <div className="hidden md:block border-b">
               <CreatePost onPost={handlePost} />

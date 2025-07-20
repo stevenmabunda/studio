@@ -47,7 +47,7 @@ export function MobileHeader() {
                 isHidden && 'hide-header'
             )}
         >
-            <div id="logo" className="flex h-12 items-center justify-between px-4">
+            <div id="logo" className="flex h-16 items-center justify-between px-4">
                 <SidebarTrigger asChild>
                     <button className="h-8 w-8 rounded-full overflow-hidden">
                         <Avatar className="h-full w-full">
@@ -57,8 +57,8 @@ export function MobileHeader() {
                     </button>
                 </SidebarTrigger>
 
-                <Link href="/home" aria-label="Home" className="h-8">
-                     <Image src="/officialogo.png" alt="BHOLO Logo" width={80} height={32} className="h-full w-auto" />
+                <Link href="/home" aria-label="Home" className="h-10">
+                     <Image src="/officialogo.png" alt="BHOLO Logo" width={160} height={64} className="h-full w-auto" />
                 </Link>
 
                 {/* Placeholder for right-side icons if needed */}
