@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { Button } from './ui/button';
-import { MessageCircle, Users, BarChart2, Newspaper } from 'lucide-react';
+import { MessageCircle, Users, BarChart2 } from 'lucide-react';
 import Image from 'next/image';
 
 export function AuthSidebar() {
@@ -30,10 +30,6 @@ export function AuthSidebar() {
                     <li className="flex items-center gap-3">
                         <BarChart2 className="h-6 w-6 text-primary" />
                         <span>React to live scores and play-by-play action</span>
-                    </li>
-                    <li className="flex items-center gap-3">
-                        <Newspaper className="h-6 w-6 text-primary" />
-                        <span>Get news, hot takes, and fan perspectives</span>
                     </li>
                 </ul>
 
