@@ -44,24 +44,30 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const showMobileTopBar = !isPostPage && !isHomePage;
 
   return (
-    <div className="w-full justify-center lg:grid lg:grid-cols-[275px_1fr] xl:grid-cols-[275px_1fr_350px]">
-      <header className="hidden lg:block">
-        <SidebarNav />
-      </header>
-      <div className="flex flex-col md:grid md:grid-cols-[1fr] md:h-screen">
-          <main className="w-full max-w-[624px] md:border-x min-h-screen md:overflow-y-auto md:max-w-full">
-            {showMobileTopBar && <MobileTopBar />}
-            {children}
-          </main>
-      </div>
-      <aside className="hidden xl:block">
-        <RightSidebar />
-      </aside>
+    <div className="md:flex md:justify-center">
+        <div className="md:max-w-7xl md:mx-auto md:w-full md:flex">
+          {/* Desktop Layout: Wrapper for sidebars and main content */}
+          <header className="hidden md:block w-[275px] shrink-0">
+            <SidebarNav />
+          </header>
 
-      {/* Mobile-only elements */}
-      <div className="md:hidden">
-        <MobileBottomNav />
-      </div>
+          <div className="flex-1 min-w-0">
+            {/* Mobile-only Top Bar */}
+            {showMobileTopBar && <MobileTopBar />}
+             <main className="w-full max-w-[624px] md:border-x min-h-screen">
+                {children}
+            </main>
+          </div>
+
+          <aside className="hidden xl:block w-[350px] shrink-0">
+            <RightSidebar />
+          </aside>
+        </div>
+
+        {/* Mobile-only Bottom Nav */}
+        <div className="md:hidden">
+            <MobileBottomNav />
+        </div>
     </div>
   );
 }

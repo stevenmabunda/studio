@@ -20,7 +20,7 @@ export function RightSidebar() {
   };
 
   return (
-    <aside className="h-screen flex-shrink-0 p-4 flex flex-col gap-6 overflow-y-auto">
+    <aside className="h-screen flex-shrink-0 p-4 flex flex-col gap-6 overflow-y-auto sticky top-0">
       <div className="relative">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
         <Input 

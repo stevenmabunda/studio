@@ -77,7 +77,7 @@ export function SidebarNav() {
   const userHandle = user?.email?.split('@')[0] || 'user';
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-screen flex flex-col sticky top-0">
       <Sidebar className="h-full">
         <SidebarHeader>
           <div className="flex h-14 items-center justify-start px-4">
