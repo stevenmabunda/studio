@@ -49,7 +49,7 @@ export function MobileTopBar() {
             </SidebarTrigger>
             
             <Link href="/home" aria-label="Home" className="absolute left-1/2 -translate-x-1/2 h-8">
-                 <Image src="/logo.png" alt="BHOLO Logo" width={80} height={32} className="h-full w-auto" />
+                 <Image src="/officialogo.png" alt="BHOLO Logo" width={80} height={32} className="h-full w-auto" />
             </Link>
 
             <div className="flex items-center gap-1">
