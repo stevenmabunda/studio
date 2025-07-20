@@ -47,6 +47,17 @@ export default function PostPage() {
   const [loadingPost, setLoadingPost] = useState(true);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loadingComments, setLoadingComments] = useState(true);
+  
+  const handleBack = () => {
+    const savedScrollY = sessionStorage.getItem('scroll-position');
+    router.push('/home'); // Or whatever the feed page is
+    if (savedScrollY) {
+      setTimeout(() => {
+        window.scrollTo(0, parseInt(savedScrollY, 10));
+        sessionStorage.removeItem('scroll-position');
+      }, 50); // Delay to allow navigation
+    }
+  };
 
   useEffect(() => {
     if (!db || !postId) {
@@ -111,7 +122,7 @@ export default function PostPage() {
 
   const Header = () => (
     <header className="sticky top-0 z-10 flex items-center gap-4 border-b bg-background/80 p-4 backdrop-blur-sm">
-        <Button variant="ghost" size="icon" className="h-8 w-8 -ml-2" onClick={() => router.back()}>
+        <Button variant="ghost" size="icon" className="h-8 w-8 -ml-2" onClick={handleBack}>
             <ArrowLeft />
         </Button>
         <h1 className="text-xl font-bold">Post</h1>

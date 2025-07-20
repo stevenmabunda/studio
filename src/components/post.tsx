@@ -611,8 +611,7 @@ export function Post(props: PostProps) {
 
   const handlePostClick = () => {
       if (!isStandalone) {
-          sessionStorage.setItem('scrollY', window.scrollY.toString());
-          sessionStorage.setItem('scrollToPostId', id);
+          sessionStorage.setItem('scroll-position', window.scrollY.toString());
           router.push(`/post/${id}`);
       }
   }
