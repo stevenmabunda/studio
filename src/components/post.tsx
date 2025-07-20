@@ -421,16 +421,18 @@ export function Post(props: PostProps) {
           <AvatarFallback>{authorName.charAt(0)}</AvatarFallback>
         </Avatar>
       </Link>
-      <div className="flex-1">
-        <div className="flex justify-between">
-          <div className="flex min-w-0 items-center gap-2">
-            <Link href={`/profile/${authorId}`} className="truncate font-bold hover:underline" onClick={(e) => e.stopPropagation()}>
-              {authorName}
-            </Link>
-            <span className="truncate text-sm text-muted-foreground">@{authorHandle}</span>
-            <span className="text-muted-foreground">·</span>
-            <span className="flex-shrink-0 text-sm text-muted-foreground">{timestamp}</span>
-          </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex justify-between items-start gap-2">
+            <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                    <Link href={`/profile/${authorId}`} className="font-bold hover:underline truncate" onClick={(e) => e.stopPropagation()}>
+                        {authorName}
+                    </Link>
+                    <span className="text-sm text-muted-foreground truncate">@{authorHandle}</span>
+                    <span className="text-muted-foreground">·</span>
+                    <span className="text-sm text-muted-foreground flex-shrink-0">{timestamp}</span>
+                </div>
+            </div>
            {isAuthor ? (
                 <div className="flex-shrink-0">
                     <DropdownMenu>
