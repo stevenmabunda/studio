@@ -103,24 +103,27 @@ export default function HomePage() {
   }, [fetchInitialPosts]);
   
   useEffect(() => {
-    // Restore scroll position when returning to the page
-    const postId = sessionStorage.getItem('scrollPostId');
-    const scrollY = sessionStorage.getItem('scrollY');
+    // Only run this logic if the posts have loaded
+    if (!loadingForYou && forYouPosts.length > 0) {
+      const postId = sessionStorage.getItem('scrollPostId');
+      const scrollY = sessionStorage.getItem('scrollY');
 
-    if (postId) {
+      if (postId) {
         // A small delay can help ensure the content is rendered before scrolling
         setTimeout(() => {
-            const postElement = document.querySelector(`[data-post-id="${postId}"]`);
-            if (postElement) {
-                postElement.scrollIntoView({ block: 'center' });
-            } else if (scrollY) {
-                window.scrollTo(0, parseInt(scrollY, 10));
-            }
-            sessionStorage.removeItem('scrollPostId');
-            sessionStorage.removeItem('scrollY');
+          const postElement = document.querySelector(`[data-post-id="${postId}"]`);
+          if (postElement) {
+            postElement.scrollIntoView({ behavior: 'auto', block: 'center' });
+          } else if (scrollY) {
+            // Fallback to scrollY if post not found
+            window.scrollTo(0, parseInt(scrollY, 10));
+          }
+          sessionStorage.removeItem('scrollPostId');
+          sessionStorage.removeItem('scrollY');
         }, 50);
+      }
     }
-  }, []);
+  }, [loadingForYou, forYouPosts]);
 
   useEffect(() => {
     const handleScroll = () => {

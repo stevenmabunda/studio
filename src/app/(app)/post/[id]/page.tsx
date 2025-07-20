@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Post } from '@/components/post';
@@ -49,14 +50,8 @@ export default function PostPage() {
   const [loadingComments, setLoadingComments] = useState(true);
   
   const handleBack = () => {
-    const savedScrollY = sessionStorage.getItem('scroll-position');
-    router.push('/home'); // Or whatever the feed page is
-    if (savedScrollY) {
-      setTimeout(() => {
-        window.scrollTo(0, parseInt(savedScrollY, 10));
-        sessionStorage.removeItem('scroll-position');
-      }, 50); // Delay to allow navigation
-    }
+    // We simply go back in history. The home page's useEffect will handle scroll restoration.
+    router.back();
   };
 
   useEffect(() => {
