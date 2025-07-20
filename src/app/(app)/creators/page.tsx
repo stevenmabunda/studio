@@ -83,7 +83,7 @@ export default function CreatorsPage() {
   if (applicationSubmitted) {
     return (
        <div className="flex flex-col min-h-screen bg-background text-foreground">
-         <main className="flex-1 flex items-center justify-center p-4 sm:p-6 md:p-8">
+         <main className="flex-1 flex items-center justify-center p-4">
             <div className="max-w-md mx-auto text-center space-y-6">
                 <Alert className="text-left border-muted-foreground/50">
                     <Check className="h-5 w-5" />
@@ -103,8 +103,8 @@ export default function CreatorsPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
-      <main className="flex-1 flex items-center justify-center p-4 sm:p-6 md:p-8">
-        <div className="max-w-5xl mx-auto">
+      <main className="flex-1 flex items-center justify-center p-4">
+        <div className="max-w-5xl mx-auto w-full">
           <div className="text-center mb-12 space-y-4">
              <Image src="/officialogo.png" alt="BHOLO Logo" width={150} height={60} priority className="mx-auto" />
             <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
@@ -115,7 +115,7 @@ export default function CreatorsPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-3xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
             {tiers.map((tier) => (
               <Card key={tier.name} className={cn(
                 "flex flex-col border-2 bg-card",
@@ -127,7 +127,7 @@ export default function CreatorsPage() {
                   <p className="font-bold text-xl">{tier.price}</p>
                   <CardDescription>{tier.priceDetail}</CardDescription>
                 </CardHeader>
-                <CardContent className="flex-1 flex flex-col justify-between space-y-8">
+                <CardContent className="flex-1 flex flex-col justify-between space-y-8 p-4">
                   <div className="space-y-6">
                     <div>
                       <h4 className="font-semibold mb-3">Eligibility</h4>
@@ -155,7 +155,7 @@ export default function CreatorsPage() {
                    <Button 
                     onClick={() => handleApply(tier.name)}
                     disabled={loadingTier !== null}
-                    className={cn(!tier.featured && "bg-foreground/80 hover:bg-foreground")}>
+                    className={cn("mt-4", !tier.featured && "bg-foreground/80 hover:bg-foreground")}>
                       {loadingTier === tier.name ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       ) : (

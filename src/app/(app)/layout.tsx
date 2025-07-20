@@ -65,7 +65,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         {/* Mobile Layout */}
         <div className="md:hidden w-full">
             {showMobileTopBar && <MobileTopBar />}
-             <main className="w-full">
+             <main className="w-full pb-16">
                 {children}
             </main>
             <MobileBottomNav />
