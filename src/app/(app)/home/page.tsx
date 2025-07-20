@@ -29,9 +29,9 @@ export default function HomePage() {
     newForYouPosts,
     showNewForYouPosts,
     loadingForYou,
-    setLoadingForYou,
     loadingDiscover,
-    addPost 
+    addPost,
+    fetchForYouPosts
   } = usePosts();
 
   const { toast } = useToast();
@@ -47,17 +47,40 @@ export default function HomePage() {
 
   const [isNavVisible, setIsNavVisible] = useState(true);
   const lastScrollY = useRef(0);
+  
+  useEffect(() => {
+    // This effect runs only when the component mounts and the posts are loaded.
+    // It's responsible for restoring the scroll position.
+    if (!loadingForYou && forYouPosts.length > 0) {
+      const postId = sessionStorage.getItem('scrollPostId');
+      const scrollY = sessionStorage.getItem('scrollY');
+
+      if (postId) {
+        setTimeout(() => {
+          const postElement = document.querySelector(`[data-post-id="${postId}"]`);
+          if (postElement) {
+            postElement.scrollIntoView({ behavior: 'auto', block: 'center' });
+          } else if (scrollY) {
+            // Fallback to scrollY if post not found (e.g., it's on a page that hasn't been loaded yet)
+            window.scrollTo(0, parseInt(scrollY, 10));
+          }
+          // Clean up session storage after use
+          sessionStorage.removeItem('scrollPostId');
+          sessionStorage.removeItem('scrollY');
+        }, 50); // A small delay helps ensure the content is rendered before scrolling.
+      }
+    }
+  }, [loadingForYou, forYouPosts]);
+
 
   const loadMorePosts = useCallback(async () => {
     if (loadingMore || !hasMorePosts) return;
 
     setLoadingMore(true);
+    const currentLastPostId = forYouPosts[forYouPosts.length - 1]?.id;
     try {
-        const morePosts = await getRecentPosts({ limit: 20, lastPostId });
-        if (morePosts.length > 0) {
-            setForYouPosts(prev => [...prev, ...morePosts]);
-            setLastPostId(morePosts[morePosts.length - 1].id);
-        } else {
+        const morePosts = await fetchForYouPosts({ limit: 20, lastPostId: currentLastPostId });
+        if (morePosts.length === 0) {
             setHasMorePosts(false);
         }
     } catch (error) {
@@ -66,7 +89,7 @@ export default function HomePage() {
     } finally {
         setLoadingMore(false);
     }
-  }, [loadingMore, hasMorePosts, lastPostId, toast, setForYouPosts]);
+  }, [loadingMore, hasMorePosts, fetchForYouPosts, toast, forYouPosts]);
 
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreTriggerRef = useCallback((node: HTMLDivElement) => {
@@ -81,49 +104,6 @@ export default function HomePage() {
 
     if (node) observerRef.current.observe(node);
   }, [loadingMore, hasMorePosts, loadMorePosts]);
-
-
-  const fetchInitialPosts = useCallback(() => {
-    setLoadingForYou(true);
-    getRecentPosts({ limit: 20 })
-      .then(initialPosts => {
-        setForYouPosts(initialPosts);
-        if (initialPosts.length < 20) {
-            setHasMorePosts(false);
-        } else {
-            setLastPostId(initialPosts[initialPosts.length - 1]?.id);
-            setHasMorePosts(true);
-        }
-      })
-      .finally(() => setLoadingForYou(false));
-  }, [setLoadingForYou, setForYouPosts]);
-
-  useEffect(() => {
-    fetchInitialPosts();
-  }, [fetchInitialPosts]);
-  
-  useEffect(() => {
-    // Only run this logic if the posts have loaded
-    if (!loadingForYou && forYouPosts.length > 0) {
-      const postId = sessionStorage.getItem('scrollPostId');
-      const scrollY = sessionStorage.getItem('scrollY');
-
-      if (postId) {
-        // A small delay can help ensure the content is rendered before scrolling
-        setTimeout(() => {
-          const postElement = document.querySelector(`[data-post-id="${postId}"]`);
-          if (postElement) {
-            postElement.scrollIntoView({ behavior: 'auto', block: 'center' });
-          } else if (scrollY) {
-            // Fallback to scrollY if post not found
-            window.scrollTo(0, parseInt(scrollY, 10));
-          }
-          sessionStorage.removeItem('scrollPostId');
-          sessionStorage.removeItem('scrollY');
-        }, 50);
-      }
-    }
-  }, [loadingForYou, forYouPosts]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -249,7 +229,7 @@ export default function HomePage() {
               <CreatePost onPost={handlePost} />
             </div>
             <div className="divide-y divide-border">
-              {loadingForYou ? (
+              {loadingForYou && forYouPosts.length === 0 ? (
                 <>
                   <PostSkeleton />
                   <PostSkeleton />

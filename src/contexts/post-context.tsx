@@ -14,6 +14,7 @@ import { extractPostTopics } from '@/ai/flows/extract-post-topics';
 import { seedPosts } from '@/lib/seed-data';
 import type { ReplyMedia } from '@/components/create-comment';
 import { getMediaPosts } from '@/app/(app)/profile/actions';
+import { getRecentPosts } from '@/app/(app)/home/actions';
 
 type PostContextType = {
   forYouPosts: PostType[];
@@ -33,6 +34,7 @@ type PostContextType = {
   loadingForYou: boolean;
   setLoadingForYou: React.Dispatch<React.SetStateAction<boolean>>;
   loadingDiscover: boolean;
+  fetchForYouPosts: (options?: { limit?: number; lastPostId?: string }) => Promise<PostType[]>;
 };
 
 const PostContext = createContext<PostContextType | undefined>(undefined);
@@ -72,6 +74,34 @@ export function PostProvider({ children }: { children: ReactNode }) {
 
   const { user } = useAuth();
   const [bookmarkedPostIds, setBookmarkedPostIds] = useState<Set<string>>(new Set());
+  
+  const [hasFetchedInitialForYou, setHasFetchedInitialForYou] = useState(false);
+
+  const fetchForYouPosts = useCallback(async (options: { limit?: number; lastPostId?: string } = {}) => {
+      setLoadingForYou(true);
+      try {
+          const posts = await getRecentPosts(options);
+          if (options.lastPostId) {
+              setForYouPosts(prev => [...prev, ...posts]);
+          } else {
+              setForYouPosts(posts);
+          }
+          return posts;
+      } catch (error) {
+          console.error("Failed to fetch 'For You' posts:", error);
+          return [];
+      } finally {
+          setLoadingForYou(false);
+      }
+  }, []);
+
+  useEffect(() => {
+    if (!hasFetchedInitialForYou) {
+        fetchForYouPosts({ limit: 20 });
+        setHasFetchedInitialForYou(true);
+    }
+  }, [hasFetchedInitialForYou, fetchForYouPosts]);
+
 
   const showNewForYouPosts = () => {
     setForYouPosts(prev => [...newForYouPosts, ...prev]);
@@ -477,6 +507,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
       loadingForYou,
       setLoadingForYou,
       loadingDiscover,
+      fetchForYouPosts,
   };
 
   return (
