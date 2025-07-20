@@ -245,6 +245,8 @@ export function Post(props: PostProps) {
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(true);
 
+  const [videoThumbnail, setVideoThumbnail] = useState<string | null>(null);
+
   const isBookmarked = useMemo(() => bookmarkedPostIds.has(id), [bookmarkedPostIds, id]);
 
   const mediaExists = media && media.length > 0;
@@ -252,6 +254,35 @@ export function Post(props: PostProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const isAuthor = user && user.uid === authorId;
+
+  // Effect to generate video thumbnail
+  useEffect(() => {
+    if (isVideo && media[0].url) {
+        const video = document.createElement('video');
+        video.crossOrigin = "anonymous";
+        video.src = media[0].url;
+        
+        const onLoadedData = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                setVideoThumbnail(canvas.toDataURL());
+            }
+            // Cleanup
+            video.removeEventListener('loadeddata', onLoadedData);
+        };
+        
+        video.addEventListener('loadeddata', onLoadedData);
+
+        return () => {
+            video.removeEventListener('loadeddata', onLoadedData);
+        }
+    }
+  }, [isVideo, media]);
+
 
   // Effect to fetch comments when the image viewer is opened
   useEffect(() => {
@@ -308,10 +339,12 @@ export function Post(props: PostProps) {
       ([entry]) => {
         if (!entry.isIntersecting) {
           videoElement.pause();
+        } else {
+          videoElement.play().catch(e => console.error("Autoplay failed", e));
         }
       },
       {
-        threshold: 0.1, 
+        threshold: 0.5, 
       }
     );
 
@@ -509,7 +542,11 @@ export function Post(props: PostProps) {
               <video
                 ref={videoRef}
                 src={media[0].url}
-                controls
+                loop
+                muted
+                playsInline
+                autoPlay
+                poster={videoThumbnail || ''}
                 className="w-full h-auto max-h-96 object-contain bg-black"
                 onClick={(e) => e.stopPropagation()}
               />
