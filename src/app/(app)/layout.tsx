@@ -8,7 +8,6 @@ import { RightSidebar } from '@/components/right-sidebar';
 import { MobileTopBar } from '@/components/mobile-top-bar';
 import { PublicLayout } from '@/components/public-layout';
 import { MobileBottomNav } from '@/components/mobile-bottom-nav';
-import { MobileHeader } from '@/components/mobile-header';
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
@@ -65,7 +64,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         
         {/* Mobile Layout */}
         <div className="md:hidden w-full">
-            {isHomePage && <MobileHeader />}
             {showGenericMobileTopBar && <MobileTopBar />}
              <main className="w-full pb-16">
                 {children}

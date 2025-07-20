@@ -17,10 +17,13 @@ import { NewPostsNotification } from '@/components/new-posts-notification';
 import { getRecentPosts } from './actions';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Bell, Mail } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
-import { MobileHeader } from '@/components/mobile-header';
+import Image from "next/image";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
 
 export default function HomePage() {
   const { 
@@ -45,6 +48,9 @@ export default function HomePage() {
   const [lastPostId, setLastPostId] = useState<string | undefined>(undefined);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMorePosts, setHasMorePosts] = useState(true);
+
+  const [isHeaderHidden, setIsHeaderHidden] = useState(false);
+  const lastScrollY = useRef(0);
 
   
   useEffect(() => {
@@ -106,11 +112,21 @@ export default function HomePage() {
 
   useEffect(() => {
     const handleScroll = () => {
+        const currentScrollY = window.scrollY;
+
+        // Header hide/show logic
+        if (currentScrollY > lastScrollY.current && currentScrollY > 50) {
+            setIsHeaderHidden(true); // Scrolling down
+        } else {
+            setIsHeaderHidden(false); // Scrolling up
+        }
+        lastScrollY.current = currentScrollY;
+
+        // New posts notification logic
         if (activeTab !== 'foryou') {
             setShowNotification(false);
             return;
         }
-
         const isScrolledPastThreshold = window.scrollY > 200;
         if (isScrolledPastThreshold) {
             setHasScrolledFromTop(true);
@@ -181,36 +197,59 @@ export default function HomePage() {
             avatars={newForYouPosts.map(p => p.authorAvatar)}
             onClick={handleShowNewPosts}
         />
-      <Tabs defaultValue="foryou" className="w-full flex flex-col flex-1" onValueChange={setActiveTab}>
-         <header className="sticky top-0 z-10 hidden md:block bg-background/95 backdrop-blur-sm">
-            <TabsList className="flex w-full justify-evenly border-b bg-transparent p-0 overflow-x-auto no-scrollbar">
-                <TabsTrigger
-                    value="foryou"
-                    className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
-                >
-                    For You
-                </TabsTrigger>
-                <TabsTrigger
-                    value="discover"
-                    className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
-                >
-                    Discover
-                </TabsTrigger>
-                <TabsTrigger
-                    value="live"
-                    className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
-                >
-                    Live
-                </TabsTrigger>
-                <TabsTrigger
-                    value="video"
-                    className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
-                >
-                    Video
-                </TabsTrigger>
-            </TabsList>
+      <Tabs defaultValue="foryou" value={activeTab} className="w-full flex flex-col flex-1" onValueChange={setActiveTab}>
+        <header className={cn(
+            "fixed md:sticky top-0 z-40 w-full bg-background/95 backdrop-blur-sm transition-transform duration-300 ease-in-out md:translate-y-0",
+            isHeaderHidden && 'hide-header'
+        )}>
+            {/* Mobile Header */}
+            <div className="md:hidden">
+                <div className="flex h-14 items-center justify-between px-4">
+                     <SidebarTrigger asChild>
+                        <button className="h-8 w-8 rounded-full overflow-hidden">
+                            <Avatar className="h-full w-full">
+                                <AvatarImage src={user?.photoURL || undefined} data-ai-hint="user avatar" />
+                                <AvatarFallback>{user?.displayName?.charAt(0) || 'U'}</AvatarFallback>
+                            </Avatar>
+                        </button>
+                    </SidebarTrigger>
+                     <Link href="/home" aria-label="Home" className="h-9">
+                         <Image src="/officialogo.png" alt="BHOLO Logo" width={140} height={56} className="h-full w-auto" />
+                    </Link>
+                     <div className="flex items-center gap-1">
+                        <Link href="/notifications" passHref>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <Bell className="h-5 w-5" />
+                                <span className="sr-only">Notifications</span>
+                            </Button>
+                        </Link>
+                        <Link href="/messages" passHref>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <Mail className="h-5 w-5" />
+                                <span className="sr-only">Messages</span>
+                            </Button>
+                        </Link>
+                    </div>
+                </div>
+                 <TabsList className="flex w-full justify-evenly border-b bg-transparent p-0 overflow-x-auto no-scrollbar">
+                    <TabsTrigger value="foryou" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">For You</TabsTrigger>
+                    <TabsTrigger value="discover" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Discover</TabsTrigger>
+                    <TabsTrigger value="live" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Live</TabsTrigger>
+                    <TabsTrigger value="video" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Video</TabsTrigger>
+                </TabsList>
+            </div>
+            {/* Desktop Header */}
+            <div className="hidden md:block">
+                 <TabsList className="flex w-full justify-evenly border-b bg-transparent p-0 overflow-x-auto no-scrollbar">
+                    <TabsTrigger value="foryou" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">For You</TabsTrigger>
+                    <TabsTrigger value="discover" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Discover</TabsTrigger>
+                    <TabsTrigger value="live" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Live</TabsTrigger>
+                    <TabsTrigger value="video" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Video</TabsTrigger>
+                </TabsList>
+            </div>
         </header>
-        <main className="flex-1 md:pt-0 pt-[124px]">
+
+        <main className="flex-1 md:pt-0 pt-[112px]">
           <TabsContent value="foryou" className="h-full">
             <div className="hidden md:block border-b">
               <CreatePost onPost={handlePost} />

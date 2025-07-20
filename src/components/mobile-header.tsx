@@ -49,7 +49,7 @@ export function MobileHeader() {
                 isHidden && 'hide-header'
             )}
         >
-            <div id="logo" className="flex h-16 items-center justify-between px-4">
+            <div id="logo" className="flex h-14 items-center justify-between px-4">
                 <SidebarTrigger asChild>
                     <button className="h-8 w-8 rounded-full overflow-hidden">
                         <Avatar className="h-full w-full">
