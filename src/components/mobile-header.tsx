@@ -10,6 +10,8 @@ import { useTabContext } from "@/contexts/tab-context";
 import { SidebarTrigger } from "./ui/sidebar";
 import { useAuth } from "@/hooks/use-auth";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { Button } from "./ui/button";
+import { Bell, Mail } from "lucide-react";
 
 export function MobileHeader() {
     const [isHidden, setIsHidden] = useState(false);
@@ -57,12 +59,24 @@ export function MobileHeader() {
                     </button>
                 </SidebarTrigger>
 
-                <Link href="/home" aria-label="Home" className="h-10">
-                     <Image src="/officialogo.png" alt="BHOLO Logo" width={160} height={64} className="h-full w-auto" />
+                <Link href="/home" aria-label="Home" className="h-9">
+                     <Image src="/officialogo.png" alt="BHOLO Logo" width={140} height={56} className="h-full w-auto" />
                 </Link>
 
-                {/* Placeholder for right-side icons if needed */}
-                <div className="h-8 w-8"></div>
+                <div className="flex items-center gap-1">
+                    <Link href="/notifications" passHref>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Bell className="h-5 w-5" />
+                            <span className="sr-only">Notifications</span>
+                        </Button>
+                    </Link>
+                    <Link href="/messages" passHref>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Mail className="h-5 w-5" />
+                            <span className="sr-only">Messages</span>
+                        </Button>
+                    </Link>
+                </div>
             </div>
             <div id="top-nav">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
