@@ -7,7 +7,7 @@ import { MessageCircle, Repeat, Heart, Share2, CheckCircle2, MoreHorizontal, Edi
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useMemo, useRef, useEffect } from "react";
-import { cn, linkify } from "@/lib/utils";
+import { cn, linkify, formatTimestamp } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -51,9 +51,28 @@ import { FollowButton } from "./follow-button";
 import { getIsFollowing } from "@/app/(app)/profile/actions";
 import { ScrollArea } from "./ui/scroll-area";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { CreateComment, type ReplyMedia } from "./create-comment";
+import { db } from "@/lib/firebase/config";
+import { collection, onSnapshot, orderBy, query, type Timestamp } from "firebase/firestore";
+import { Skeleton } from "./ui/skeleton";
 
 type PostProps = PostType & {
   isStandalone?: boolean;
+};
+
+type CommentType = {
+  id: string;
+  authorId: string;
+  authorName: string;
+  authorHandle: string;
+  authorAvatar: string;
+  content: string;
+  createdAt: Timestamp;
+  media?: Array<{
+    url: string;
+    type: 'image' | 'video';
+    hint?: string;
+  }>;
 };
 
 // Helper components for social icons
@@ -120,6 +139,65 @@ function Poll({ poll, postId }: { poll: NonNullable<PostType['poll']>, postId: s
   );
 }
 
+function Comment({ comment }: { comment: CommentType }) {
+  const hasMedia = comment.media && comment.media.length > 0;
+  const isVideo = hasMedia && comment.media![0].type === 'video';
+  
+  return (
+    <div className="p-3 md:p-4">
+      <div className="flex space-x-3 md:space-x-4">
+          <Avatar>
+            <AvatarImage src={comment.authorAvatar} alt={comment.authorName} data-ai-hint="user avatar" />
+            <AvatarFallback>{comment.authorName.charAt(0)}</AvatarFallback>
+          </Avatar>
+          <div className="flex-1">
+              <div className="flex items-center gap-2 text-sm">
+                  <Link href={`/profile/${comment.authorId}`} className="font-bold hover:underline" onClick={(e) => e.stopPropagation()}>
+                      {comment.authorName}
+                  </Link>
+                  <span className="text-muted-foreground">@{comment.authorHandle}</span>
+                  <span className="text-muted-foreground">·</span>
+                  <span className="text-muted-foreground">{formatTimestamp(comment.createdAt.toDate())}</span>
+              </div>
+              <p className="mt-2 whitespace-pre-wrap">{comment.content}</p>
+              {hasMedia && (
+                <div className={cn("mt-3 rounded-2xl overflow-hidden border max-h-[400px]")}>
+                  {isVideo ? (
+                    <video
+                      src={comment.media![0].url}
+                      controls
+                      className="w-full h-auto max-h-96 object-contain bg-black"
+                    />
+                  ) : (
+                    <Image
+                      src={comment.media![0].url}
+                      alt={`Comment image`}
+                      width={500}
+                      height={500}
+                      className="w-full h-auto max-h-[400px] object-contain"
+                      data-ai-hint={comment.media![0].hint}
+                    />
+                  )}
+                </div>
+              )}
+          </div>
+      </div>
+    </div>
+  )
+}
+
+function CommentSkeleton() {
+  return (
+      <div className="flex space-x-3 md:space-x-4 p-3 md:p-4">
+          <Skeleton className="h-10 w-10 rounded-full" />
+          <div className="flex-1 space-y-2">
+              <Skeleton className="h-4 w-3/5" />
+              <Skeleton className="h-4 w-4/5" />
+          </div>
+      </div>
+  )
+}
+
 
 export function Post(props: PostProps) {
   const {
@@ -130,7 +208,7 @@ export function Post(props: PostProps) {
     authorAvatar,
     content,
     timestamp,
-    comments,
+    comments: initialComments,
     reposts: initialReposts,
     likes: initialLikes,
     media,
@@ -141,9 +219,13 @@ export function Post(props: PostProps) {
   
   const router = useRouter();
   const { user } = useAuth();
-  const { editPost, deletePost, likePost, repostPost, bookmarkPost, bookmarkedPostIds } = usePosts();
+  const { editPost, deletePost, likePost, repostPost, bookmarkPost, bookmarkedPostIds, addComment } = usePosts();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+
+  const [comments, setComments] = useState<CommentType[]>([]);
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [commentCount, setCommentCount] = useState(initialComments);
 
   const [likeCount, setLikeCount] = useState(initialLikes);
   const [isLiked, setIsLiked] = useState(false);
@@ -170,6 +252,36 @@ export function Post(props: PostProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const isAuthor = user && user.uid === authorId;
+
+  // Effect to fetch comments when the image viewer is opened
+  useEffect(() => {
+    let unsubscribe = () => {};
+    if (isImageViewerOpen && db) {
+      setLoadingComments(true);
+      const commentsRef = collection(db, 'posts', id, 'comments');
+      const q = query(commentsRef, orderBy('createdAt', 'desc'));
+      unsubscribe = onSnapshot(q, (snapshot) => {
+        const fetchedComments = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as CommentType[];
+        setComments(fetchedComments);
+        setLoadingComments(false);
+      });
+    }
+    return () => unsubscribe();
+  }, [isImageViewerOpen, id]);
+
+  const handleCreateComment = async (data: { text: string; media: ReplyMedia[] }) => {
+    if (!user || !id) return;
+    try {
+      await addComment(id, data);
+      setCommentCount(prev => prev + 1);
+    } catch (error) {
+        toast({ variant: 'destructive', description: "Failed to post reply." });
+        console.error("Failed to add comment:", error);
+    }
+  }
 
   useEffect(() => {
     if (isStandalone && user && user.uid !== authorId) {
@@ -438,7 +550,7 @@ export function Post(props: PostProps) {
           <div className="flex items-center -ml-3">
               <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-primary">
                   <MessageCircle className="h-5 w-5" />
-                  <span>{comments > 0 ? comments : ''}</span>
+                  <span>{commentCount > 0 ? commentCount : ''}</span>
               </Button>
               <Button variant="ghost" size="sm" className={cn("flex items-center gap-2", isReposted ? 'text-green-500' : 'hover:text-green-500')} onClick={handleRepost}>
                 <Repeat className="h-5 w-5" />
@@ -563,9 +675,23 @@ export function Post(props: PostProps) {
                         </DialogClose>
                     </div>
                     <aside className="w-full md:w-[400px] bg-background h-full flex flex-col">
-                        <ScrollArea className="flex-1">
-                            {renderPostContent({ includeMedia: false })}
-                        </ScrollArea>
+                         <div className="flex-1 flex flex-col">
+                            <ScrollArea className="flex-1">
+                                {renderPostContent({ includeMedia: false })}
+                                <div className="divide-y divide-border border-t">
+                                    {loadingComments ? (
+                                        Array.from({length: 3}).map((_, i) => <CommentSkeleton key={i} />)
+                                    ) : comments.length > 0 ? (
+                                        comments.map((comment) => <Comment key={comment.id} comment={comment} />)
+                                    ) : (
+                                        <p className="p-8 text-center text-muted-foreground text-sm">No comments yet.</p>
+                                    )}
+                                </div>
+                            </ScrollArea>
+                            <div className="border-t">
+                                <CreateComment onComment={handleCreateComment} />
+                            </div>
+                        </div>
                     </aside>
                 </DialogContent>
             </Dialog>

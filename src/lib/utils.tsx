@@ -68,8 +68,8 @@ export function formatTimestamp(date: Date): string {
     if (hours < 24) return `${hours}h`;
 
     const days = Math.floor(hours / 24);
-    if (days < 365) return `${days}d`;
-
-    const years = Math.floor(days / 365);
-    return `${years}y`;
+    if (days < 7) return `${days}d`;
+    
+    // Format as date for anything older than a week
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
