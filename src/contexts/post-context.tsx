@@ -126,26 +126,30 @@ export function PostProvider({ children }: { children: ReactNode }) {
                 const postData = change.doc.data();
                 const now = new Date();
                 const postDate = (postData.createdAt as Timestamp)?.toDate() || now;
+                
+                // Only count as "new" if posted within last 5 minutes.
                 const isRecent = (now.getTime() - postDate.getTime()) < 5 * 60 * 1000;
-
-                // Use a functional update with setForYouPosts to get the most current state
-                // and prevent race conditions.
+                
+                // Use a functional update to get the most current state of both post arrays.
                 setForYouPosts(currentForYouPosts => {
-                    const postExistsInForYou = currentForYouPosts.some(p => p.id === change.doc.id);
-                    const postExistsInNew = newForYouPosts.some(p => p.id === change.doc.id);
-                    
-                    if (isRecent && !postExistsInForYou && !postExistsInNew) {
-                        const newPost: PostType = {
-                            id: change.doc.id,
-                            ...postData,
-                            timestamp: formatTimestamp(postDate),
-                            createdAt: postDate.toISOString()
-                        } as PostType;
+                    setNewForYouPosts(currentNewPosts => {
+                        const postExists = currentForYouPosts.some(p => p.id === change.doc.id) || currentNewPosts.some(p => p.id === change.doc.id);
                         
-                        setNewForYouPosts(prevNewPosts => [newPost, ...prevNewPosts]);
-                    }
-
-                    // Return the state unmodified as we're handling the new post in setNewForYouPosts
+                        if (isRecent && !postExists && postData.authorId !== user.uid) {
+                            const newPost: PostType = {
+                                id: change.doc.id,
+                                ...postData,
+                                timestamp: formatTimestamp(postDate),
+                                createdAt: postDate.toISOString()
+                            } as PostType;
+                            
+                            return [newPost, ...currentNewPosts];
+                        }
+                        
+                        // Return the state unmodified if no new post should be added.
+                        return currentNewPosts;
+                    });
+                     // Return the state unmodified for the `forYouPosts` state.
                     return currentForYouPosts;
                 });
             }
@@ -153,7 +157,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
     });
 
     return () => unsubscribe();
-  }, [newForYouPosts, user]);
+  }, [user]);
 
 
   const addPost = async ({ text, media, poll, location, tribeId, communityId }: { text: string; media: Media[]; poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }): Promise<PostType | undefined> => {

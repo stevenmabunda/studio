@@ -41,12 +41,32 @@ export default function HomePage() {
   const [showNotification, setShowNotification] = useState(false);
   const [hasScrolledFromTop, setHasScrolledFromTop] = useState(false);
   
-  const [lastPostId, setLastPostId] = useState<string | null>(null);
+  const [lastPostId, setLastPostId] = useState<string | undefined>(undefined);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMorePosts, setHasMorePosts] = useState(true);
 
   const [isNavVisible, setIsNavVisible] = useState(true);
   const lastScrollY = useRef(0);
+
+  const loadMorePosts = useCallback(async () => {
+    if (loadingMore || !hasMorePosts) return;
+
+    setLoadingMore(true);
+    try {
+        const morePosts = await getRecentPosts({ limit: 20, lastPostId });
+        if (morePosts.length > 0) {
+            setForYouPosts(prev => [...prev, ...morePosts]);
+            setLastPostId(morePosts[morePosts.length - 1].id);
+        } else {
+            setHasMorePosts(false);
+        }
+    } catch (error) {
+        console.error("Failed to load more posts:", error);
+        toast({ variant: 'destructive', description: "Could not load more posts." });
+    } finally {
+        setLoadingMore(false);
+    }
+  }, [loadingMore, hasMorePosts, lastPostId, toast, setForYouPosts]);
 
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreTriggerRef = useCallback((node: HTMLDivElement) => {
@@ -60,7 +80,7 @@ export default function HomePage() {
     });
 
     if (node) observerRef.current.observe(node);
-  }, [loadingMore, hasMorePosts]);
+  }, [loadingMore, hasMorePosts, loadMorePosts]);
 
 
   const fetchInitialPosts = useCallback(() => {
@@ -81,27 +101,6 @@ export default function HomePage() {
   useEffect(() => {
     fetchInitialPosts();
   }, [fetchInitialPosts]);
-
-  const loadMorePosts = useCallback(async () => {
-    if (loadingMore || !hasMorePosts || !lastPostId) return;
-
-    setLoadingMore(true);
-    try {
-        const morePosts = await getRecentPosts({ limit: 20, lastPostId });
-        if (morePosts.length > 0) {
-            setForYouPosts(prev => [...prev, ...morePosts]);
-            setLastPostId(morePosts[morePosts.length - 1].id);
-        }
-        if (morePosts.length < 20) {
-            setHasMorePosts(false);
-        }
-    } catch (error) {
-        console.error("Failed to load more posts:", error);
-        toast({ variant: 'destructive', description: "Could not load more posts." });
-    } finally {
-        setLoadingMore(false);
-    }
-  }, [loadingMore, hasMorePosts, lastPostId, toast, setForYouPosts]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -166,8 +165,10 @@ export default function HomePage() {
   
   const handlePost = async (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null }) => {
     try {
-        await addPost(data);
-        // Let the real-time listener handle adding the post to the feed
+        const newPost = await addPost(data);
+        if (newPost) {
+           setForYouPosts(prev => [newPost, ...prev]);
+        }
         toast({ description: "Your post has been published!" });
         // Scroll to top only if the user is already near the top
         if (window.scrollY < 200) {
@@ -226,6 +227,8 @@ export default function HomePage() {
             <div className="divide-y divide-border">
               {loadingForYou ? (
                 <>
+                  <PostSkeleton />
+                  <PostSkeleton />
                   <PostSkeleton />
                   <PostSkeleton />
                   <PostSkeleton />
