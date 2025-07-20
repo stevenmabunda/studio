@@ -50,6 +50,7 @@ import { useToast } from "@/hooks/use-toast";
 import { FollowButton } from "./follow-button";
 import { getIsFollowing } from "@/app/(app)/profile/actions";
 import { ScrollArea } from "./ui/scroll-area";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type PostProps = PostType & {
   isStandalone?: boolean;
@@ -142,6 +143,7 @@ export function Post(props: PostProps) {
   const { user } = useAuth();
   const { editPost, deletePost, likePost, repostPost, bookmarkPost, bookmarkedPostIds } = usePosts();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const [likeCount, setLikeCount] = useState(initialLikes);
   const [isLiked, setIsLiked] = useState(false);
@@ -170,7 +172,6 @@ export function Post(props: PostProps) {
   const isAuthor = user && user.uid === authorId;
 
   useEffect(() => {
-    // Only fetch follow status on the standalone page for the correct user
     if (isStandalone && user && user.uid !== authorId) {
         setFollowLoading(true);
         getIsFollowing(user.uid, authorId).then(status => {
@@ -198,7 +199,7 @@ export function Post(props: PostProps) {
         }
       },
       {
-        threshold: 0.1, // Pause when less than 10% is visible
+        threshold: 0.1, 
       }
     );
 
@@ -251,7 +252,6 @@ export function Post(props: PostProps) {
     try {
       await deletePost(id);
       toast({ description: "Post deleted." });
-      // If we are on the standalone page, redirect after delete
       if (isStandalone) {
         router.push('/home');
       }
@@ -283,6 +283,10 @@ export function Post(props: PostProps) {
 
   const openImageViewer = (e: React.MouseEvent, imageUrl: string, index: number) => {
     e.stopPropagation();
+    if (isMobile) {
+      router.push(`/post/${id}`);
+      return;
+    }
     setSelectedImage({url: imageUrl, index});
     setIsImageViewerOpen(true);
   };
@@ -297,8 +301,7 @@ export function Post(props: PostProps) {
     4: 'grid-cols-2 grid-rows-2',
   }[imageCount] || '';
 
-
-  const postUiContent = (
+  const renderPostContent = (options: { includeMedia: boolean }) => (
     <div className="flex space-x-3 md:space-x-4 p-3 md:p-4">
       <Link href={`/profile/${authorId}`} className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
         <Avatar>
@@ -386,7 +389,7 @@ export function Post(props: PostProps) {
           )}
         </p>
         {poll && <Poll poll={poll} postId={id} />}
-        {mediaExists && (
+        {options.includeMedia && mediaExists && (
           <div className={cn("mt-3 rounded-2xl overflow-hidden border", imageCount > 1 && "aspect-video")}>
             {isVideo ? (
               <video
@@ -502,7 +505,7 @@ export function Post(props: PostProps) {
 
   return (
       <div className={!isStandalone ? 'cursor-pointer hover:bg-accent/20' : ''} onClick={handlePostClick}>
-          {postUiContent}
+          {renderPostContent({ includeMedia: true })}
           <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
               <AlertDialogContent onClick={e => e.stopPropagation()}>
                   <AlertDialogHeader>
@@ -561,7 +564,7 @@ export function Post(props: PostProps) {
                     </div>
                     <aside className="w-full md:w-[400px] bg-background h-full flex flex-col">
                         <ScrollArea className="flex-1">
-                            {postUiContent}
+                            {renderPostContent({ includeMedia: false })}
                         </ScrollArea>
                     </aside>
                 </DialogContent>
