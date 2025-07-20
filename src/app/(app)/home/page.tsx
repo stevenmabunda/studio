@@ -104,20 +104,19 @@ export default function HomePage() {
   
   useEffect(() => {
     // Restore scroll position when returning to the page
-    const postId = sessionStorage.getItem('scrollToPostId');
+    const postId = sessionStorage.getItem('scrollPostId');
+    const scrollY = sessionStorage.getItem('scrollY');
+
     if (postId) {
         // A small delay can help ensure the content is rendered before scrolling
         setTimeout(() => {
             const postElement = document.querySelector(`[data-post-id="${postId}"]`);
             if (postElement) {
-                postElement.scrollIntoView({ block: 'start' });
-            } else {
-                const scrollY = sessionStorage.getItem('scrollY');
-                if (scrollY) {
-                    window.scrollTo(0, parseInt(scrollY, 10));
-                }
+                postElement.scrollIntoView({ block: 'center' });
+            } else if (scrollY) {
+                window.scrollTo(0, parseInt(scrollY, 10));
             }
-            sessionStorage.removeItem('scrollToPostId');
+            sessionStorage.removeItem('scrollPostId');
             sessionStorage.removeItem('scrollY');
         }, 50);
     }
