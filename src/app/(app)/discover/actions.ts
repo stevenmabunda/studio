@@ -63,8 +63,13 @@ export async function getMostViewedPosts(): Promise<PostType[]> {
       return [];
     }
 
-    // 6. Randomly select one to be the hero from the top 5. We already know they all have images.
+    // 6. Randomly select one to be the hero from the top 5.
     const heroCandidates = topPosts.slice(0, 5);
+
+    // CRITICAL FIX: Ensure heroCandidates is not empty before trying to access it.
+    if (heroCandidates.length === 0) {
+      return topPosts; // Return the list as is if no candidates for hero.
+    }
     
     const heroIndex = Math.floor(Math.random() * heroCandidates.length);
     const heroPost = heroCandidates[heroIndex];
