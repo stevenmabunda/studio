@@ -77,7 +77,7 @@ export function SidebarNav() {
   const userHandle = user?.email?.split('@')[0] || 'user';
 
   return (
-    <Sidebar>
+    <Sidebar className="h-full">
       <SidebarHeader>
         <div className="flex h-14 items-center justify-start px-4">
             <Link href="/home" className="font-bold text-white text-2xl group-data-[collapsible=icon]:hidden" aria-label="BHOLO">
