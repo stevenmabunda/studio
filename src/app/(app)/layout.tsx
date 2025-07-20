@@ -45,16 +45,14 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="md:flex md:justify-center">
-        <div className="md:max-w-7xl md:mx-auto md:w-full md:flex">
-          {/* Desktop Layout: Wrapper for sidebars and main content */}
-          <header className="hidden md:block w-[275px] shrink-0">
+        {/* Desktop Layout: Centered wrapper with fixed sidebars */}
+        <div className="hidden md:flex md:max-w-7xl md:mx-auto md:w-full">
+          <header className="w-[275px] shrink-0">
             <SidebarNav />
           </header>
 
           <div className="flex-1 min-w-0">
-            {/* Mobile-only Top Bar */}
-            {showMobileTopBar && <MobileTopBar />}
-             <main className="w-full max-w-[624px] md:border-x min-h-screen">
+             <main className="w-full max-w-[624px] md:border-x h-screen overflow-y-auto">
                 {children}
             </main>
           </div>
@@ -63,9 +61,13 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             <RightSidebar />
           </aside>
         </div>
-
-        {/* Mobile-only Bottom Nav */}
-        <div className="md:hidden">
+        
+        {/* Mobile Layout */}
+        <div className="md:hidden w-full">
+            {showMobileTopBar && <MobileTopBar />}
+             <main className="w-full">
+                {children}
+            </main>
             <MobileBottomNav />
         </div>
     </div>
