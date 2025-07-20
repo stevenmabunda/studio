@@ -396,7 +396,7 @@ export function Post(props: PostProps) {
   const openImageViewer = (e: React.MouseEvent, imageUrl: string, index: number) => {
     e.stopPropagation();
     if (isMobile) {
-      router.push(`/post/${id}`);
+      handlePostClick();
       return;
     }
     setSelectedImage({url: imageUrl, index});
