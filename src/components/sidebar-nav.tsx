@@ -82,7 +82,7 @@ export function SidebarNav() {
         <SidebarHeader>
           <div className="flex h-14 items-center justify-start px-4">
               <Link href="/home" className="group-data-[collapsible=icon]:hidden w-24" aria-label="BHOLO">
-                  <Image src="/officialogo.png" alt="BHOLO Logo" width={100} height={40} priority />
+                  <Image src="/officialogo.png" alt="BHOLO Logo" width={40} height={16} priority />
               </Link>
               <Link href="/home" className="hidden group-data-[collapsible=icon]:block w-8 h-8" aria-label="BHOLO">
                    <Image src="/officialogo.png" alt="BHOLO Icon" width={32} height={32} priority />
