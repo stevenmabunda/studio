@@ -174,15 +174,10 @@ export default function HomePage() {
         />
       <Tabs defaultValue="foryou" className="w-full flex flex-col flex-1" onValueChange={setActiveTab}>
          <header className={cn(
-            "sticky top-0 z-10 bg-black transition-transform duration-300 ease-in-out",
+            "sticky top-0 z-10 bg-background/95 backdrop-blur-sm transition-transform duration-300 ease-in-out",
             !isNavVisible && "-translate-y-full"
             )}>
-              <div className="flex h-14 items-center justify-between border-b border-border bg-background/95 px-4 backdrop-blur-sm md:hidden">
-                <Link href="/home" aria-label="Home">
-                  <span className="text-2xl font-bold text-white">BHOLO</span>
-                </Link>
-              </div>
-            <TabsList className="flex w-full justify-evenly bg-transparent p-0 overflow-x-auto no-scrollbar">
+            <TabsList className="flex w-full justify-evenly border-b bg-transparent p-0 overflow-x-auto no-scrollbar">
                 <TabsTrigger
                     value="foryou"
                     className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4"
