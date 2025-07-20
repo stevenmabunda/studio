@@ -50,19 +50,22 @@ export async function createTribe(
   let imageUrl = 'https://placehold.co/600x200.png';
 
   try {
+    // 1. Create the document in Firestore first to get an ID.
     const tribeDocRef = await addDoc(collection(db, 'tribes'), {
       name,
       description,
-      bannerUrl: imageUrl,
+      bannerUrl: imageUrl, // Start with a placeholder
       creatorId: userId,
       createdAt: serverTimestamp(),
       memberCount: 1, // Start with the creator as a member
     });
     
+    // 2. If there's a picture, upload it using the new tribe ID.
     if (profilePic && profilePic.size > 0) {
       const tribePicRef = ref(storage, `tribes/${tribeDocRef.id}/banner`);
       await uploadBytes(tribePicRef, profilePic);
       imageUrl = await getDownloadURL(tribePicRef);
+      // 3. Update the document with the final banner URL.
       await updateDoc(tribeDocRef, { bannerUrl: imageUrl });
     }
 
