@@ -2,7 +2,7 @@
 'use server';
 
 import { db, storage } from '@/lib/firebase/config';
-import { collection, addDoc, serverTimestamp, getDocs, query, orderBy, type Timestamp, doc, runTransaction, increment, collectionGroup, getDoc, where, setDoc, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDocs, query, orderBy, type Timestamp, doc, runTransaction, increment, collectionGroup, getDoc, where, setDoc, updateDoc, writeBatch, deleteDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { z } from 'zod';
 import type { PostType } from '@/lib/data';
@@ -40,37 +40,39 @@ export async function createTribe(
 
   const name = formData.get('name') as string;
   const description = formData.get('description') as string;
-  const profilePic = formData.get('profilePic') as File;
+  const bannerFile = formData.get('banner') as File | null;
 
   const validation = CreateTribeSchema.safeParse({ name, description });
   if (!validation.success) {
     return { success: false, error: validation.error.errors.map(e => e.message).join(', ') };
   }
-
-  let imageUrl = 'https://placehold.co/600x200.png';
+  
+  if (!bannerFile || bannerFile.size === 0) {
+    return { success: false, error: 'A tribe banner image is required.' };
+  }
 
   try {
-    // 1. Create the document in Firestore first to get an ID.
-    const tribeDocRef = await addDoc(collection(db, 'tribes'), {
+    // 1. Create a document reference first to get a unique ID.
+    const tribeDocRef = doc(collection(db, 'tribes'));
+    const tribeId = tribeDocRef.id;
+
+    // 2. Upload the banner image using the new tribe ID for the path.
+    const bannerRef = ref(storage, `tribes/${tribeId}/banner`);
+    await uploadBytes(bannerRef, bannerFile);
+    const imageUrl = await getDownloadURL(bannerRef);
+    
+    // 3. Now, create the document in Firestore with all the data.
+    await setDoc(tribeDocRef, {
       name,
       description,
-      bannerUrl: imageUrl, // Start with a placeholder
+      bannerUrl: imageUrl,
       creatorId: userId,
       createdAt: serverTimestamp(),
       memberCount: 1, // Start with the creator as a member
     });
     
-    // 2. If there's a picture, upload it using the new tribe ID.
-    if (profilePic && profilePic.size > 0) {
-      const tribePicRef = ref(storage, `tribes/${tribeDocRef.id}/banner`);
-      await uploadBytes(tribePicRef, profilePic);
-      imageUrl = await getDownloadURL(tribePicRef);
-      // 3. Update the document with the final banner URL.
-      await updateDoc(tribeDocRef, { bannerUrl: imageUrl });
-    }
-
-    // Automatically add the creator to the members subcollection
-    const memberRef = doc(db, 'tribes', tribeDocRef.id, 'members', userId);
+    // 4. Automatically add the creator to the members subcollection.
+    const memberRef = doc(db, 'tribes', tribeId, 'members', userId);
     const userDoc = await getDoc(doc(db, 'users', userId));
     const userData = userDoc.data();
 
@@ -85,7 +87,10 @@ export async function createTribe(
     return { success: true };
   } catch (error) {
     console.error('Error creating tribe:', error);
-    return { success: false, error: 'Failed to create tribe.' };
+    if (error instanceof Error) {
+        return { success: false, error: `Failed to create tribe: ${error.message}` };
+    }
+    return { success: false, error: 'An unknown error occurred while creating the tribe.' };
   }
 }
 
@@ -128,6 +133,64 @@ export async function updateTribe(
   } catch (error) {
     console.error("Error updating tribe:", error);
     return { success: false, error: 'Failed to update tribe.' };
+  }
+}
+
+export async function deleteTribe(
+  tribeId: string,
+  userId: string
+): Promise<{ success: boolean; error?: string }> {
+  if (!db || !storage || !userId) {
+    return { success: false, error: 'Service not available.' };
+  }
+
+  const tribeRef = doc(db, 'tribes', tribeId);
+
+  try {
+    const tribeDoc = await getDoc(tribeRef);
+    if (!tribeDoc.exists()) {
+      return { success: false, error: "Tribe not found." };
+    }
+    if (tribeDoc.data().creatorId !== userId) {
+      return { success: false, error: "You don't have permission to delete this tribe." };
+    }
+
+    const batch = writeBatch(db);
+
+    // 1. Delete all posts in the tribe
+    const postsQuery = query(collection(db, 'posts'), where('tribeId', '==', tribeId));
+    const postsSnapshot = await getDocs(postsQuery);
+    postsSnapshot.forEach(doc => batch.delete(doc.ref));
+
+    // 2. Delete all members in the tribe
+    const membersQuery = query(collection(db, 'tribes', tribeId, 'members'));
+    const membersSnapshot = await getDocs(membersQuery);
+    membersSnapshot.forEach(doc => batch.delete(doc.ref));
+    
+    // 3. Delete the tribe document itself
+    batch.delete(tribeRef);
+
+    // Commit all Firestore deletions
+    await batch.commit();
+
+    // 4. Delete the banner image from storage
+    try {
+      const bannerRef = ref(storage, `tribes/${tribeId}/banner`);
+      await deleteObject(bannerRef);
+    } catch (storageError: any) {
+        // If the image doesn't exist, that's okay. We still want to proceed.
+        if (storageError.code !== 'storage/object-not-found') {
+            console.error("Error deleting tribe banner from storage:", storageError);
+            // Non-critical error, so we don't return failure, but we log it.
+        }
+    }
+    
+    return { success: true };
+
+  } catch (error) {
+    console.error("Error deleting tribe:", error);
+    const message = error instanceof Error ? error.message : 'An unexpected error occurred.';
+    return { success: false, error: message };
   }
 }
 

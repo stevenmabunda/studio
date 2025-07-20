@@ -2,6 +2,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Dialog,
   DialogContent,
@@ -12,14 +13,25 @@ import {
   DialogTrigger,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
-import { updateTribe, type Tribe } from '@/app/(app)/tribes/actions';
-import { Loader2, Camera } from 'lucide-react';
+import { updateTribe, deleteTribe, type Tribe } from '@/app/(app)/tribes/actions';
+import { Loader2, Camera, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 
 interface EditTribeDialogProps {
@@ -39,7 +51,9 @@ export function EditTribeDialog({
 }: EditTribeDialogProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [bannerPreview, setBannerPreview] = useState<string>(tribe.bannerUrl);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -92,6 +106,26 @@ export function EditTribeDialog({
     }
   };
 
+  const handleDeleteTribe = async () => {
+    if (!user) return;
+    setIsDeleting(true);
+    try {
+      const result = await deleteTribe(tribe.id, user.uid);
+      if (result.success) {
+        toast({ description: "Tribe deleted successfully." });
+        onOpenChange(false);
+        router.push('/tribes'); // Redirect to tribes list after deletion
+        router.refresh();
+      } else {
+        toast({ variant: 'destructive', description: result.error || "Could not delete tribe." });
+      }
+    } catch (error) {
+       toast({ variant: 'destructive', description: "An unexpected error occurred." });
+    } finally {
+        setIsDeleting(false);
+    }
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>{children}</DialogTrigger>
@@ -142,16 +176,44 @@ export function EditTribeDialog({
               maxLength={280}
             />
           </div>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button type="button" variant="outline">
-                Cancel
-              </Button>
-            </DialogClose>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Save Changes
-            </Button>
+          <DialogFooter className="sm:justify-between pt-2">
+             <AlertDialog>
+                <AlertDialogTrigger asChild>
+                    <Button type="button" variant="destructive" className="w-full sm:w-auto">
+                        <Trash2 className="mr-2 h-4 w-4" /> Delete Tribe
+                    </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete your tribe, all of its posts, and remove all members.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleDeleteTribe}
+                            disabled={isDeleting}
+                            className={buttonVariants({ variant: "destructive" })}
+                        >
+                             {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+            <div className="flex gap-2 justify-end">
+                <DialogClose asChild>
+                <Button type="button" variant="outline">
+                    Cancel
+                </Button>
+                </DialogClose>
+                <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Save Changes
+                </Button>
+            </div>
           </DialogFooter>
         </form>
       </DialogContent>
