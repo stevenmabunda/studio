@@ -51,7 +51,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           <SidebarNav />
         </div>
       </header>
-      <main className="w-full max-w-[624px] md:border-x">
+      <main className="w-full max-w-[624px] md:border-x min-h-screen">
         {showMobileTopBar && <MobileTopBar />}
         {children}
       </main>
