@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useAuth } from "@/hooks/use-auth";
 import Link from "next/link";
+import Image from "next/image";
 
 const tiers = [
   {
@@ -19,15 +20,15 @@ const tiers = [
     priceDetail: 'Entry-level Creators',
     icon: Star,
     eligibility: [
-      '18+ years old',
-      'At least 3 football-related posts/week',
+      'At least 25 football-related posts per month',
       'Content is original & follows community guidelines',
-      'Minimum 50 total engagements/month',
+      'Minimum 100 total engagements/month',
     ],
     perks: [
       'Creator Badge',
       'Mobile data or airtime rewards',
       'Access to creator tips & tools',
+      'Referral bonus: Get extra data or airtime when others join using your code',
     ],
     featured: false,
   },
@@ -38,14 +39,15 @@ const tiers = [
     icon: Gem,
     eligibility: [
       'Meet Rising Star criteria',
-      'At least 10 football posts/month',
-      '1K+ monthly engagements or strong follower base',
+      'At least 30 football-related posts per month',
+      '1,500+ monthly engagements or a strong follower base',
     ],
     perks: [
-      'Rewards including cash (R250–R750 monthly)',
+      'Monthly rewards including cash (R250–R750)',
       'Pro Creator Badge',
-      'Priority featuring in trending tabs',
+      'Featured placement in trending tabs',
       'Exclusive BHOLO merch drops',
+      'Referral income: Earn cash when creators sign up using your code',
     ],
     featured: true,
   },
@@ -103,7 +105,8 @@ export default function CreatorsPage() {
     <div className="flex flex-col min-h-screen bg-background text-foreground">
       <main className="flex-1 flex items-center justify-center p-4 sm:p-6 md:p-8">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
+          <div className="text-center mb-12 space-y-4">
+             <Image src="/officialogo.png" alt="BHOLO Logo" width={150} height={60} priority className="mx-auto" />
             <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
               BHOLO Creator Program
             </h1>
