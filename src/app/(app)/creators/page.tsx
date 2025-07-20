@@ -42,7 +42,7 @@ const tiers = [
       '1K+ monthly engagements or strong follower base',
     ],
     perks: [
-      'Cash payouts (R250–R750 monthly)',
+      'Rewards including cash (R250–R750 monthly)',
       'Pro Creator Badge',
       'Priority featuring in trending tabs',
       'Exclusive BHOLO merch drops',
