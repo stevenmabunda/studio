@@ -611,13 +611,18 @@ export function Post(props: PostProps) {
 
   const handlePostClick = () => {
       if (!isStandalone) {
-          sessionStorage.setItem('timelineScroll', window.scrollY.toString());
+          sessionStorage.setItem('scrollY', window.scrollY.toString());
+          sessionStorage.setItem('scrollToPostId', id);
           router.push(`/post/${id}`);
       }
   }
 
   return (
-      <div className={!isStandalone ? 'cursor-pointer hover:bg-accent/20' : ''} onClick={handlePostClick}>
+      <div 
+        className={!isStandalone ? 'cursor-pointer hover:bg-accent/20' : ''} 
+        onClick={handlePostClick}
+        data-post-id={id}
+      >
           {renderPostContent({ includeMedia: true })}
           <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
               <AlertDialogContent onClick={e => e.stopPropagation()}>

@@ -103,10 +103,20 @@ export default function HomePage() {
   }, [fetchInitialPosts]);
   
   useEffect(() => {
-    const savedScrollPosition = sessionStorage.getItem('timelineScroll');
-    if (savedScrollPosition) {
-      window.scrollTo(0, parseInt(savedScrollPosition, 10));
-      sessionStorage.removeItem('timelineScroll');
+    // Restore scroll position when returning to the page
+    const postId = sessionStorage.getItem('scrollToPostId');
+    if (postId) {
+        const postElement = document.querySelector(`[data-post-id="${postId}"]`);
+        if (postElement) {
+            postElement.scrollIntoView({ block: 'start' });
+        } else {
+            const scrollY = sessionStorage.getItem('scrollY');
+            if (scrollY) {
+                window.scrollTo(0, parseInt(scrollY, 10));
+            }
+        }
+        sessionStorage.removeItem('scrollToPostId');
+        sessionStorage.removeItem('scrollY');
     }
   }, []);
 
