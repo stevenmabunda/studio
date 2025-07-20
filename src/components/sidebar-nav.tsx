@@ -77,15 +77,15 @@ export function SidebarNav() {
   const userHandle = user?.email?.split('@')[0] || 'user';
 
   return (
-    <div className="h-full flex-col sticky top-0 flex w-[275px]">
+    <div className="h-full flex-col sticky top-0 flex w-full">
       <Sidebar className="h-full overflow-y-auto">
         <SidebarHeader>
           <div className="flex h-14 items-center justify-start px-4">
               <Link href="/home" className="group-data-[collapsible=icon]:hidden w-24" aria-label="BHOLO">
-                  <Image src="/logo.png" alt="BHOLO Logo" width={100} height={40} />
+                  <Image src="/logo.png" alt="BHOLO Logo" width={100} height={40} priority />
               </Link>
               <Link href="/home" className="hidden group-data-[collapsible=icon]:block w-8 h-8" aria-label="BHOLO">
-                   <Image src="/logo.png" alt="BHOLO Icon" width={32} height={32} />
+                   <Image src="/logo.png" alt="BHOLO Icon" width={32} height={32} priority />
               </Link>
           </div>
         </SidebarHeader>
