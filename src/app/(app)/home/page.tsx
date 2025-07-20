@@ -48,6 +48,20 @@ export default function HomePage() {
   const [isNavVisible, setIsNavVisible] = useState(true);
   const lastScrollY = useRef(0);
 
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const loadMoreTriggerRef = useCallback((node: HTMLDivElement) => {
+    if (loadingMore) return;
+    if (observerRef.current) observerRef.current.disconnect();
+
+    observerRef.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMorePosts) {
+        loadMorePosts();
+      }
+    });
+
+    if (node) observerRef.current.observe(node);
+  }, [loadingMore, hasMorePosts]);
+
 
   const fetchInitialPosts = useCallback(() => {
     setLoadingForYou(true);
@@ -225,11 +239,9 @@ export default function HomePage() {
                 </div>
               )}
             </div>
-            {hasMorePosts && !loadingForYou && (
-                <div className="py-8 text-center">
-                    <Button onClick={loadMorePosts} disabled={loadingMore}>
-                        {loadingMore ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Load More'}
-                    </Button>
+             {hasMorePosts && !loadingForYou && (
+                <div ref={loadMoreTriggerRef} className="py-8 text-center">
+                    {loadingMore && <Loader2 className="h-6 w-6 animate-spin mx-auto" />}
                 </div>
             )}
              {!hasMorePosts && !loadingForYou && forYouPosts.length > 0 && (
@@ -276,3 +288,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    
