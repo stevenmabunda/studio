@@ -16,6 +16,9 @@
   .scroll-snap-align-start {
     scroll-snap-align: start;
   }
+  .hide-header {
+    transform: translateY(-100%);
+  }
 }
 
 @layer base {

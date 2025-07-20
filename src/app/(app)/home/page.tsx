@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { MobileHeader } from '@/components/mobile-header';
 
 export default function HomePage() {
   const { 
@@ -45,8 +46,6 @@ export default function HomePage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMorePosts, setHasMorePosts] = useState(true);
 
-  const [isNavVisible, setIsNavVisible] = useState(true);
-  const lastScrollY = useRef(0);
   
   useEffect(() => {
     // This effect runs only when the component mounts and the posts are loaded.
@@ -107,19 +106,10 @@ export default function HomePage() {
 
   useEffect(() => {
     const handleScroll = () => {
-        const currentScrollY = window.scrollY;
-        
         if (activeTab !== 'foryou') {
             setShowNotification(false);
             return;
         }
-
-        if (currentScrollY > lastScrollY.current && currentScrollY > 10) {
-            setIsNavVisible(false);
-        } else {
-            setIsNavVisible(true);
-        }
-        lastScrollY.current = currentScrollY;
 
         const isScrolledPastThreshold = window.scrollY > 200;
         if (isScrolledPastThreshold) {
@@ -192,10 +182,7 @@ export default function HomePage() {
             onClick={handleShowNewPosts}
         />
       <Tabs defaultValue="foryou" className="w-full flex flex-col flex-1" onValueChange={setActiveTab}>
-         <header className={cn(
-            "sticky top-0 z-10 bg-background/95 backdrop-blur-sm transition-transform duration-300 ease-in-out",
-            !isNavVisible && "-translate-y-full"
-            )}>
+         <header className="sticky top-0 z-10 hidden md:block bg-background/95 backdrop-blur-sm">
             <TabsList className="flex w-full justify-evenly border-b bg-transparent p-0 overflow-x-auto no-scrollbar">
                 <TabsTrigger
                     value="foryou"
@@ -223,7 +210,7 @@ export default function HomePage() {
                 </TabsTrigger>
             </TabsList>
         </header>
-        <main className="flex-1">
+        <main className="flex-1 md:pt-0 pt-[100px]">
           <TabsContent value="foryou" className="h-full">
             <div className="hidden md:block border-b">
               <CreatePost onPost={handlePost} />
