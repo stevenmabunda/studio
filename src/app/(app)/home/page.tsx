@@ -215,7 +215,7 @@ export default function HomePage() {
                         </button>
                     </SidebarTrigger>
                      <Link href="/home" aria-label="Home" className="flex items-center justify-center h-10">
-                         <Image src="/bholo_app_mobile_logo.png" alt="BHOLO Logo" width={95} height={95} className="h-full w-auto" />
+                         <Image src="/logo_64x64.png" alt="BHOLO Logo" width={64} height={64} className="h-full w-auto" />
                     </Link>
                      <div className="flex items-center gap-1">
                         <Link href="/notifications" passHref>
