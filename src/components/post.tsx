@@ -708,11 +708,11 @@ export function Post(props: PostProps) {
           </Dialog>
            <Dialog open={isImageViewerOpen} onOpenChange={setIsImageViewerOpen}>
                 <DialogContent 
-                    className="max-w-none w-screen h-screen bg-black/90 border-none shadow-none p-0 flex flex-col md:flex-row"
+                    className="max-w-none w-screen h-screen bg-black/90 border-none shadow-none p-0 flex flex-col"
                     onClick={(e) => e.stopPropagation()}
                 >
                     <DialogTitle className="sr-only">Image Viewer</DialogTitle>
-                    <div className="relative w-full h-full md:w-[calc(100%-400px)] flex items-center justify-center group/viewer">
+                    <div className="relative flex-1 w-full h-full flex items-center justify-center group/viewer">
                         <div className="overflow-hidden w-full h-full" ref={emblaRef}>
                             <div className="flex h-full">
                                 {media?.filter(m => m.type === 'image').map((image, index) => (
@@ -739,7 +739,7 @@ export function Post(props: PostProps) {
                             </Button>
                         </DialogClose>
                     </div>
-                    <aside className="w-full md:w-[400px] bg-background h-full flex flex-col">
+                    <aside className="w-full h-1/2 md:w-full md:h-1/3 bg-background flex flex-col overflow-y-hidden">
                          <div className="flex-1 flex flex-col">
                             <ScrollArea className="flex-1">
                                 {renderPostContent({ includeMedia: false })}
@@ -763,5 +763,3 @@ export function Post(props: PostProps) {
       </div>
   );
 }
-
-    
