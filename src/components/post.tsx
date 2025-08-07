@@ -339,36 +339,6 @@ export function Post(props: PostProps) {
   const needsTruncation = !isStandalone && !isExpanded && content.length > 280;
   const displayText = needsTruncation ? `${content.substring(0, 280)}` : content;
 
-  useEffect(() => {
-    const videoElement = videoRef.current;
-    if (!videoElement) {
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) {
-          videoElement.pause();
-        } else {
-          // On mobile, autoplay is often restricted until user interaction.
-          // The `autoPlay` prop combined with `muted` helps, but this is a fallback.
-          videoElement.play().catch(e => console.log("Autoplay prevented. User interaction needed.", e));
-        }
-      },
-      {
-        threshold: 0.5, 
-      }
-    );
-
-    observer.observe(videoElement);
-
-    return () => {
-      if (videoElement) {
-        observer.unobserve(videoElement);
-      }
-    };
-  }, [isVideo]);
-
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsLiked(!isLiked);
@@ -552,8 +522,7 @@ export function Post(props: PostProps) {
                 src={media[0].url}
                 loop
                 muted
-                playsInline
-                autoPlay
+                controls
                 poster={videoThumbnail || ''}
                 className="w-full h-auto max-h-96 object-contain bg-black"
                 onClick={(e) => e.stopPropagation()}
@@ -708,7 +677,7 @@ export function Post(props: PostProps) {
           </Dialog>
            <Dialog open={isImageViewerOpen} onOpenChange={setIsImageViewerOpen}>
                 <DialogContent 
-                    className="max-w-none w-screen h-screen bg-black/90 border-none shadow-none p-0 flex flex-col"
+                    className="max-w-none w-screen h-screen bg-black/90 border-none shadow-none p-0 flex flex-col md:flex-row"
                     onClick={(e) => e.stopPropagation()}
                 >
                     <DialogTitle className="sr-only">Image Viewer</DialogTitle>
@@ -739,7 +708,7 @@ export function Post(props: PostProps) {
                             </Button>
                         </DialogClose>
                     </div>
-                    <aside className="w-full h-1/2 md:w-full md:h-1/3 bg-background flex flex-col overflow-y-hidden">
+                    <aside className="w-full md:w-[380px] md:h-full bg-background flex flex-col overflow-y-hidden flex-shrink-0">
                          <div className="flex-1 flex flex-col">
                             <ScrollArea className="flex-1">
                                 {renderPostContent({ includeMedia: false })}
