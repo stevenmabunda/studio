@@ -340,7 +340,9 @@ export function Post(props: PostProps) {
         if (!entry.isIntersecting) {
           videoElement.pause();
         } else {
-          videoElement.play().catch(e => console.error("Autoplay failed", e));
+          // On mobile, autoplay is often restricted until user interaction.
+          // The `autoPlay` prop combined with `muted` helps, but this is a fallback.
+          videoElement.play().catch(e => console.log("Autoplay prevented. User interaction needed.", e));
         }
       },
       {
@@ -743,3 +745,5 @@ export function Post(props: PostProps) {
       </div>
   );
 }
+
+    
