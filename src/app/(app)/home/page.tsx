@@ -10,11 +10,8 @@ import { DiscoverFeed } from '@/components/discover-feed';
 import type { PostType } from '@/lib/data';
 import { CreatePost, type Media } from '@/components/create-post';
 import { useToast } from '@/hooks/use-toast';
-import { VideoPost } from '@/components/video-post';
 import { useTabContext } from '@/contexts/tab-context';
-import { LiveMatches } from '@/components/live-matches';
 import { NewPostsNotification } from '@/components/new-posts-notification';
-import { getRecentPosts } from './actions';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Loader2, Bell, Mail } from 'lucide-react';
@@ -23,17 +20,16 @@ import Link from 'next/link';
 import Image from "next/image";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { TrendingTopics } from '@/components/trending-topics';
 
 
 export default function HomePage() {
   const { 
     forYouPosts,
     setForYouPosts,
-    discoverPosts,
     newForYouPosts,
     showNewForYouPosts,
     loadingForYou,
-    loadingDiscover,
     addPost,
     fetchForYouPosts
   } = usePosts();
@@ -45,7 +41,6 @@ export default function HomePage() {
   const [showNotification, setShowNotification] = useState(false);
   const [hasScrolledFromTop, setHasScrolledFromTop] = useState(false);
   
-  const [lastPostId, setLastPostId] = useState<string | undefined>(undefined);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMorePosts, setHasMorePosts] = useState(true);
 
@@ -154,24 +149,6 @@ export default function HomePage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     setShowNotification(false);
   }
-
-  const [isMuted, setIsMuted] = useState(true);
-  const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
-
-  const videoPosts = useMemo(
-    () => discoverPosts.filter(post => post.media?.some(m => m.type === 'video')),
-    [discoverPosts]
-  );
-  
-  const handleVisibilityChange = useCallback((id: string, isVisible: boolean) => {
-    if (isVisible) {
-      setPlayingVideoId(id);
-    } else {
-      if (playingVideoId === id) {
-        setPlayingVideoId(null);
-      }
-    }
-  }, [playingVideoId]);
   
   const handlePost = async (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null }) => {
     try {
@@ -234,8 +211,7 @@ export default function HomePage() {
                  <TabsList className="flex w-full justify-evenly border-b bg-transparent p-0 overflow-x-auto no-scrollbar">
                     <TabsTrigger value="foryou" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">For You</TabsTrigger>
                     <TabsTrigger value="discover" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Discover</TabsTrigger>
-                    <TabsTrigger value="live" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Live</TabsTrigger>
-                    <TabsTrigger value="video" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Video</TabsTrigger>
+                    <TabsTrigger value="trending" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Trending</TabsTrigger>
                 </TabsList>
             </div>
             {/* Desktop Header */}
@@ -243,8 +219,7 @@ export default function HomePage() {
                  <TabsList className="flex w-full justify-evenly border-b bg-transparent p-0 overflow-x-auto no-scrollbar">
                     <TabsTrigger value="foryou" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">For You</TabsTrigger>
                     <TabsTrigger value="discover" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Discover</TabsTrigger>
-                    <TabsTrigger value="live" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Live</TabsTrigger>
-                    <TabsTrigger value="video" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Video</TabsTrigger>
+                    <TabsTrigger value="trending" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Trending</TabsTrigger>
                 </TabsList>
             </div>
         </header>
@@ -284,37 +259,8 @@ export default function HomePage() {
           <TabsContent value="discover" className="h-full">
             <DiscoverFeed />
           </TabsContent>
-           <TabsContent value="live" className="h-full">
-            <LiveMatches isPage />
-          </TabsContent>
-          <TabsContent value="video" className="h-full bg-black">
-             <div className="h-[calc(100vh-160px)] md:h-[calc(100vh-110px)] overflow-y-auto snap-y snap-mandatory">
-              {loadingDiscover ? (
-                <div className="flex items-center justify-center h-full">
-                  <PostSkeleton />
-                </div>
-              ) : videoPosts.length > 0 ? (
-                <div className="h-full w-full">
-                  {videoPosts.map((post) => (
-                    <div key={post.id} className="h-full w-full snap-start flex items-center justify-center">
-                       <VideoPost
-                        post={post}
-                        isMuted={isMuted}
-                        onToggleMute={() => setIsMuted(prev => !prev)}
-                        isPlaying={playingVideoId === post.id}
-                        onVisibilityChange={handleVisibilityChange}
-                        activeVideoId={playingVideoId}
-                      />
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="p-8 text-center text-muted-foreground h-full flex flex-col justify-center items-center">
-                  <h2 className="text-xl font-bold">No videos yet</h2>
-                  <p>When users post videos, they'll appear here.</p>
-                </div>
-              )}
-            </div>
+           <TabsContent value="trending" className="h-full p-4">
+             <TrendingTopics />
           </TabsContent>
         </main>
       </Tabs>
