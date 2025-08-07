@@ -6,6 +6,8 @@ import type { PostType } from '@/lib/data';
 import { collection, query, orderBy, getDocs, type Timestamp, where } from 'firebase/firestore';
 import { formatTimestamp } from '@/lib/utils';
 
+const DUMMY_USER_IDS = ['bholo-bot', 'user-jane-smith', 'user-john-doe', 'user-cristiano-ronaldo'];
+
 export async function getMostViewedPosts(): Promise<PostType[]> {
   if (!db) {
     console.error("Firestore not initialized, returning empty posts.");
@@ -26,7 +28,7 @@ export async function getMostViewedPosts(): Promise<PostType[]> {
       return [];
     }
 
-    // 3. Map documents to PostType objects and filter for posts with images.
+    // 3. Map documents to PostType objects, filter out dummy users, and filter for posts with images.
     let imagePosts = querySnapshot.docs
       .map(doc => {
         const data = doc.data();
@@ -47,6 +49,7 @@ export async function getMostViewedPosts(): Promise<PostType[]> {
             timestamp: createdAt ? formatTimestamp(createdAt) : 'now',
         } as PostType;
       })
+      .filter(p => !DUMMY_USER_IDS.includes(p.authorId)) // Filter out dummy posts
       .filter(p => p.media && p.media.length > 0 && p.media.some(m => m.type === 'image'));
 
     if (imagePosts.length === 0) {

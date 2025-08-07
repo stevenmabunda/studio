@@ -97,6 +97,8 @@ export async function getFollowingPosts(userId: string): Promise<PostType[]> {
     }
 }
 
+const DUMMY_USER_IDS = ['bholo-bot', 'user-jane-smith', 'user-john-doe', 'user-cristiano-ronaldo'];
+
 export async function getRecentPosts(options: { limit?: number; lastPostId?: string } = {}): Promise<PostType[]> {
     if (!db) {
         return [];
@@ -124,26 +126,28 @@ export async function getRecentPosts(options: { limit?: number; lastPostId?: str
             return [];
         }
 
-        const posts = querySnapshot.docs.map(doc => {
-            const data = doc.data();
-            const createdAt = (data.createdAt as Timestamp)?.toDate();
-            return {
-                id: doc.id,
-                authorId: data.authorId,
-                authorName: data.authorName,
-                authorHandle: data.authorHandle,
-                authorAvatar: data.authorAvatar,
-                content: data.content,
-                comments: data.comments,
-                reposts: data.reposts,
-                likes: data.likes,
-                views: data.views,
-                media: data.media,
-                poll: data.poll,
-                timestamp: createdAt ? formatTimestamp(createdAt) : 'now',
-                createdAt: createdAt
-            } as PostType;
-        });
+        const posts = querySnapshot.docs
+            .map(doc => {
+                const data = doc.data();
+                const createdAt = (data.createdAt as Timestamp)?.toDate();
+                return {
+                    id: doc.id,
+                    authorId: data.authorId,
+                    authorName: data.authorName,
+                    authorHandle: data.authorHandle,
+                    authorAvatar: data.authorAvatar,
+                    content: data.content,
+                    comments: data.comments,
+                    reposts: data.reposts,
+                    likes: data.likes,
+                    views: data.views,
+                    media: data.media,
+                    poll: data.poll,
+                    timestamp: createdAt ? formatTimestamp(createdAt) : 'now',
+                    createdAt: createdAt
+                } as PostType;
+            })
+            .filter(post => !DUMMY_USER_IDS.includes(post.authorId)); // Filter out dummy posts
         
         return posts;
 
