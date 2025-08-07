@@ -213,8 +213,8 @@ export default function HomePage() {
                             </Avatar>
                         </button>
                     </SidebarTrigger>
-                     <Link href="/home" aria-label="Home" className="h-9">
-                         <Image src="/officialogo.png" alt="BHOLO Logo" width={140} height={56} className="h-full w-auto" />
+                     <Link href="/home" aria-label="Home" className="flex items-center justify-center h-8">
+                         <Image src="/bholo_app_mobile_logo.png" alt="BHOLO Logo" width={32} height={32} className="h-full w-auto" />
                     </Link>
                      <div className="flex items-center gap-1">
                         <Link href="/notifications" passHref>
