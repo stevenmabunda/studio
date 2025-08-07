@@ -8,7 +8,8 @@ export const ai = genkit({
   plugins: [
     googleAI({
       api: 'vertex',
+      location: 'us-central1',
     }),
   ],
-  model: 'googleai/gemini-2.0-flash',
+  model: 'googleai/gemini-2.0-flash-001',
 });
