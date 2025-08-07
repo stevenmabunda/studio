@@ -3,10 +3,10 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { MessageCircle, Repeat, Heart, Share2, CheckCircle2, MoreHorizontal, Edit, Trash2, Bookmark, MapPin, Copy, X } from "lucide-react";
+import { MessageCircle, Repeat, Heart, Share2, CheckCircle2, MoreHorizontal, Edit, Trash2, Bookmark, MapPin, Copy, X, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { cn, linkify, formatTimestamp } from "@/lib/utils";
 import {
   Dialog,
@@ -50,11 +50,11 @@ import { useToast } from "@/hooks/use-toast";
 import { FollowButton } from "./follow-button";
 import { getIsFollowing } from "@/app/(app)/profile/actions";
 import { ScrollArea } from "./ui/scroll-area";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { CreateComment, type ReplyMedia } from "./create-comment";
 import { db } from "@/lib/firebase/config";
 import { collection, onSnapshot, orderBy, query, type Timestamp } from "firebase/firestore";
 import { Skeleton } from "./ui/skeleton";
+import useEmblaCarousel from 'embla-carousel-react';
 
 type PostProps = PostType & {
   isStandalone?: boolean;
@@ -221,7 +221,6 @@ export function Post(props: PostProps) {
   const { user } = useAuth();
   const { editPost, deletePost, likePost, repostPost, bookmarkPost, bookmarkedPostIds, addComment } = usePosts();
   const { toast } = useToast();
-  const isMobile = useIsMobile();
 
   const [comments, setComments] = useState<CommentType[]>([]);
   const [loadingComments, setLoadingComments] = useState(false);
@@ -238,7 +237,7 @@ export function Post(props: PostProps) {
   const [isShareSheetOpen, setShareSheetOpen] = useState(false);
 
   const [isImageViewerOpen, setIsImageViewerOpen] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<{url: string, index: number} | null>(null);
+  const [imageViewerStartIndex, setImageViewerStartIndex] = useState(0);
   
   const [isExpanded, setIsExpanded] = useState(false);
   
@@ -254,6 +253,17 @@ export function Post(props: PostProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const isAuthor = user && user.uid === authorId;
+
+  // Embla carousel hooks for the image viewer
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false, startIndex: imageViewerStartIndex });
+  const scrollPrev = useCallback(() => emblaApi && emblaApi.scrollPrev(), [emblaApi]);
+  const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
+  
+  useEffect(() => {
+    if (emblaApi) {
+        emblaApi.scrollTo(imageViewerStartIndex, true); // Instantly jump to start index
+    }
+  }, [emblaApi, imageViewerStartIndex, isImageViewerOpen]);
 
   // Effect to generate video thumbnail
   useEffect(() => {
@@ -428,13 +438,9 @@ export function Post(props: PostProps) {
     }
   };
 
-  const openImageViewer = (e: React.MouseEvent, imageUrl: string, index: number) => {
+  const openImageViewer = (e: React.MouseEvent, index: number) => {
     e.stopPropagation();
-    if (isMobile) {
-      handlePostClick();
-      return;
-    }
-    setSelectedImage({url: imageUrl, index});
+    setImageViewerStartIndex(index);
     setIsImageViewerOpen(true);
   };
 
@@ -555,7 +561,7 @@ export function Post(props: PostProps) {
             ) : singleImage ? (
               <div 
                   className="relative w-full max-h-[500px] bg-black cursor-pointer"
-                  onClick={(e) => openImageViewer(e, media[0].url, 0)}
+                  onClick={(e) => openImageViewer(e, 0)}
               >
                   <Image
                       src={media[0].url}
@@ -572,7 +578,7 @@ export function Post(props: PostProps) {
                    <div 
                       key={index} 
                       className={cn("relative cursor-pointer", imageCount === 3 && index === 0 && "row-span-2")}
-                      onClick={(e) => openImageViewer(e, item.url, index)}
+                      onClick={(e) => openImageViewer(e, index)}
                   >
                     <Image
                       src={item.url}
@@ -706,15 +712,27 @@ export function Post(props: PostProps) {
                     onClick={(e) => e.stopPropagation()}
                 >
                     <DialogTitle className="sr-only">Image Viewer</DialogTitle>
-                    <div className="relative w-full h-full md:w-[calc(100%-400px)] flex items-center justify-center">
-                        {selectedImage && (
-                            <Image
-                                src={selectedImage.url}
-                                alt={`Enlarged view of post image ${selectedImage.index + 1}`}
-                                fill
-                                className="object-contain"
-                            />
-                        )}
+                    <div className="relative w-full h-full md:w-[calc(100%-400px)] flex items-center justify-center group/viewer">
+                        <div className="overflow-hidden w-full h-full" ref={emblaRef}>
+                            <div className="flex h-full">
+                                {media?.filter(m => m.type === 'image').map((image, index) => (
+                                    <div key={index} className="flex-[0_0_100%] min-w-0 relative flex items-center justify-center">
+                                         <Image
+                                            src={image.url}
+                                            alt={`Enlarged view of post image ${index + 1}`}
+                                            fill
+                                            className="object-contain"
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        <Button variant="ghost" size="icon" className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 text-white h-10 w-10 bg-black/30 hover:bg-black/50 hover:text-white rounded-full opacity-50 group-hover/viewer:opacity-100 transition-opacity" onClick={scrollPrev}>
+                            <ChevronLeft className="h-6 w-6"/>
+                        </Button>
+                         <Button variant="ghost" size="icon" className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 text-white h-10 w-10 bg-black/30 hover:bg-black/50 hover:text-white rounded-full opacity-50 group-hover/viewer:opacity-100 transition-opacity" onClick={scrollNext}>
+                            <ChevronRight className="h-6 w-6"/>
+                        </Button>
                         <DialogClose asChild>
                             <Button variant="ghost" size="icon" className="absolute top-2 right-2 text-white h-10 w-10 bg-black/30 hover:bg-black/50 hover:text-white">
                                 <X className="h-6 w-6"/>
