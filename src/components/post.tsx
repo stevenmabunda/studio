@@ -704,39 +704,45 @@ export function Post(props: PostProps) {
           </Dialog>
            <Dialog open={isImageViewerOpen} onOpenChange={setIsImageViewerOpen}>
                 <DialogContent 
-                    className="max-w-none w-screen h-screen bg-black/90 border-none shadow-none p-0 flex flex-col"
+                    className="max-w-none w-screen h-screen bg-black/90 border-none shadow-none p-0 flex flex-col md:flex-row"
                     onClick={(e) => e.stopPropagation()}
                 >
                     <DialogTitle className="sr-only">Image Viewer</DialogTitle>
-                    <div className="relative flex-1 w-full h-full flex items-center justify-center group/viewer">
-                        <div className="overflow-hidden w-full h-full" ref={emblaRef}>
-                            <div className="flex h-full">
-                                {media?.filter(m => m.type === 'image').map((image, index) => (
-                                    <div key={index} className="flex-[0_0_100%] min-w-0 relative flex items-center justify-center">
-                                         <Image
-                                            src={image.url}
-                                            alt={`Enlarged view of post image ${index + 1}`}
-                                            fill
-                                            className="object-contain"
-                                        />
-                                    </div>
-                                ))}
+                    
+                    {/* Main Image Content */}
+                    <div className="flex-1 flex flex-col min-h-0 md:h-full">
+                        <div className="relative flex-1 w-full h-full flex items-center justify-center group/viewer">
+                            <div className="overflow-hidden w-full h-full" ref={emblaRef}>
+                                <div className="flex h-full">
+                                    {media?.filter(m => m.type === 'image').map((image, index) => (
+                                        <div key={index} className="flex-[0_0_100%] min-w-0 relative flex items-center justify-center">
+                                            <Image
+                                                src={image.url}
+                                                alt={`Enlarged view of post image ${index + 1}`}
+                                                fill
+                                                className="object-contain"
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
-                        <Button variant="ghost" size="icon" className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 text-white h-10 w-10 bg-black/30 hover:bg-black/50 hover:text-white rounded-full opacity-50 group-hover/viewer:opacity-100 transition-opacity" onClick={scrollPrev}>
-                            <ChevronLeft className="h-6 w-6"/>
-                        </Button>
-                         <Button variant="ghost" size="icon" className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 text-white h-10 w-10 bg-black/30 hover:bg-black/50 hover:text-white rounded-full opacity-50 group-hover/viewer:opacity-100 transition-opacity" onClick={scrollNext}>
-                            <ChevronRight className="h-6 w-6"/>
-                        </Button>
-                        <DialogClose asChild>
-                            <Button variant="ghost" size="icon" className="absolute top-2 right-2 text-white h-10 w-10 bg-black/30 hover:bg-black/50 hover:text-white">
-                                <X className="h-6 w-6"/>
+                            <Button variant="ghost" size="icon" className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 text-white h-10 w-10 bg-black/30 hover:bg-black/50 hover:text-white rounded-full opacity-50 group-hover/viewer:opacity-100 transition-opacity" onClick={scrollPrev}>
+                                <ChevronLeft className="h-6 w-6"/>
                             </Button>
-                        </DialogClose>
+                            <Button variant="ghost" size="icon" className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 text-white h-10 w-10 bg-black/30 hover:bg-black/50 hover:text-white rounded-full opacity-50 group-hover/viewer:opacity-100 transition-opacity" onClick={scrollNext}>
+                                <ChevronRight className="h-6 w-6"/>
+                            </Button>
+                            <DialogClose asChild>
+                                <Button variant="ghost" size="icon" className="absolute top-2 right-2 text-white h-10 w-10 bg-black/30 hover:bg-black/50 hover:text-white">
+                                    <X className="h-6 w-6"/>
+                                </Button>
+                            </DialogClose>
+                        </div>
                     </div>
-                    <aside className="w-full md:w-[380px] md:h-full bg-background flex flex-col overflow-y-hidden flex-shrink-0 max-h-[40vh] md:max-h-full md:w-auto">
-                         <div className="flex-1 flex flex-col min-h-0">
+
+                    {/* Sidebar with Post and Comments */}
+                    <aside className="w-full md:w-[380px] md:h-full bg-background flex flex-col overflow-y-hidden flex-shrink-0 max-h-[40vh] md:max-h-full">
+                        <div className="flex-1 flex flex-col min-h-0">
                             <ScrollArea className="flex-1">
                                 {renderPostContent({ includeMedia: false })}
                                 <div className="divide-y divide-border border-t">
