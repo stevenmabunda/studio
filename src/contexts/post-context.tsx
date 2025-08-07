@@ -11,7 +11,6 @@ import { collection, addDoc, serverTimestamp, getDocs, query, type Timestamp, do
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { formatTimestamp } from '@/lib/utils';
 import { extractPostTopics } from '@/ai/flows/extract-post-topics';
-import { seedPosts } from '@/lib/seed-data';
 import type { ReplyMedia } from '@/components/create-comment';
 import { getMediaPosts } from '@/app/(app)/profile/actions';
 import { getRecentPosts } from '@/app/(app)/home/actions';
@@ -38,31 +37,6 @@ type PostContextType = {
 };
 
 const PostContext = createContext<PostContextType | undefined>(undefined);
-
-
-async function seedDatabaseIfEmpty() {
-    if (!db) return;
-    const postsRef = collection(db, 'posts');
-    const q = query(postsRef, limit(1));
-    const snapshot = await getDocs(q);
-
-    if (snapshot.empty) {
-        console.log("Database is empty, seeding posts...");
-        const batch = writeBatch(db);
-        seedPosts.forEach((post) => {
-            const docRef = doc(postsRef); // Create a new doc with a random ID
-            const firestorePost = {
-                ...post,
-                createdAt: serverTimestamp()
-            };
-            batch.set(docRef, firestorePost);
-        });
-        await batch.commit();
-        console.log("Database seeded successfully.");
-    } else {
-        console.log("Database already has posts, skipping seed.");
-    }
-}
 
 export function PostProvider({ children }: { children: ReactNode }) {
   const [forYouPosts, setForYouPosts] = useState<PostType[]>([]);
@@ -115,8 +89,6 @@ export function PostProvider({ children }: { children: ReactNode }) {
     }
     setLoadingDiscover(true);
     try {
-        await seedDatabaseIfEmpty();
-
         getMediaPosts().then(posts => {
           setDiscoverPosts(posts);
           setLoadingDiscover(false);
