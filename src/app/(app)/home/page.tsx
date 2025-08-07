@@ -21,6 +21,48 @@ import Image from "next/image";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TrendingTopics } from '@/components/trending-topics';
+import { getVideoPosts } from './actions';
+
+
+function VideoFeed() {
+  const [videoPosts, setVideoPosts] = useState<PostType[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    getVideoPosts({ limit: 20 })
+      .then(setVideoPosts)
+      .catch(err => console.error("Failed to fetch video posts:", err))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <>
+        <PostSkeleton />
+        <PostSkeleton />
+        <PostSkeleton />
+      </>
+    );
+  }
+
+  if (videoPosts.length === 0) {
+    return (
+      <div className="p-8 text-center text-muted-foreground">
+        <h2 className="text-xl font-bold">No videos yet</h2>
+        <p>When users post videos, they'll appear here.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="divide-y divide-border">
+      {videoPosts.map((post) => (
+        <Post key={post.id} {...post} />
+      ))}
+    </div>
+  );
+}
 
 
 export default function HomePage() {
@@ -212,6 +254,7 @@ export default function HomePage() {
                     <TabsTrigger value="foryou" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">For You</TabsTrigger>
                     <TabsTrigger value="discover" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Discover</TabsTrigger>
                     <TabsTrigger value="trending" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Trending</TabsTrigger>
+                    <TabsTrigger value="video" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Video</TabsTrigger>
                 </TabsList>
             </div>
             {/* Desktop Header */}
@@ -220,6 +263,7 @@ export default function HomePage() {
                     <TabsTrigger value="foryou" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">For You</TabsTrigger>
                     <TabsTrigger value="discover" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Discover</TabsTrigger>
                     <TabsTrigger value="trending" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Trending</TabsTrigger>
+                    <TabsTrigger value="video" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Video</TabsTrigger>
                 </TabsList>
             </div>
         </header>
@@ -261,6 +305,9 @@ export default function HomePage() {
           </TabsContent>
            <TabsContent value="trending" className="h-full p-4">
              <TrendingTopics />
+          </TabsContent>
+          <TabsContent value="video" className="h-full">
+            <VideoFeed />
           </TabsContent>
         </main>
       </Tabs>

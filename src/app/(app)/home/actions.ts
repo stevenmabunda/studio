@@ -156,3 +156,60 @@ export async function getRecentPosts(options: { limit?: number; lastPostId?: str
         return [];
     }
 }
+
+export async function getVideoPosts(options: { limit?: number; lastPostId?: string } = {}): Promise<PostType[]> {
+  if (!db) {
+    return [];
+  }
+
+  try {
+    const postsRef = collection(db, 'posts');
+    const queryConstraints = [
+      orderBy('createdAt', 'desc'),
+      limit(options.limit || 20)
+    ];
+
+    if (options.lastPostId) {
+      const lastPostDoc = await getDoc(doc(db, 'posts', options.lastPostId));
+      if (lastPostDoc.exists()) {
+        queryConstraints.push(startAfter(lastPostDoc));
+      }
+    }
+
+    const q = query(postsRef, ...queryConstraints);
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+      return [];
+    }
+
+    const posts = querySnapshot.docs
+      .map(doc => {
+        const data = doc.data();
+        const createdAt = (data.createdAt as Timestamp)?.toDate();
+        return {
+          id: doc.id,
+          authorId: data.authorId,
+          authorName: data.authorName,
+          authorHandle: data.authorHandle,
+          authorAvatar: data.authorAvatar,
+          content: data.content,
+          comments: data.comments,
+          reposts: data.reposts,
+          likes: data.likes,
+          views: data.views,
+          media: data.media,
+          poll: data.poll,
+          timestamp: createdAt ? formatTimestamp(createdAt) : 'now',
+          createdAt: createdAt
+        } as PostType;
+      })
+      .filter(post => post.media && post.media.some(m => m.type === 'video')) // Filter for video posts
+      .filter(post => !DUMMY_USER_IDS.includes(post.authorId)); // Filter out dummy posts
+
+    return posts;
+  } catch (error) {
+    console.error("Error fetching video posts:", error);
+    return [];
+  }
+}
