@@ -165,9 +165,10 @@ export async function getVideoPosts(options: { limit?: number; lastPostId?: stri
   try {
     const postsRef = collection(db, 'posts');
     const queryConstraints = [
-      where('media', '!=', []),
+      // The where('media', '!=', []) clause was causing silent failures without a composite index.
+      // Fetching all recent posts and filtering on the server is a more reliable approach for an MVP.
       orderBy('createdAt', 'desc'),
-      limit(options.limit || 20)
+      limit(options.limit || 50) // Fetch more posts to increase chances of finding videos
     ];
 
     if (options.lastPostId) {
