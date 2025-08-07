@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { searchEverything, type SearchResults } from './actions';
 import { Input } from '@/components/ui/input';
-import { Search, ArrowLeft } from 'lucide-react';
+import { Search, ArrowLeft, Users } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Post } from '@/components/post';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -14,11 +14,13 @@ import Link from 'next/link';
 import { PostSkeleton } from '@/components/post-skeleton';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { JoinTribeButton } from '@/components/join-tribe-button';
-import { getJoinedTribeIds, type Tribe } from '@/app/(app)/tribes/actions';
 import { useAuth } from '@/hooks/use-auth';
 import Image from 'next/image';
-import { getIsFollowing, toggleFollow } from '@/app/(app)/profile/actions';
+import { getIsFollowing } from '@/app/(app)/profile/actions';
+import type { Community } from '@/app/(app)/communities/actions';
+import { getJoinedCommunityIds } from '@/app/(app)/communities/actions';
+import { JoinCommunityButton } from '@/components/join-community-button';
+
 
 function UserResultSkeleton() {
     return (
@@ -35,7 +37,7 @@ function UserResultSkeleton() {
     );
 }
 
-function TribeResultSkeleton() {
+function CommunityResultSkeleton() {
     return (
         <div className="flex items-center justify-between p-4">
             <div className="flex items-center gap-4">
@@ -60,18 +62,18 @@ export default function SearchPage() {
   const [results, setResults] = useState<SearchResults | null>(null);
   const [loading, setLoading] = useState(true);
   
-  const [joinedTribeIds, setJoinedTribeIds] = useState<Set<string>>(new Set());
+  const [joinedCommunityIds, setJoinedCommunityIds] = useState<Set<string>>(new Set());
   const [followedUserIds, setFollowedUserIds] = useState<Set<string>>(new Set());
 
   const fetchInitialData = useCallback(async () => {
     if (user) {
       setLoading(true);
-      const [tribeIds, searchResults] = await Promise.all([
-        getJoinedTribeIds(user.uid),
+      const [communityIds, searchResults] = await Promise.all([
+        getJoinedCommunityIds(user.uid),
         searchEverything(initialQuery)
       ]);
 
-      setJoinedTribeIds(new Set(tribeIds));
+      setJoinedCommunityIds(new Set(communityIds));
       setResults(searchResults);
       
       if (searchResults.users.length > 0) {
@@ -93,7 +95,7 @@ export default function SearchPage() {
       setResults(searchResults);
       setLoading(false);
     } else {
-      setResults({ users: [], tribes: [], posts: [] });
+      setResults({ users: [], posts: [], communities: [] });
       setLoading(false);
     }
   }, [user, initialQuery]);
@@ -123,13 +125,13 @@ export default function SearchPage() {
       })
   }
 
-  const handleMembershipChange = (tribeId: string, isMember: boolean) => {
-    setJoinedTribeIds(prev => {
+  const handleMembershipChange = (communityId: string, isMember: boolean) => {
+    setJoinedCommunityIds(prev => {
       const newSet = new Set(prev);
       if (isMember) {
-        newSet.add(tribeId);
+        newSet.add(communityId);
       } else {
-        newSet.delete(tribeId);
+        newSet.delete(communityId);
       }
       return newSet;
     });
@@ -137,7 +139,7 @@ export default function SearchPage() {
 
   const hasResults = useMemo(() => {
     if (!results) return false;
-    return results.users.length > 0 || results.tribes.length > 0 || results.posts.length > 0;
+    return results.users.length > 0 || results.posts.length > 0 || results.communities.length > 0;
   }, [results]);
 
   return (
@@ -163,14 +165,14 @@ export default function SearchPage() {
           <TabsTrigger value="top" className="flex-1 rounded-none py-3 text-sm font-semibold text-muted-foreground data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none">Top</TabsTrigger>
           <TabsTrigger value="users" className="flex-1 rounded-none py-3 text-sm font-semibold text-muted-foreground data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none">Users</TabsTrigger>
           <TabsTrigger value="posts" className="flex-1 rounded-none py-3 text-sm font-semibold text-muted-foreground data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none">Posts</TabsTrigger>
-          <TabsTrigger value="tribes" className="flex-1 rounded-none py-3 text-sm font-semibold text-muted-foreground data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none">Tribes</TabsTrigger>
+           <TabsTrigger value="communities" className="flex-1 rounded-none py-3 text-sm font-semibold text-muted-foreground data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none">Communities</TabsTrigger>
         </TabsList>
         <main className="flex-1">
           {loading ? (
              <div className="divide-y divide-border">
                 <UserResultSkeleton />
                 <PostSkeleton />
-                <TribeResultSkeleton />
+                <CommunityResultSkeleton />
              </div>
           ) : !hasResults ? (
              <div className="p-8 text-center text-muted-foreground">
@@ -237,23 +239,26 @@ export default function SearchPage() {
                         {results?.posts.map(post => <Post key={post.id} {...post} />)}
                     </div>
                 </TabsContent>
-                <TabsContent value="tribes">
+                <TabsContent value="communities">
                      <div className="divide-y divide-border">
-                        {results?.tribes.map(tribe => (
-                             <div key={tribe.id} className="p-4 hover:bg-accent/50">
+                        {results?.communities.map(community => (
+                             <div key={community.id} className="p-4 hover:bg-accent/50">
                                 <div className="flex items-start justify-between gap-4">
-                                    <Link href={`/tribes/${tribe.id}`} className="flex items-start gap-4 flex-1">
-                                        <Image src={tribe.bannerUrl} alt={tribe.name} width={64} height={64} className="rounded-lg object-cover h-16 w-16" />
+                                    <Link href={`/communities/${community.id}`} className="flex items-start gap-4 flex-1">
+                                        <Image src={community.bannerUrl} alt={community.name} width={64} height={64} className="rounded-lg object-cover h-16 w-16" />
                                         <div className="flex-1">
-                                            <h3 className="font-bold hover:underline">{tribe.name}</h3>
-                                            <p className="text-sm text-muted-foreground line-clamp-2">{tribe.description}</p>
-                                            <p className="text-xs text-muted-foreground mt-1">{tribe.memberCount} members</p>
+                                            <h3 className="font-bold hover:underline">{community.name}</h3>
+                                            <p className="text-sm text-muted-foreground line-clamp-2">{community.description}</p>
+                                            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                                                <Users className="h-3 w-3" />
+                                                {community.memberCount} members
+                                            </p>
                                         </div>
                                     </Link>
-                                    <div className="w-28 flex-shrink-0">
-                                        <JoinTribeButton
-                                            tribeId={tribe.id}
-                                            isMember={joinedTribeIds.has(tribe.id)}
+                                    <div className="w-36 flex-shrink-0">
+                                        <JoinCommunityButton
+                                            communityId={community.id}
+                                            isMember={joinedCommunityIds.has(community.id)}
                                             onToggleMembership={handleMembershipChange}
                                         />
                                     </div>

@@ -36,7 +36,7 @@ import Image from 'next/image';
 const navItems = [
   { href: '/home', label: 'Home', icon: Home },
   { href: '/explore', label: 'Explore', icon: Hash },
-  { href: '/tribes', label: 'Tribes', icon: Users },
+  { href: '/communities', label: 'Communities', icon: Users },
   { href: '/notifications', label: 'Notifications', icon: Bell },
   { href: '/messages', label: 'Messages', icon: MessageSquare },
   { href: '/bookmarks', label: 'Bookmarks', icon: Bookmark },

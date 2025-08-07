@@ -17,7 +17,7 @@ const navItems = [
   { href: '/home', icon: Home, label: 'Home' },
   { href: '/explore', icon: Search, label: 'Explore' },
   { href: 'POST_ACTION', icon: Plus, label: 'Post' },
-  { href: '/tribes', icon: Users, label: 'Tribes' },
+  { href: '/communities', icon: Users, label: 'Communities' },
 ];
 
 export function MobileBottomNav() {

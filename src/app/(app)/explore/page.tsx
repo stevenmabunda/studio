@@ -5,8 +5,8 @@ import { TrendingTopics } from "@/components/trending-topics";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { WhoToFollow } from "@/components/who-to-follow";
-import { SuggestedTribes } from "@/components/suggested-tribes";
 import { useRouter } from "next/navigation";
+import { SuggestedCommunities } from "@/components/suggested-communities";
 
 export default function ExplorePage() {
   const router = useRouter();
@@ -37,7 +37,7 @@ export default function ExplorePage() {
           <TrendingTopics />
         </div>
         <div className="px-4">
-          <SuggestedTribes />
+          <SuggestedCommunities />
         </div>
         <div className="px-4">
           <WhoToFollow />
