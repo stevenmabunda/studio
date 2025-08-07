@@ -4,26 +4,16 @@
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { CreatePost, type Media } from './create-post';
-import { usePosts } from '@/contexts/post-context';
 import React, { useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
 import { Plus } from 'lucide-react';
 import type { PostType } from '@/lib/data';
 
-export function FloatingCreatePostButton() {
-  const { addPost } = usePosts();
-  const { toast } = useToast();
+export function FloatingCreatePostButton({ onPost }: { onPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null }) => Promise<void> }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handlePost = async (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null }) => {
-    try {
-        await addPost(data);
-        setIsDialogOpen(false);
-        toast({ description: "Your post has been published!" });
-    } catch (error) {
-        console.error("Failed to create post from dialog:", error);
-        toast({ variant: 'destructive', description: "Something went wrong. Please try again." });
-    }
+    await onPost(data);
+    setIsDialogOpen(false); // Close dialog on successful post
   };
   
   return (

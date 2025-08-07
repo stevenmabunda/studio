@@ -23,6 +23,7 @@ import Link from 'next/link';
 import Image from "next/image";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { FloatingCreatePostButton } from '@/components/floating-create-post-button';
 
 
 export default function HomePage() {
@@ -318,6 +319,7 @@ export default function HomePage() {
           </TabsContent>
         </main>
       </Tabs>
+      <FloatingCreatePostButton onPost={handlePost} />
     </div>
   );
 }
