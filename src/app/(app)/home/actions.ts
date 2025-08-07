@@ -165,6 +165,7 @@ export async function getVideoPosts(options: { limit?: number; lastPostId?: stri
   try {
     const postsRef = collection(db, 'posts');
     const queryConstraints = [
+      where('media', '!=', []),
       orderBy('createdAt', 'desc'),
       limit(options.limit || 20)
     ];
