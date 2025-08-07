@@ -23,7 +23,6 @@ import Link from 'next/link';
 import Image from "next/image";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { FloatingCreatePostButton } from '@/components/floating-create-post-button';
 
 
 export default function HomePage() {
@@ -215,7 +214,7 @@ export default function HomePage() {
                         </button>
                     </SidebarTrigger>
                      <Link href="/home" aria-label="Home" className="flex items-center justify-center h-10">
-                         <Image src="/logo_64x64.png" alt="BHOLO Logo" width={64} height={64} className="h-full w-auto" />
+                         <Image src="/logo_64x64.png" alt="BHOLO Logo" width="95" height="95" className="h-full w-auto" />
                     </Link>
                      <div className="flex items-center gap-1">
                         <Link href="/notifications" passHref>
@@ -319,7 +318,6 @@ export default function HomePage() {
           </TabsContent>
         </main>
       </Tabs>
-      <FloatingCreatePostButton onPost={handlePost} />
     </div>
   );
 }
