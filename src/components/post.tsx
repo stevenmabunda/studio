@@ -292,6 +292,33 @@ export function Post(props: PostProps) {
         }
     }
   }, [isVideo, media]);
+  
+    // Effect for Intersection Observer to play/pause video
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !isVideo) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (entry.isIntersecting) {
+          // Check if video has controls, if so, don't autoplay
+          if (!video.hasAttribute('controls')) {
+             video.play().catch(() => {});
+          }
+        } else {
+          video.pause();
+        }
+      },
+      { threshold: 0.5 } // Trigger when 50% of the video is visible
+    );
+
+    observer.observe(video);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [isVideo]);
 
 
   // Effect to fetch comments when the image viewer is opened
@@ -677,7 +704,7 @@ export function Post(props: PostProps) {
           </Dialog>
            <Dialog open={isImageViewerOpen} onOpenChange={setIsImageViewerOpen}>
                 <DialogContent 
-                    className="max-w-none w-screen h-screen bg-black/90 border-none shadow-none p-0 flex flex-col md:flex-row"
+                    className="max-w-none w-screen h-screen bg-black/90 border-none shadow-none p-0 flex flex-col"
                     onClick={(e) => e.stopPropagation()}
                 >
                     <DialogTitle className="sr-only">Image Viewer</DialogTitle>
@@ -708,8 +735,8 @@ export function Post(props: PostProps) {
                             </Button>
                         </DialogClose>
                     </div>
-                    <aside className="w-full md:w-[380px] md:h-full bg-background flex flex-col overflow-y-hidden flex-shrink-0">
-                         <div className="flex-1 flex flex-col">
+                    <aside className="w-full md:w-[380px] md:h-full bg-background flex flex-col overflow-y-hidden flex-shrink-0 max-h-[40vh] md:max-h-full md:w-auto">
+                         <div className="flex-1 flex flex-col min-h-0">
                             <ScrollArea className="flex-1">
                                 {renderPostContent({ includeMedia: false })}
                                 <div className="divide-y divide-border border-t">
