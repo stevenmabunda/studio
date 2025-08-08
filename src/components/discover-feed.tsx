@@ -54,7 +54,7 @@ export function DiscoverFeed() {
       return (
         <div className="border-b">
             {/* Hero Skeleton */}
-            <div className="relative w-full h-64 mb-2">
+            <div className="relative w-full aspect-square mb-2">
                 <Skeleton className="w-full h-full" />
                 <div className="absolute bottom-0 left-0 p-4 w-full bg-gradient-to-t from-black/70 to-transparent">
                     <Skeleton className="h-8 w-3/4 mb-1" />
@@ -84,14 +84,14 @@ export function DiscoverFeed() {
       {/* Hero Section */}
       {heroPost && (
         <div 
-            className="relative w-full h-64 cursor-pointer group mb-2"
+            className="relative w-full aspect-square cursor-pointer group mb-2"
             onClick={() => handlePostClick(heroPost.id)}
         >
             <Image
                 src={heroPost.media?.[0]?.url || 'https://placehold.co/600x300.png'}
                 alt={heroPost.content}
                 fill
-                className="object-cover object-top group-hover:opacity-90 transition-opacity"
+                className="object-cover object-center group-hover:opacity-90 transition-opacity"
                 data-ai-hint={heroPost.media?.[0]?.hint || 'stadium lights'}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
