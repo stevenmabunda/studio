@@ -6,6 +6,7 @@ import { Input } from "./ui/input";
 import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { CreatorProgramPromo } from "./creator-program-promo";
+import Link from "next/link";
 
 export function RightSidebar() {
   const router = useRouter();
@@ -32,6 +33,15 @@ export function RightSidebar() {
       <CreatorProgramPromo />
       <TrendingTopics />
       <WhoToFollow />
+       <footer className="mt-auto text-sm text-muted-foreground space-y-2">
+            <div className="flex flex-wrap gap-x-4 gap-y-1">
+                <Link href="#" className="hover:underline">Terms of Service</Link>
+                <Link href="#" className="hover:underline">Privacy Policy</Link>
+                <Link href="#" className="hover:underline">Help Center</Link>
+                <Link href="#" className="hover:underline">Feedback</Link>
+            </div>
+            <p>© 2025 BHOLO Sports.</p>
+        </footer>
     </aside>
   );
 }
