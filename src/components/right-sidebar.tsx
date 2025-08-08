@@ -33,11 +33,11 @@ export function RightSidebar() {
       <CreatorProgramPromo />
       <TrendingTopics />
       <WhoToFollow />
-       <footer className="mt-auto text-sm text-muted-foreground space-y-2">
-            <div className="flex flex-wrap gap-x-4 gap-y-1">
-                <Link href="#" className="hover:underline">Terms of Service</Link>
-                <Link href="#" className="hover:underline">Privacy Policy</Link>
-                <Link href="#" className="hover:underline">Help Center</Link>
+       <footer className="mt-auto text-xs text-muted-foreground">
+            <div className="flex flex-wrap gap-x-2">
+                <Link href="#" className="hover:underline">Terms</Link>
+                <Link href="#" className="hover:underline">Privacy</Link>
+                <Link href="#" className="hover:underline">Help</Link>
                 <Link href="#" className="hover:underline">Feedback</Link>
             </div>
             <p>© 2025 BHOLO Sports.</p>
