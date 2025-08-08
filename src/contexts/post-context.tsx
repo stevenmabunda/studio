@@ -135,7 +135,9 @@ export function PostProvider({ children }: { children: ReactNode }) {
                 // Use a functional update to get the most current state of both post arrays.
                 setForYouPosts(currentForYouPosts => {
                     setNewForYouPosts(currentNewPosts => {
-                        const postExists = currentForYouPosts.some(p => p.id === change.doc.id) || currentNewPosts.some(p => p.id === change.doc.id);
+                        const postExistsInMainFeed = currentForYouPosts.some(p => p.id === change.doc.id);
+                        const postExistsInNewFeed = currentNewPosts.some(p => p.id === change.doc.id);
+                        const postExists = postExistsInMainFeed || postExistsInNewFeed;
                         
                         if (isRecent && !postExists && postData.authorId !== user.uid) {
                             const newPost: PostType = {
