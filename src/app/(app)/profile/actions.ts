@@ -423,27 +423,40 @@ export async function getFollowing(profileId: string): Promise<ProfileData[]> {
 }
 
 export async function getUsersToFollow(currentUserId: string): Promise<ProfileData[]> {
-    if (!db) return [];
+    if (!db || !currentUserId) return [];
     
-    const usersRef = collection(db, 'users');
-    const q = query(usersRef, orderBy('followersCount', 'desc'), limit(4));
-    
-    const querySnapshot = await getDocs(q);
-    
-    const users = querySnapshot.docs
-      .map(doc => {
-        const data = doc.data();
-        return {
-          uid: doc.id,
-          displayName: data.displayName || 'User',
-          handle: data.handle || 'user',
-          photoURL: data.photoURL || 'https://placehold.co/40x40.png',
-          // These fields are not needed for the suggestion list but are part of the type
-          bannerUrl: '', bio: '', country: '', favouriteClub: '', joined: '', followersCount: 0, followingCount: 0, location: ''
-        } as ProfileData;
-      })
-      .filter(user => user.uid !== currentUserId); // Filter out the current user
+    try {
+        // 1. Get the list of users the current user is already following.
+        const followingRef = collection(db, 'users', currentUserId, 'following');
+        const followingSnapshot = await getDocs(followingRef);
+        const followingIds = new Set(followingSnapshot.docs.map(doc => doc.id));
+        followingIds.add(currentUserId); // Also exclude the user themselves.
 
-    return users.slice(0, 3); // Ensure we only return 3 users after filtering
+        // 2. Fetch all users, sorted by followers.
+        const usersRef = collection(db, 'users');
+        const q = query(usersRef, orderBy('followersCount', 'desc'), limit(20)); // Fetch more to have a pool for filtering.
+        const querySnapshot = await getDocs(q);
+
+        // 3. Filter out users the current user already follows.
+        const usersToSuggest = querySnapshot.docs
+          .map(doc => {
+            const data = doc.data();
+            return {
+              uid: doc.id,
+              displayName: data.displayName || 'User',
+              handle: data.handle || 'user',
+              photoURL: data.photoURL || 'https://placehold.co/40x40.png',
+              // These fields are not needed for the suggestion list but are part of the type
+              bannerUrl: '', bio: '', country: '', favouriteClub: '', joined: '', followersCount: 0, followingCount: 0, location: ''
+            } as ProfileData;
+          })
+          .filter(user => !followingIds.has(user.uid)); // Exclude already followed users.
+
+        // 4. Return the top 3 from the filtered list.
+        return usersToSuggest.slice(0, 3);
+    } catch (error) {
+        console.error("Error getting users to follow:", error);
+        return [];
+    }
 }
     
