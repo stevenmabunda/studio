@@ -4,8 +4,8 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Image as ImageIcon, X, Film, ListOrdered, Smile, MapPin, Loader2, Trash2 } from "lucide-react";
-import React, { useState, useRef } from "react";
+import { Image as ImageIcon, X, Film, ListOrdered, Smile, MapPin, Loader2, Trash2, Link2 } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -13,6 +13,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { Input } from "./ui/input";
 import type { PostType } from "@/lib/data";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { extractLinkMetadata, type ExtractLinkMetadataOutput } from "@/ai/flows/extract-link-metadata";
+import { Skeleton } from "./ui/skeleton";
 
 export type Media = {
   file: File;
@@ -24,7 +26,21 @@ const EMOJIS = [
     '😀', '😂', '😍', '🤔', '😭', '🙏', '❤️', '🔥', '👍', '⚽️', '🥅', '🏆', '🎉', '👏', '🚀', '💯'
 ];
 
-export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }) => Promise<void>, tribeId?: string, communityId?: string }) {
+function LinkPreviewSkeleton() {
+    return (
+        <div className="mt-3 rounded-2xl border flex flex-col md:flex-row gap-0 md:gap-4 overflow-hidden">
+            <Skeleton className="h-32 w-full md:w-32 flex-shrink-0" />
+            <div className="p-4 flex-1 space-y-2">
+                <Skeleton className="h-4 w-1/4" />
+                <Skeleton className="h-5 w-3/4" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-2/3" />
+            </div>
+        </div>
+    )
+}
+
+export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string, linkPreview?: ExtractLinkMetadataOutput | null }) => Promise<void>, tribeId?: string, communityId?: string }) {
   const { user } = useAuth();
   const [text, setText] = useState("");
   const [media, setMedia] = useState<Media[]>([]);
@@ -37,7 +53,43 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
   const [pollChoices, setPollChoices] = useState<string[]>(['', '']);
   const [location, setLocation] = useState<string | null>(null);
 
+  const [linkPreview, setLinkPreview] = useState<ExtractLinkMetadataOutput | null>(null);
+  const [isFetchingPreview, setIsFetchingPreview] = useState(false);
+  const [detectedUrl, setDetectedUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const urlRegex = /(https?:\/\/[^\s]+)/;
+    const match = text.match(urlRegex);
+    const newUrl = match ? match[0] : null;
+
+    if (newUrl && newUrl !== detectedUrl) {
+      setDetectedUrl(newUrl);
+      setIsFetchingPreview(true);
+      setLinkPreview(null);
+      setMedia([]); // Can't have media and a link preview
+      setShowPoll(false); // Can't have poll and link preview
+
+      extractLinkMetadata({ url: newUrl })
+        .then(data => {
+          if (data) {
+            setLinkPreview(data);
+          } else {
+            setDetectedUrl(null); // Reset if metadata fails
+          }
+        })
+        .catch(() => setDetectedUrl(null)) // Reset on error
+        .finally(() => setIsFetchingPreview(false));
+
+    } else if (!newUrl) {
+      setDetectedUrl(null);
+      setLinkPreview(null);
+    }
+  }, [text, detectedUrl]);
+
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setLinkPreview(null);
+    setDetectedUrl(null);
     const files = Array.from(event.target.files || []);
     if (!files.length) return;
 
@@ -108,7 +160,7 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
     }
 
     try {
-        await onPost({ text, media, poll: pollData, location, tribeId, communityId });
+        await onPost({ text, media, poll: pollData, location, tribeId, communityId, linkPreview });
         
         // Clean up object URLs after successful post
         media.forEach(m => URL.revokeObjectURL(m.previewUrl));
@@ -118,13 +170,16 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
         setShowPoll(false);
         setPollChoices(['', '']);
         setLocation(null);
+        setLinkPreview(null);
+        setDetectedUrl(null);
+        setIsFetchingPreview(false);
         if (imageInputRef.current) imageInputRef.current.value = "";
         if (videoInputRef.current) videoInputRef.current.value = "";
     } catch (error) {
         console.error("Failed to create post:", error);
         toast({ variant: 'destructive', description: "Failed to create post. Please try again." });
     } finally {
-        setPosting(false);
+        posting && setPosting(false);
     }
   };
   
@@ -150,6 +205,7 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
     if (!showPoll) {
         media.forEach(m => URL.revokeObjectURL(m.previewUrl));
         setMedia([]);
+        setLinkPreview(null);
     }
     setShowPoll(!showPoll);
   };
@@ -188,10 +244,11 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
     setText(prevText => prevText + emoji);
   };
 
-  const isPostable = text.trim().length > 0 || media.length > 0 || (showPoll && pollChoices.some(c => c.trim()));
+  const isPostable = text.trim().length > 0 || media.length > 0 || (showPoll && pollChoices.some(c => c.trim())) || linkPreview;
   const hasVideo = media.length > 0 && media[0].type === 'video';
   const hasImages = media.length > 0 && media[0].type === 'image';
   const maxImagesReached = media.length >= 4;
+  const hasContent = showPoll || hasVideo || hasImages || linkPreview;
 
   const singleImage = hasImages && media.length === 1;
 
@@ -212,7 +269,7 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
         </div>
         <div className="flex-1 space-y-3">
           <Textarea
-            placeholder="What is happening?!"
+            placeholder="What is happening?! Paste a link to see the magic."
             className="w-full resize-none border-0 bg-transparent px-0 text-lg focus-visible:ring-0 focus-visible:ring-offset-0"
             rows={1}
             value={text}
@@ -245,6 +302,24 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
                     </Button>
                 </div>
             </div>
+          )}
+
+          {isFetchingPreview && <LinkPreviewSkeleton />}
+
+          {linkPreview && (
+              <div className="relative mt-3 rounded-2xl border overflow-hidden">
+                {linkPreview.imageUrl && (
+                    <Image src={linkPreview.imageUrl} alt={linkPreview.title} width={500} height={250} className="w-full h-auto max-h-64 object-cover" />
+                )}
+                <div className="p-4">
+                    <p className="text-xs text-muted-foreground uppercase">{linkPreview.domain}</p>
+                    <h3 className="font-bold line-clamp-2">{linkPreview.title}</h3>
+                    <p className="text-sm text-muted-foreground line-clamp-3 mt-1">{linkPreview.description}</p>
+                </div>
+                 <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-8 w-8 rounded-full bg-black/50 hover:bg-black/75 text-white hover:text-white" onClick={() => { setLinkPreview(null); setDetectedUrl(null); }}>
+                    <X className="h-4 w-4" />
+                </Button>
+              </div>
           )}
 
           {media.length > 0 && (
@@ -305,13 +380,13 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
                 className="hidden"
                 disabled={posting}
               />
-              <Button variant="ghost" size="icon" onClick={handleImageClick} disabled={showPoll || hasVideo || maxImagesReached || posting}>
+              <Button variant="ghost" size="icon" onClick={handleImageClick} disabled={!!hasContent || posting}>
                 <ImageIcon className="h-5 w-5 text-primary" />
               </Button>
-               <Button variant="ghost" size="icon" onClick={handleVideoClick} disabled={showPoll || hasImages || posting}>
+               <Button variant="ghost" size="icon" onClick={handleVideoClick} disabled={!!hasContent || posting}>
                 <Film className="h-5 w-5 text-primary" />
               </Button>
-              <Button variant="ghost" size="icon" onClick={togglePoll} disabled={posting}>
+              <Button variant="ghost" size="icon" onClick={togglePoll} disabled={!!hasContent || posting}>
                 <ListOrdered className="h-5 w-5 text-primary" />
               </Button>
               <Popover>

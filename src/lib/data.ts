@@ -1,4 +1,5 @@
 import { type Timestamp } from 'firebase/firestore';
+import type { ExtractLinkMetadataOutput } from '@/ai/flows/extract-link-metadata';
 
 export type PostType = {
   id: string;
@@ -24,6 +25,7 @@ export type PostType = {
   poll?: {
     choices: { text: string; votes: number }[];
   };
+  linkPreview?: ExtractLinkMetadataOutput;
 };
 
 export type MatchType = {
