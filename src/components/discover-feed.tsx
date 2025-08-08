@@ -54,7 +54,7 @@ export function DiscoverFeed() {
       return (
         <div className="border-b">
             {/* Hero Skeleton */}
-            <div className="relative w-full aspect-square mb-2">
+            <div className="relative w-full h-[400px] mb-2">
                 <Skeleton className="w-full h-full" />
                 <div className="absolute bottom-0 left-0 p-4 w-full bg-gradient-to-t from-black/70 to-transparent">
                     <Skeleton className="h-8 w-3/4 mb-1" />
@@ -84,7 +84,7 @@ export function DiscoverFeed() {
       {/* Hero Section */}
       {heroPost && (
         <div 
-            className="relative w-full aspect-square cursor-pointer group mb-2"
+            className="relative w-full h-[400px] cursor-pointer group mb-2"
             onClick={() => handlePostClick(heroPost.id)}
         >
             <Image
