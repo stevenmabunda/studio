@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Plus, Search, Users } from 'lucide-react';
+import { Home, Plus, Search, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import React, { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -12,16 +12,18 @@ import { usePosts } from '@/contexts/post-context';
 import { useToast } from '@/hooks/use-toast';
 import type { PostType } from '@/lib/data';
 import { ScrollArea } from './ui/scroll-area';
+import { useAuth } from '@/hooks/use-auth';
 
 const navItems = [
   { href: '/home', icon: Home, label: 'Home' },
   { href: '/explore', icon: Search, label: 'Explore' },
   { href: 'POST_ACTION', icon: Plus, label: 'Post' },
-  { href: '/communities', icon: Users, label: 'Communities' },
+  { href: '/profile', icon: User, label: 'Profile' },
 ];
 
 export function MobileBottomNav() {
   const pathname = usePathname();
+  const { user } = useAuth();
   const { addPost } = usePosts();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -67,9 +69,15 @@ export function MobileBottomNav() {
             );
           }
           
-          const isActive = pathname.startsWith(item.href);
+          let href = item.href;
+          if (item.href === '/profile' && user) {
+            href = `/profile/${user.uid}`;
+          }
+
+          const isActive = pathname === href || (item.href !== '/home' && pathname.startsWith(item.href));
+          
           return (
-            <Link key={item.href + item.label} href={item.href} className="flex-1 flex justify-center items-center h-full">
+            <Link key={item.href + item.label} href={href} className="flex-1 flex justify-center items-center h-full">
               <item.icon
                 className={cn(
                   'h-6 w-6 text-muted-foreground transition-colors',
