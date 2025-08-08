@@ -1,4 +1,5 @@
 
+
 'use client';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ import { FollowListDialog } from "@/components/follow-list-dialog";
 import { MessageButton } from "@/components/message-button";
 import { cn } from "@/lib/utils";
 import Link from 'next/link';
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 
 const profileFormSchema = z.object({
@@ -475,7 +477,7 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
-            <DialogContent>
+            <DialogContent className="flex flex-col h-full max-h-[90vh] sm:max-h-[800px]">
                 <DialogHeader>
                     <DialogTitle>Edit profile</DialogTitle>
                      <DialogDescription>
@@ -483,63 +485,69 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="relative h-32 w-full bg-muted sm:h-40">
-                    <Image src={bannerPreview} alt="Banner preview" fill objectFit="cover" className="rounded-md" />
-                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                         <Button size="icon" variant="ghost" className="text-white hover:bg-black/50" onClick={() => bannerInputRef.current?.click()}>
-                            <Camera className="h-6 w-6" />
-                         </Button>
-                         <input type="file" accept="image/*" ref={bannerInputRef} onChange={(e) => handleFileChange(e, 'banner')} className="hidden" />
-                    </div>
-                </div>
+                <ScrollArea className="flex-1 pr-6 -mr-6">
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                        <div className="relative h-32 w-full bg-muted sm:h-40">
+                            <Image src={bannerPreview} alt="Banner preview" fill objectFit="cover" className="rounded-md" />
+                            <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                                <Button size="icon" type="button" variant="ghost" className="text-white hover:bg-black/50" onClick={() => bannerInputRef.current?.click()}>
+                                    <Camera className="h-6 w-6" />
+                                </Button>
+                                <input type="file" accept="image/*" ref={bannerInputRef} onChange={(e) => handleFileChange(e, 'banner')} className="hidden" />
+                            </div>
+                        </div>
 
-                <div className="relative -mt-12 ml-4 h-24 w-24">
-                     <Avatar className="h-24 w-24 border-4 border-background">
-                        <AvatarImage src={avatarPreview} />
-                        <AvatarFallback>{profile.displayName?.charAt(0) || 'U'}</AvatarFallback>
-                    </Avatar>
-                    <div className="absolute inset-0 bg-black/30 rounded-full flex items-center justify-center">
-                         <Button size="icon" variant="ghost" className="text-white hover:bg-black/50" onClick={() => avatarInputRef.current?.click()}>
-                            <Camera className="h-6 w-6" />
-                         </Button>
-                         <input type="file" accept="image/*" ref={avatarInputRef} onChange={(e) => handleFileChange(e, 'avatar')} className="hidden" />
-                    </div>
-                </div>
-                
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
-                    <Controller name="displayName" control={form.control} render={({ field }) => <Input placeholder="Name" {...field} />} />
-                    {form.formState.errors.displayName && <p className="text-sm text-destructive">{form.formState.errors.displayName.message}</p>}
+                        <div className="relative -mt-12 ml-4 h-24 w-24">
+                            <Avatar className="h-24 w-24 border-4 border-background">
+                                <AvatarImage src={avatarPreview} />
+                                <AvatarFallback>{profile.displayName?.charAt(0) || 'U'}</AvatarFallback>
+                            </Avatar>
+                            <div className="absolute inset-0 bg-black/30 rounded-full flex items-center justify-center">
+                                <Button size="icon" type="button" variant="ghost" className="text-white hover:bg-black/50" onClick={() => avatarInputRef.current?.click()}>
+                                    <Camera className="h-6 w-6" />
+                                </Button>
+                                <input type="file" accept="image/*" ref={avatarInputRef} onChange={(e) => handleFileChange(e, 'avatar')} className="hidden" />
+                            </div>
+                        </div>
+                        
+                        <div className="space-y-4 pt-4">
+                            <Controller name="displayName" control={form.control} render={({ field }) => <Input placeholder="Name" {...field} />} />
+                            {form.formState.errors.displayName && <p className="text-sm text-destructive">{form.formState.errors.displayName.message}</p>}
 
-                    <Controller name="bio" control={form.control} render={({ field }) => <Textarea placeholder="Bio" {...field} />} />
-                    {form.formState.errors.bio && <p className="text-sm text-destructive">{form.formState.errors.bio.message}</p>}
+                            <Controller name="bio" control={form.control} render={({ field }) => <Textarea placeholder="Bio" {...field} />} />
+                            {form.formState.errors.bio && <p className="text-sm text-destructive">{form.formState.errors.bio.message}</p>}
 
-                    <Controller name="location" control={form.control} render={({ field }) => <Input placeholder="Location" {...field} />} />
-                     {form.formState.errors.location && <p className="text-sm text-destructive">{form.formState.errors.location.message}</p>}
+                            <Controller name="location" control={form.control} render={({ field }) => <Input placeholder="Location" {...field} />} />
+                            {form.formState.errors.location && <p className="text-sm text-destructive">{form.formState.errors.location.message}</p>}
 
-                    <Controller name="country" control={form.control} render={({ field }) => <Input placeholder="Country" {...field} />} />
-                    {form.formState.errors.country && <p className="text-sm text-destructive">{form.formState.errors.country.message}</p>}
+                            <Controller name="country" control={form.control} render={({ field }) => <Input placeholder="Country" {...field} />} />
+                            {form.formState.errors.country && <p className="text-sm text-destructive">{form.formState.errors.country.message}</p>}
 
-                    <Controller name="favouriteClub" control={form.control} render={({ field }) => <Input placeholder="Favourite Club" {...field} />} />
-                    {form.formState.errors.favouriteClub && <p className="text-sm text-destructive">{form.formState.errors.favouriteClub.message}</p>}
+                            <Controller name="favouriteClub" control={form.control} render={({ field }) => <Input placeholder="Favourite Club" {...field} />} />
+                            {form.formState.errors.favouriteClub && <p className="text-sm text-destructive">{form.formState.errors.favouriteClub.message}</p>}
 
-                    <div className="border-t pt-4">
-                        <Button type="button" variant="secondary" onClick={handleSyncPosts} disabled={isSyncing}>
-                            {isSyncing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
-                             Sync My Posts
-                        </Button>
-                    </div>
-
-                    <DialogFooter>
-                        <DialogClose asChild>
-                            <Button type="button" variant="outline">Cancel</Button>
-                        </DialogClose>
-                        <Button type="submit" disabled={isSaving}>
-                            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Save
-                        </Button>
-                    </DialogFooter>
-                </form>
+                            <div className="border-t pt-4">
+                                <Button type="button" variant="secondary" onClick={handleSyncPosts} disabled={isSyncing}>
+                                    {isSyncing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+                                    Sync My Posts
+                                </Button>
+                            </div>
+                        </div>
+                    </form>
+                </ScrollArea>
+                <DialogFooter className="pt-4 border-t">
+                    <DialogClose asChild>
+                        <Button type="button" variant="outline">Cancel</Button>
+                    </DialogClose>
+                    <Button type="button" onClick={form.handleSubmit(onSubmit)} disabled={isSaving}>
+                        {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Save
+                    </Button>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
     );
 }
+
+
+    
