@@ -193,7 +193,9 @@ export default function ProfilePage() {
           src={profile.bannerUrl}
           alt="Profile banner"
           fill
-          className="object-cover object-top"
+          className="object-cover"
+          style={{ objectPosition: `center ${profile.bannerPosition || 50}%` }}
+          priority
           data-ai-hint="stadium lights"
         />
       </div>
@@ -310,8 +312,7 @@ export default function ProfilePage() {
                                 src={media.url}
                                 alt={`Media from post ${post.id}`}
                                 fill
-                                objectFit="cover"
-                                className="transition-opacity group-hover:opacity-80"
+                                className="object-cover"
                             />
                              {media.type === 'video' && (
                                 <div className="absolute inset-0 flex items-center justify-center">
@@ -362,6 +363,13 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
     const [bannerFile, setBannerFile] = useState<File | null>(null);
     const [avatarPreview, setAvatarPreview] = useState<string>(profile?.photoURL || '');
     const [bannerPreview, setBannerPreview] = useState<string>(profile?.bannerUrl || '');
+    
+    // State for banner repositioning
+    const [bannerPosition, setBannerPosition] = useState(profile?.bannerPosition || 50); // In percentage
+    const [isDragging, setIsDragging] = useState(false);
+    const dragStartRef = useRef({ y: 0, position: 0 });
+    const bannerRef = useRef<HTMLDivElement>(null);
+
 
     const avatarInputRef = useRef<HTMLInputElement>(null);
     const bannerInputRef = useRef<HTMLInputElement>(null);
@@ -378,7 +386,7 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
     });
     
     useEffect(() => {
-        if (profile) {
+        if (profile && isOpen) {
             form.reset({
                 displayName: profile.displayName || '',
                 bio: profile.bio || '',
@@ -388,6 +396,7 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
             });
             setAvatarPreview(profile.photoURL);
             setBannerPreview(profile.bannerUrl);
+            setBannerPosition(profile.bannerPosition || 50);
         }
     }, [profile, form, isOpen]);
 
@@ -401,9 +410,44 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
             } else {
                 setBannerFile(file);
                 setBannerPreview(previewUrl);
+                setBannerPosition(50); // Reset position for new banner
             }
         }
     };
+    
+    // Banner dragging handlers
+    const handleMouseDown = (e: React.MouseEvent) => {
+        e.preventDefault();
+        setIsDragging(true);
+        dragStartRef.current = { y: e.clientY, position: bannerPosition };
+    };
+
+    const handleMouseMove = (e: React.MouseEvent) => {
+        if (!isDragging || !bannerRef.current) return;
+        const bannerHeight = bannerRef.current.offsetHeight;
+        const deltaY = e.clientY - dragStartRef.current.y;
+        const deltaPercent = (deltaY / bannerHeight) * 100;
+        
+        let newPosition = dragStartRef.current.position + deltaPercent;
+        newPosition = Math.max(0, Math.min(100, newPosition)); // Clamp between 0 and 100
+        setBannerPosition(newPosition);
+    };
+
+    const handleMouseUp = () => {
+        setIsDragging(false);
+    };
+    
+    useEffect(() => {
+        if (isDragging) {
+            window.addEventListener('mousemove', handleMouseMove as any);
+            window.addEventListener('mouseup', handleMouseUp);
+        }
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove as any);
+            window.removeEventListener('mouseup', handleMouseUp);
+        };
+    }, [isDragging]);
+
 
     const uploadImage = async (file: File, path: string): Promise<string> => {
         if (!storage) throw new Error("Storage not initialized");
@@ -457,6 +501,7 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
                 country: data.country,
                 favouriteClub: data.favouriteClub,
                 bannerUrl: newBannerUrl,
+                bannerPosition: bannerPosition, // Save the new banner position
             }, { merge: true });
 
             // Automatically sync posts after profile update
@@ -486,11 +531,22 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
                 </DialogHeader>
 
                 <ScrollArea className="flex-1 pr-6 -mr-6">
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                        <div className="relative h-32 w-full bg-muted sm:h-40">
-                            <Image src={bannerPreview} alt="Banner preview" fill objectFit="cover" className="rounded-md" />
+                    <div className="space-y-4">
+                        <div 
+                            ref={bannerRef}
+                            className={cn("relative h-32 w-full bg-muted sm:h-40 rounded-md overflow-hidden", isDragging && "cursor-grabbing")}
+                            onMouseDown={handleMouseDown}
+                        >
+                            <Image 
+                                src={bannerPreview} 
+                                alt="Banner preview" 
+                                fill 
+                                className="object-cover" 
+                                style={{ objectPosition: `center ${bannerPosition}%` }}
+                                draggable="false"
+                             />
                             <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                                <Button size="icon" type="button" variant="ghost" className="text-white hover:bg-black/50" onClick={() => bannerInputRef.current?.click()}>
+                                <Button size="icon" type="button" variant="ghost" className="text-white hover:bg-black/50" onClick={(e) => { e.stopPropagation(); bannerInputRef.current?.click();}}>
                                     <Camera className="h-6 w-6" />
                                 </Button>
                                 <input type="file" accept="image/*" ref={bannerInputRef} onChange={(e) => handleFileChange(e, 'banner')} className="hidden" />
@@ -503,14 +559,14 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
                                 <AvatarFallback>{profile.displayName?.charAt(0) || 'U'}</AvatarFallback>
                             </Avatar>
                             <div className="absolute inset-0 bg-black/30 rounded-full flex items-center justify-center">
-                                <Button size="icon" type="button" variant="ghost" className="text-white hover:bg-black/50" onClick={() => avatarInputRef.current?.click()}>
+                                <Button size="icon" type="button" variant="ghost" className="text-white hover:bg-black/50" onClick={(e) => { e.stopPropagation(); avatarInputRef.current?.click();}}>
                                     <Camera className="h-6 w-6" />
                                 </Button>
                                 <input type="file" accept="image/*" ref={avatarInputRef} onChange={(e) => handleFileChange(e, 'avatar')} className="hidden" />
                             </div>
                         </div>
                         
-                        <div className="space-y-4 pt-4">
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
                             <Controller name="displayName" control={form.control} render={({ field }) => <Input placeholder="Name" {...field} />} />
                             {form.formState.errors.displayName && <p className="text-sm text-destructive">{form.formState.errors.displayName.message}</p>}
 
@@ -532,8 +588,8 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
                                     Sync My Posts
                                 </Button>
                             </div>
-                        </div>
-                    </form>
+                        </form>
+                    </div>
                 </ScrollArea>
                 <DialogFooter className="pt-4 border-t">
                     <DialogClose asChild>

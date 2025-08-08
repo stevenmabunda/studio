@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { db } from '@/lib/firebase/config';
@@ -27,6 +28,7 @@ export type ProfileData = {
   handle: string;
   photoURL: string;
   bannerUrl: string;
+  bannerPosition?: number;
   bio: string;
   location: string;
   country: string;
@@ -58,6 +60,7 @@ export async function getUserProfile(
         country: 'Digital Realm',
         favouriteClub: 'All of them',
         bannerUrl: 'https://placehold.co/1200x400.png',
+        bannerPosition: 50,
         followersCount: 999,
         followingCount: 1,
       };
@@ -82,6 +85,7 @@ export async function getUserProfile(
     country: data.country || '',
     favouriteClub: data.favouriteClub || '',
     bannerUrl: data.bannerUrl || 'https://placehold.co/1200x400.png',
+    bannerPosition: data.bannerPosition === undefined ? 50 : data.bannerPosition,
     followersCount: data.followersCount || 0,
     followingCount: data.followingCount || 0,
   };
@@ -447,7 +451,7 @@ export async function getUsersToFollow(currentUserId: string): Promise<ProfileDa
               handle: data.handle || 'user',
               photoURL: data.photoURL || 'https://placehold.co/40x40.png',
               // These fields are not needed for the suggestion list but are part of the type
-              bannerUrl: '', bio: '', country: '', favouriteClub: '', joined: '', followersCount: 0, followingCount: 0, location: ''
+              bannerUrl: '', bio: '', country: '', favouriteClub: '', joined: '', followersCount: 0, followingCount: 0, location: '', bannerPosition: 50
             } as ProfileData;
           })
           .filter(user => !followingIds.has(user.uid)); // Exclude already followed users.
