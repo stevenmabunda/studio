@@ -45,21 +45,23 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const showGenericMobileTopBar = !isPostPage && !isHomePage;
 
   return (
-    <div className="md:flex md:justify-center">
+    <div className="flex justify-center">
         {/* Desktop Layout: Centered wrapper with fixed sidebars */}
-        <div className="hidden md:flex md:max-w-7xl md:mx-auto md:w-full">
-          <header className="w-[275px] shrink-0">
-            <SidebarNav />
+        <div className="flex max-w-7xl mx-auto w-full">
+          <header className="w-[275px] shrink-0 hidden md:block">
+            <div className="sticky top-0 h-screen">
+                <SidebarNav />
+            </div>
           </header>
 
-          <div className="flex-1 min-w-0">
-             <main className="w-full max-w-[624px] md:border-x h-screen overflow-y-auto">
-                {children}
-            </main>
-          </div>
+          <main className="w-full max-w-[624px] md:border-x min-h-screen">
+            {children}
+          </main>
 
           <aside className="hidden xl:block w-[350px] shrink-0">
-            <RightSidebar />
+             <div className="sticky top-0 h-screen">
+                <RightSidebar />
+            </div>
           </aside>
         </div>
         
