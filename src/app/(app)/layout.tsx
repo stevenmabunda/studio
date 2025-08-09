@@ -9,6 +9,7 @@ import { PublicLayout } from '@/components/public-layout';
 import { MobileBottomNav } from '@/components/mobile-bottom-nav';
 import { MobileTopBar } from '@/components/mobile-top-bar';
 import { FloatingCreatePostButton } from '@/components/floating-create-post-button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
@@ -45,34 +46,36 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const showGenericMobileTopBar = !isPostPage && !isHomePage;
 
   return (
-    <div className="flex justify-center">
-        {/* Desktop Layout: Centered wrapper with fixed sidebars */}
+    <>
+      {/* Desktop Layout: Centered wrapper with fixed sidebars */}
+      <div className="hidden md:flex justify-center h-screen overflow-hidden">
         <div className="flex max-w-7xl mx-auto w-full">
-          <header className="w-[275px] shrink-0 hidden md:block">
-            <div className="sticky top-0 h-screen">
-                <SidebarNav />
-            </div>
+          <header className="w-[275px] shrink-0 h-full">
+              <SidebarNav />
           </header>
 
-          <main className="w-full max-w-[624px] md:border-x min-h-screen">
-            {children}
+          <main className="w-full max-w-[624px] border-x">
+             <ScrollArea className="h-screen">
+                {children}
+              </ScrollArea>
           </main>
 
-          <aside className="hidden xl:block w-[350px] shrink-0">
-             <div className="sticky top-0 h-screen">
+          <aside className="hidden xl:block w-[350px] shrink-0 h-full">
+             <ScrollArea className="h-screen">
                 <RightSidebar />
-            </div>
+              </ScrollArea>
           </aside>
         </div>
-        
-        {/* Mobile Layout */}
-        <div className="md:hidden w-full">
-            {showGenericMobileTopBar && <MobileTopBar />}
-             <main className="w-full pb-16">
-                {children}
-            </main>
-            <MobileBottomNav />
-        </div>
-    </div>
+      </div>
+      
+      {/* Mobile Layout */}
+      <div className="md:hidden w-full">
+          {showGenericMobileTopBar && <MobileTopBar />}
+            <main className="w-full pb-16">
+              {children}
+          </main>
+          <MobileBottomNav />
+      </div>
+    </>
   );
 }
