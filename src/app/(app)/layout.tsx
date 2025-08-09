@@ -55,13 +55,13 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           </header>
 
           <main className="w-full max-w-[624px] border-x">
-             <ScrollArea className="h-screen">
+             <ScrollArea className="h-screen no-scrollbar">
                 {children}
               </ScrollArea>
           </main>
 
           <aside className="hidden xl:block w-[350px] shrink-0 h-full">
-             <ScrollArea className="h-screen">
+             <ScrollArea className="h-screen no-scrollbar">
                 <RightSidebar />
               </ScrollArea>
           </aside>
