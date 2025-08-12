@@ -4,7 +4,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Image as ImageIcon, X, Film, ListOrdered, Smile, MapPin, Loader2, Trash2, Link2 } from "lucide-react";
+import { Image as ImageIcon, X, Film, ListOrdered, Smile, MapPin, Loader2, Trash2 } from "lucide-react";
 import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
@@ -126,7 +126,7 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
         console.error("Failed to create post:", error);
         toast({ variant: 'destructive', description: "Failed to create post. Please try again." });
     } finally {
-        posting && setPosting(false);
+        setPosting(false);
     }
   };
   
