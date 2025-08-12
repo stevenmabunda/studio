@@ -14,7 +14,6 @@ import { extractPostTopics } from '@/ai/flows/extract-post-topics';
 import type { ReplyMedia } from '@/components/create-comment';
 import { getMediaPosts } from '@/app/(app)/profile/actions';
 import { getRecentPosts } from '@/app/(app)/home/actions';
-import { type ExtractLinkMetadataOutput } from '@/ai/flows/extract-link-metadata';
 
 type PostContextType = {
   forYouPosts: PostType[];
@@ -22,7 +21,7 @@ type PostContextType = {
   discoverPosts: PostType[];
   newForYouPosts: PostType[];
   showNewForYouPosts: () => void;
-  addPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string, linkPreview?: ExtractLinkMetadataOutput | null }) => Promise<PostType | undefined>;
+  addPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }) => Promise<PostType | undefined>;
   editPost: (postId: string, data: { text:string }) => Promise<void>;
   deletePost: (postId: string) => Promise<void>;
   addVote: (postId: string, choiceIndex: number) => Promise<void>;
@@ -165,7 +164,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
 
-  const addPost = async ({ text, media, poll, location, tribeId, communityId, linkPreview }: { text: string; media: Media[]; poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string, linkPreview?: ExtractLinkMetadataOutput | null }): Promise<PostType | undefined> => {
+  const addPost = async ({ text, media, poll, location, tribeId, communityId }: { text: string; media: Media[]; poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }): Promise<PostType | undefined> => {
     if (!user || !db || !storage) {
         throw new Error("Cannot add post: user not logged in or Firebase not configured.");
     }
@@ -197,7 +196,6 @@ export function PostProvider({ children }: { children: ReactNode }) {
           ...(location && { location }),
           ...(tribeId && { tribeId }),
           ...(communityId && { communityId }),
-          ...(linkPreview && { linkPreview }),
         };
 
         const docRef = await addDoc(collection(db, "posts"), postDataForDb);
@@ -241,7 +239,6 @@ export function PostProvider({ children }: { children: ReactNode }) {
           ...(location && { location }),
           ...(tribeId && { tribeId }),
           ...(communityId && { communityId }),
-          ...(linkPreview && { linkPreview }),
         };
 
         return newPost;

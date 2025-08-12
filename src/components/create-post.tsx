@@ -13,7 +13,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { Input } from "./ui/input";
 import type { PostType } from "@/lib/data";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import { extractLinkMetadata, type ExtractLinkMetadataOutput } from "@/ai/flows/extract-link-metadata";
 import { Skeleton } from "./ui/skeleton";
 
 export type Media = {
@@ -26,21 +25,7 @@ const EMOJIS = [
     '😀', '😂', '😍', '🤔', '😭', '🙏', '❤️', '🔥', '👍', '⚽️', '🥅', '🏆', '🎉', '👏', '🚀', '💯'
 ];
 
-function LinkPreviewSkeleton() {
-    return (
-        <div className="mt-3 rounded-2xl border flex flex-col md:flex-row gap-0 md:gap-4 overflow-hidden">
-            <Skeleton className="h-32 w-full md:w-32 flex-shrink-0" />
-            <div className="p-4 flex-1 space-y-2">
-                <Skeleton className="h-4 w-1/4" />
-                <Skeleton className="h-5 w-3/4" />
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-2/3" />
-            </div>
-        </div>
-    )
-}
-
-export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string, linkPreview?: ExtractLinkMetadataOutput | null }) => Promise<void>, tribeId?: string, communityId?: string }) {
+export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }) => Promise<void>, tribeId?: string, communityId?: string }) {
   const { user } = useAuth();
   const [text, setText] = useState("");
   const [media, setMedia] = useState<Media[]>([]);
@@ -53,43 +38,7 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
   const [pollChoices, setPollChoices] = useState<string[]>(['', '']);
   const [location, setLocation] = useState<string | null>(null);
 
-  const [linkPreview, setLinkPreview] = useState<ExtractLinkMetadataOutput | null>(null);
-  const [isFetchingPreview, setIsFetchingPreview] = useState(false);
-  const [detectedUrl, setDetectedUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    const urlRegex = /(https?:\/\/[^\s]+)/;
-    const match = text.match(urlRegex);
-    const newUrl = match ? match[0] : null;
-
-    if (newUrl && newUrl !== detectedUrl) {
-      setDetectedUrl(newUrl);
-      setIsFetchingPreview(true);
-      setLinkPreview(null);
-      setMedia([]); // Can't have media and a link preview
-      setShowPoll(false); // Can't have poll and link preview
-
-      extractLinkMetadata({ url: newUrl })
-        .then(data => {
-          if (data) {
-            setLinkPreview(data);
-          } else {
-            setDetectedUrl(null); // Reset if metadata fails
-          }
-        })
-        .catch(() => setDetectedUrl(null)) // Reset on error
-        .finally(() => setIsFetchingPreview(false));
-
-    } else if (!newUrl) {
-      setDetectedUrl(null);
-      setLinkPreview(null);
-    }
-  }, [text, detectedUrl]);
-
-
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setLinkPreview(null);
-    setDetectedUrl(null);
     const files = Array.from(event.target.files || []);
     if (!files.length) return;
 
@@ -97,6 +46,7 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
 
     // Clear existing media before adding new ones
     media.forEach(m => URL.revokeObjectURL(m.previewUrl));
+    setShowPoll(false);
 
     if (fileType === 'video') {
         if (files.length > 1) {
@@ -160,7 +110,7 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
     }
 
     try {
-        await onPost({ text, media, poll: pollData, location, tribeId, communityId, linkPreview });
+        await onPost({ text, media, poll: pollData, location, tribeId, communityId });
         
         // Clean up object URLs after successful post
         media.forEach(m => URL.revokeObjectURL(m.previewUrl));
@@ -170,9 +120,6 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
         setShowPoll(false);
         setPollChoices(['', '']);
         setLocation(null);
-        setLinkPreview(null);
-        setDetectedUrl(null);
-        setIsFetchingPreview(false);
         if (imageInputRef.current) imageInputRef.current.value = "";
         if (videoInputRef.current) videoInputRef.current.value = "";
     } catch (error) {
@@ -205,7 +152,6 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
     if (!showPoll) {
         media.forEach(m => URL.revokeObjectURL(m.previewUrl));
         setMedia([]);
-        setLinkPreview(null);
     }
     setShowPoll(!showPoll);
   };
@@ -244,11 +190,11 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
     setText(prevText => prevText + emoji);
   };
 
-  const isPostable = text.trim().length > 0 || media.length > 0 || (showPoll && pollChoices.some(c => c.trim())) || linkPreview;
+  const isPostable = text.trim().length > 0 || media.length > 0 || (showPoll && pollChoices.some(c => c.trim()));
   const hasVideo = media.length > 0 && media[0].type === 'video';
   const hasImages = media.length > 0 && media[0].type === 'image';
   const maxImagesReached = media.length >= 4;
-  const hasContent = showPoll || hasVideo || hasImages || linkPreview;
+  const hasContent = showPoll || hasVideo || hasImages;
 
   const singleImage = hasImages && media.length === 1;
 
@@ -269,7 +215,7 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
         </div>
         <div className="flex-1 space-y-3">
           <Textarea
-            placeholder="What is happening?! Paste a link to see the magic."
+            placeholder="What is happening?!"
             className="w-full resize-none border-0 bg-transparent px-0 text-lg focus-visible:ring-0 focus-visible:ring-offset-0"
             rows={1}
             value={text}
@@ -302,24 +248,6 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
                     </Button>
                 </div>
             </div>
-          )}
-
-          {isFetchingPreview && <LinkPreviewSkeleton />}
-
-          {linkPreview && (
-              <div className="relative mt-3 rounded-2xl border overflow-hidden">
-                {linkPreview.imageUrl && (
-                    <Image src={linkPreview.imageUrl} alt={linkPreview.title} width={500} height={250} className="w-full h-auto max-h-64 object-cover" />
-                )}
-                <div className="p-4">
-                    <p className="text-xs text-muted-foreground uppercase">{linkPreview.domain}</p>
-                    <h3 className="font-bold line-clamp-2">{linkPreview.title}</h3>
-                    <p className="text-sm text-muted-foreground line-clamp-3 mt-1">{linkPreview.description}</p>
-                </div>
-                 <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-8 w-8 rounded-full bg-black/50 hover:bg-black/75 text-white hover:text-white" onClick={() => { setLinkPreview(null); setDetectedUrl(null); }}>
-                    <X className="h-4 w-4" />
-                </Button>
-              </div>
           )}
 
           {media.length > 0 && (

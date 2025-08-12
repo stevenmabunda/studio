@@ -215,7 +215,6 @@ export function Post(props: PostProps) {
     media,
     poll,
     location,
-    linkPreview,
     isStandalone = false,
   } = props;
   
@@ -552,19 +551,6 @@ export function Post(props: PostProps) {
         </p>
         {poll && <Poll poll={poll} postId={id} />}
         
-        {linkPreview && (
-          <a href={linkify(content).toString()} target="_blank" rel="noopener noreferrer" className="block mt-3 rounded-2xl border overflow-hidden hover:bg-accent/50 transition-colors" onClick={e => e.stopPropagation()}>
-            {linkPreview.imageUrl && (
-                <Image src={linkPreview.imageUrl} alt={linkPreview.title} width={500} height={250} className="w-full h-auto max-h-64 object-cover" />
-            )}
-            <div className="p-4">
-                <p className="text-xs text-muted-foreground uppercase">{linkPreview.domain}</p>
-                <h3 className="font-bold line-clamp-2">{linkPreview.title}</h3>
-                <p className="text-sm text-muted-foreground line-clamp-3 mt-1">{linkPreview.description}</p>
-            </div>
-          </a>
-        )}
-
         {options.includeMedia && mediaExists && (
           <div className={cn("mt-3 rounded-2xl overflow-hidden border", imageCount > 1 && "aspect-video")}>
             {isVideo ? (
