@@ -39,9 +39,9 @@ export async function getTrendingTopics(
     return acc;
   }, {} as Record<string, number>);
 
-  // 3. Get topics mentioned at least 3 times, then sort by popularity
+  // 3. Get topics mentioned at least 2 times, then sort by popularity
   const popularTopics = Object.entries(topicCounts)
-    .filter(([, count]) => count >= 3)
+    .filter(([, count]) => count >= 2)
     .sort(([, a], [, b]) => b - a)
     .map(([topic]) => topic);
   
@@ -107,9 +107,9 @@ export async function getTrendingKeywords(
     return acc;
   }, {} as Record<string, number>);
 
-  // Filter for topics mentioned at least 3 times and sort
+  // Filter for topics mentioned at least 2 times and sort
   const popularTopics = Object.entries(topicCounts)
-    .filter(([, count]) => count >= 3)
+    .filter(([, count]) => count >= 2)
     .sort(([, a], [, b]) => b - a)
     .slice(0, numberOfTopicsToFetch)
     .map(([topic, count]) => ({
