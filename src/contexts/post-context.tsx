@@ -21,7 +21,7 @@ type PostContextType = {
   discoverPosts: PostType[];
   newForYouPosts: PostType[];
   showNewForYouPosts: () => void;
-  addPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }) => Promise<PostType | undefined>;
+  addPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }) => Promise<void>;
   editPost: (postId: string, data: { text:string }) => Promise<void>;
   deletePost: (postId: string) => Promise<void>;
   addVote: (postId: string, choiceIndex: number) => Promise<void>;
@@ -164,7 +164,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
 
-  const addPost = async ({ text, media, poll, location, tribeId, communityId }: { text: string; media: Media[]; poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }): Promise<PostType | undefined> => {
+  const addPost = async ({ text, media, poll, location, tribeId, communityId }: { text: string; media: Media[]; poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }) => {
     if (!user || !db || !storage) {
         throw new Error("Cannot add post: user not logged in or Firebase not configured.");
     }
@@ -240,8 +240,10 @@ export function PostProvider({ children }: { children: ReactNode }) {
           ...(tribeId && { tribeId }),
           ...(communityId && { communityId }),
         };
+        
+        // Add the new post to the top of the feed immediately.
+        setForYouPosts(prev => [newPost, ...prev]);
 
-        return newPost;
     } catch (error) {
         console.error("Failed to create post:", error);
         throw error;
