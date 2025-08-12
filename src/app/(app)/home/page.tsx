@@ -27,16 +27,54 @@ import { getVideoPosts } from './actions';
 function VideoFeed() {
   const [videoPosts, setVideoPosts] = useState<PostType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const observer = useRef<IntersectionObserver | null>(null);
+
+  const loadMoreVideos = useCallback(async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    try {
+      const lastPostId = videoPosts.length > 0 ? videoPosts[videoPosts.length - 1].id : undefined;
+      const newVideos = await getVideoPosts({ limit: 10, lastPostId });
+      if (newVideos.length === 0) {
+        setHasMore(false);
+      } else {
+        setVideoPosts(prev => [...prev, ...newVideos]);
+      }
+    } catch (err) {
+      console.error("Failed to load more video posts:", err);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [loadingMore, hasMore, videoPosts]);
+
+  const lastVideoElementRef = useCallback(node => {
+    if (loadingMore) return;
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        loadMoreVideos();
+      }
+    });
+    if (node) observer.current.observe(node);
+  }, [loadingMore, hasMore, loadMoreVideos]);
+
 
   useEffect(() => {
     setLoading(true);
-    getVideoPosts({ limit: 20 })
-      .then(setVideoPosts)
+    getVideoPosts({ limit: 10 })
+      .then((initialVideos) => {
+        setVideoPosts(initialVideos);
+        if (initialVideos.length < 10) {
+            setHasMore(false);
+        }
+      })
       .catch(err => console.error("Failed to fetch video posts:", err))
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) {
+  if (loading && videoPosts.length === 0) {
     return (
       <>
         <PostSkeleton />
@@ -57,9 +95,16 @@ function VideoFeed() {
 
   return (
     <div className="divide-y divide-border">
-      {videoPosts.map((post) => (
-        <Post key={post.id} {...post} />
-      ))}
+      {videoPosts.map((post, index) => {
+        if (videoPosts.length === index + 1) {
+          return <div ref={lastVideoElementRef} key={post.id}><Post {...post} /></div>;
+        }
+        return <Post key={post.id} {...post} />;
+      })}
+      {loadingMore && <PostSkeleton />}
+      {!hasMore && (
+        <p className="py-8 text-center text-muted-foreground">You've reached the end!</p>
+      )}
     </div>
   );
 }
