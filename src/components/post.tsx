@@ -214,7 +214,6 @@ export function Post(props: PostProps) {
     likes: initialLikes,
     media,
     poll,
-    location,
     isStandalone = false,
   } = props;
   
@@ -368,6 +367,18 @@ export function Post(props: PostProps) {
   
   const needsTruncation = !isStandalone && !isExpanded && content.length > 280;
   const displayText = needsTruncation ? `${content.substring(0, 280)}` : content;
+
+  const handlePostClick = () => {
+      if (!user) {
+        setIsLoginDialogOpen(true);
+        return;
+      }
+      if (!isStandalone) {
+          sessionStorage.setItem('scrollY', String(window.scrollY));
+          sessionStorage.setItem('scrollPostId', id);
+          router.push(`/post/${id}`);
+      }
+  }
 
   const handleActionClick = (action: () => void) => (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -601,7 +612,7 @@ export function Post(props: PostProps) {
         )}
         <div className="mt-4 flex items-center justify-between text-muted-foreground">
           <div className="flex items-center -ml-3">
-              <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-primary" onClick={handleActionClick(() => {})}>
+              <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-primary" onClick={handleActionClick(handlePostClick)}>
                   <MessageCircle className="h-5 w-5" />
                   <span>{commentCount > 0 ? commentCount : ''}</span>
               </Button>
@@ -661,18 +672,6 @@ export function Post(props: PostProps) {
       </div>
     </div>
   );
-
-  const handlePostClick = () => {
-      if (!user) {
-        setIsLoginDialogOpen(true);
-        return;
-      }
-      if (!isStandalone) {
-          sessionStorage.setItem('scrollY', String(window.scrollY));
-          sessionStorage.setItem('scrollPostId', id);
-          router.push(`/post/${id}`);
-      }
-  }
 
   return (
       <div 
