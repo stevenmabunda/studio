@@ -55,6 +55,7 @@ import { db } from "@/lib/firebase/config";
 import { collection, onSnapshot, orderBy, query, type Timestamp } from "firebase/firestore";
 import { Skeleton } from "./ui/skeleton";
 import useEmblaCarousel from 'embla-carousel-react';
+import { LoginOrSignupDialog } from "./login-or-signup-dialog";
 
 type PostProps = PostType & {
   isStandalone?: boolean;
@@ -247,6 +248,8 @@ export function Post(props: PostProps) {
 
   const [videoThumbnail, setVideoThumbnail] = useState<string | null>(null);
 
+  const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
+
   const isBookmarked = useMemo(() => bookmarkedPostIds.has(id), [bookmarkedPostIds, id]);
 
   const mediaExists = media && media.length > 0;
@@ -367,22 +370,28 @@ export function Post(props: PostProps) {
   const needsTruncation = !isStandalone && !isExpanded && content.length > 280;
   const displayText = needsTruncation ? `${content.substring(0, 280)}` : content;
 
-  const handleLike = (e: React.MouseEvent) => {
+  const handleActionClick = (action: () => void) => (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!user) {
+      setIsLoginDialogOpen(true);
+      return;
+    }
+    action();
+  };
+
+  const handleLike = () => {
     setIsLiked(!isLiked);
     setLikeCount(isLiked ? likeCount - 1 : likeCount + 1);
     likePost(id, isLiked);
   };
 
-  const handleRepost = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleRepost = () => {
     setIsReposted(!isReposted);
     setRepostCount(isReposted ? repostCount - 1 : repostCount + 1);
     repostPost(id, isReposted);
   };
 
-  const handleBookmark = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleBookmark = () => {
     bookmarkPost(id, isBookmarked);
     toast({
       description: !isBookmarked ? "Post bookmarked." : "Bookmark removed.",
@@ -606,21 +615,21 @@ export function Post(props: PostProps) {
         )}
         <div className="mt-4 flex items-center justify-between text-muted-foreground">
           <div className="flex items-center -ml-3">
-              <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-primary">
+              <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-primary" onClick={handleActionClick(() => {})}>
                   <MessageCircle className="h-5 w-5" />
                   <span>{commentCount > 0 ? commentCount : ''}</span>
               </Button>
-              <Button variant="ghost" size="sm" className={cn("flex items-center gap-2", isReposted ? 'text-green-500' : 'hover:text-green-500')} onClick={handleRepost}>
+              <Button variant="ghost" size="sm" className={cn("flex items-center gap-2", isLiked ? 'text-green-500' : 'hover:text-green-500')} onClick={handleActionClick(handleRepost)}>
                 <Repeat className="h-5 w-5" />
                 <span>{repostCount > 0 ? repostCount : ''}</span>
               </Button>
-              <Button variant="ghost" size="sm" className={cn("flex items-center gap-2", isLiked ? 'text-red-500' : 'hover:text-red-500')} onClick={handleLike}>
+              <Button variant="ghost" size="sm" className={cn("flex items-center gap-2", isLiked ? 'text-red-500' : 'hover:text-red-500')} onClick={handleActionClick(handleLike)}>
                 <Heart className={cn("h-5 w-5", isLiked && 'fill-current')} />
                 <span>{likeCount > 0 ? likeCount : ''}</span>
               </Button>
           </div>
           <div className="flex items-center -mr-3">
-              <Button variant="ghost" size="icon" className={cn("hover:text-primary", isBookmarked && "text-primary")} onClick={handleBookmark}>
+              <Button variant="ghost" size="icon" className={cn("hover:text-primary", isBookmarked && "text-primary")} onClick={handleActionClick(handleBookmark)}>
                   <Bookmark className={cn("h-5 w-5", isBookmarked && 'fill-current')} />
               </Button>
               <Sheet open={isShareSheetOpen} onOpenChange={setShareSheetOpen}>
@@ -668,6 +677,10 @@ export function Post(props: PostProps) {
   );
 
   const handlePostClick = () => {
+      if (!user) {
+        setIsLoginDialogOpen(true);
+        return;
+      }
       if (!isStandalone) {
           sessionStorage.setItem('scrollY', String(window.scrollY));
           sessionStorage.setItem('scrollPostId', id);
@@ -777,6 +790,7 @@ export function Post(props: PostProps) {
                     </aside>
                 </DialogContent>
             </Dialog>
+            <LoginOrSignupDialog isOpen={isLoginDialogOpen} onOpenChange={setIsLoginDialogOpen} />
       </div>
   );
 }

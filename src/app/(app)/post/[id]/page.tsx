@@ -168,13 +168,15 @@ export default function PostPage() {
                     return (
                         <div key={comment.id} className="p-3 md:p-4">
                             <div className="flex space-x-3 md:space-x-4">
-                                <Avatar>
-                                <AvatarImage src={comment.authorAvatar} alt={comment.authorName} data-ai-hint="user avatar" />
-                                <AvatarFallback>{comment.authorName.charAt(0)}</AvatarFallback>
-                                </Avatar>
+                                <Link href={`/profile/${comment.authorId}`} className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                                    <Avatar>
+                                        <AvatarImage src={comment.authorAvatar} alt={comment.authorName} data-ai-hint="user avatar" />
+                                        <AvatarFallback>{comment.authorName.charAt(0)}</AvatarFallback>
+                                    </Avatar>
+                                </Link>
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2 text-sm">
-                                        <Link href="#" className="font-bold hover:underline" onClick={(e) => e.stopPropagation()}>
+                                        <Link href={`/profile/${comment.authorId}`} className="font-bold hover:underline" onClick={(e) => e.stopPropagation()}>
                                             {comment.authorName}
                                         </Link>
                                         <span className="text-muted-foreground">@{comment.authorHandle}</span>

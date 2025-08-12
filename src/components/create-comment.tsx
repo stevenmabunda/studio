@@ -11,6 +11,7 @@ import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { LoginOrSignupDialog } from "./login-or-signup-dialog";
 
 export type ReplyMedia = {
   file: File;
@@ -28,6 +29,7 @@ export function CreateComment({ onComment }: { onComment: (data: { text: string;
   const [text, setText] = useState("");
   const [media, setMedia] = useState<ReplyMedia[]>([]);
   const [posting, setPosting] = useState(false);
+  const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
 
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
@@ -66,7 +68,19 @@ export function CreateComment({ onComment }: { onComment: (data: { text: string;
     if (videoInputRef.current) videoInputRef.current.value = "";
   }
 
+  const handleActionClick = (action: () => void) => () => {
+    if (!user) {
+      setIsLoginDialogOpen(true);
+      return;
+    }
+    action();
+  };
+
   const handleComment = async () => {
+    if (!user) {
+        setIsLoginDialogOpen(true);
+        return;
+    }
     if (!isPostable || posting) return;
     setPosting(true);
 
@@ -91,12 +105,14 @@ export function CreateComment({ onComment }: { onComment: (data: { text: string;
   const isPostable = text.trim().length > 0 || media.length > 0;
   const hasMedia = media.length > 0;
   const hasVideo = hasMedia && media[0].type === 'video';
+  
+  const guestAvatarSrc = "https://placehold.co/40x40.png";
 
   return (
     <div className="p-3 md:p-4 border-t">
       <div className="flex space-x-3 md:space-x-4">
         <Avatar>
-          <AvatarImage src={user?.photoURL || "https://placehold.co/40x40.png"} alt={user?.displayName || "User"} data-ai-hint="user avatar" />
+          <AvatarImage src={user?.photoURL || guestAvatarSrc} alt={user?.displayName || "User"} data-ai-hint="user avatar" />
           <AvatarFallback>{user?.displayName?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
         </Avatar>
         <div className="flex-1 space-y-4">
@@ -106,6 +122,7 @@ export function CreateComment({ onComment }: { onComment: (data: { text: string;
             rows={1}
             value={text}
             onChange={(e) => setText(e.target.value)}
+            onFocus={handleActionClick(() => {})}
           />
 
           {hasMedia && (
@@ -141,15 +158,15 @@ export function CreateComment({ onComment }: { onComment: (data: { text: string;
                     className="hidden"
                     disabled={posting || hasMedia}
                 />
-                <Button variant="ghost" size="icon" onClick={() => imageInputRef.current?.click()} disabled={posting || hasMedia}>
+                <Button variant="ghost" size="icon" onClick={handleActionClick(() => imageInputRef.current?.click())} disabled={posting || hasMedia}>
                     <ImageIcon className="h-5 w-5 text-primary" />
                 </Button>
-                <Button variant="ghost" size="icon" onClick={() => videoInputRef.current?.click()} disabled={posting || hasMedia}>
+                <Button variant="ghost" size="icon" onClick={handleActionClick(() => videoInputRef.current?.click())} disabled={posting || hasMedia}>
                     <Film className="h-5 w-5 text-primary" />
                 </Button>
                  <Popover>
                     <PopoverTrigger asChild>
-                        <Button variant="ghost" size="icon" disabled={posting}>
+                        <Button variant="ghost" size="icon" onClick={handleActionClick(() => {})} disabled={posting}>
                             <Smile className="h-5 w-5 text-primary" />
                         </Button>
                     </PopoverTrigger>
@@ -176,6 +193,7 @@ export function CreateComment({ onComment }: { onComment: (data: { text: string;
           </div>
         </div>
       </div>
+      <LoginOrSignupDialog isOpen={isLoginDialogOpen} onOpenChange={setIsLoginDialogOpen} />
     </div>
   );
 }
