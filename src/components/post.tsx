@@ -304,10 +304,7 @@ export function Post(props: PostProps) {
       (entries) => {
         const entry = entries[0];
         if (entry.isIntersecting) {
-          // Check if video has controls, if so, don't autoplay
-          if (!video.hasAttribute('controls')) {
-             video.play().catch(() => {});
-          }
+          video.play().catch(() => {});
         } else {
           video.pause();
         }
@@ -571,6 +568,7 @@ export function Post(props: PostProps) {
                 loop
                 muted
                 playsInline
+                controls
                 poster={videoThumbnail || ''}
                 className="w-full h-auto max-h-96 object-contain bg-black"
                 onClick={(e) => e.stopPropagation()}
