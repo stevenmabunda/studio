@@ -47,23 +47,21 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <>
-      {/* Desktop Layout: Centered wrapper with fixed sidebars */}
-      <div className="hidden md:flex justify-center h-screen overflow-hidden">
-        <div className="flex max-w-7xl mx-auto w-full">
-          <header className="w-[275px] shrink-0 h-full">
+      {/* Desktop Layout: Centered wrapper with sticky sidebars and a single scrollable main area */}
+      <div className="hidden md:flex justify-center">
+        <div className="flex max-w-7xl mx-auto w-full relative">
+          <header className="w-[275px] shrink-0 h-screen sticky top-0">
               <SidebarNav />
           </header>
 
-          <main className="w-full max-w-[624px] border-x">
-             <ScrollArea className="h-screen no-scrollbar">
-                {children}
-              </ScrollArea>
+          <main className="w-full max-w-[624px] border-x min-h-screen">
+             {children}
           </main>
 
-          <aside className="hidden xl:block w-[350px] shrink-0 h-full">
-             <ScrollArea className="h-screen no-scrollbar">
+          <aside className="hidden xl:block w-[350px] shrink-0 h-screen sticky top-0">
+            <ScrollArea className="h-full">
                 <RightSidebar />
-              </ScrollArea>
+            </ScrollArea>
           </aside>
         </div>
       </div>
