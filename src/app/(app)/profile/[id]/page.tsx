@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Post } from "@/components/post";
 import Image from "next/image";
-import { MapPin, Link as LinkIcon, CalendarDays, Camera, Loader2, ArrowLeft, Heart, Globe, RefreshCw, PlayCircle } from "lucide-react";
+import { MapPin, Link as LinkIcon, CalendarDays, Camera, Loader2, ArrowLeft, Heart, Globe, RefreshCw, PlayCircle, Move } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { PostSkeleton } from "@/components/post-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -534,7 +534,7 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
                     <div className="space-y-4">
                         <div 
                             ref={bannerRef}
-                            className={cn("relative h-32 w-full bg-muted sm:h-40 rounded-md overflow-hidden", isDragging && "cursor-grabbing")}
+                            className={cn("relative h-32 w-full bg-muted sm:h-40 rounded-md overflow-hidden", isDragging ? "cursor-grabbing" : "cursor-grab")}
                             onMouseDown={handleMouseDown}
                         >
                             <Image 
@@ -545,12 +545,22 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
                                 style={{ objectPosition: `center ${bannerPosition}%` }}
                                 draggable="false"
                              />
-                            <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                                <Button size="icon" type="button" variant="ghost" className="text-white hover:bg-black/50" onClick={(e) => { e.stopPropagation(); bannerInputRef.current?.click();}}>
-                                    <Camera className="h-6 w-6" />
-                                </Button>
-                                <input type="file" accept="image/*" ref={bannerInputRef} onChange={(e) => handleFileChange(e, 'banner')} className="hidden" />
+                            <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center text-white space-y-2 pointer-events-none">
+                                <div className="flex items-center gap-4">
+                                     <button 
+                                        type="button" 
+                                        className="p-2 rounded-full bg-black/50 hover:bg-black/75 pointer-events-auto" 
+                                        onClick={(e) => { e.stopPropagation(); bannerInputRef.current?.click();}}
+                                    >
+                                        <Camera className="h-5 w-5" />
+                                    </button>
+                                     <div className="flex items-center gap-1">
+                                        <Move className="h-5 w-5" />
+                                        <span className="text-xs font-semibold">Drag to reposition</span>
+                                     </div>
+                                </div>
                             </div>
+                             <input type="file" accept="image/*" ref={bannerInputRef} onChange={(e) => handleFileChange(e, 'banner')} className="hidden" />
                         </div>
 
                         <div className="relative -mt-12 ml-4 h-24 w-24">
