@@ -15,7 +15,7 @@ import Link from 'next/link';
 import { AuthFormError } from './auth-form-error';
 import { doc, setDoc } from 'firebase/firestore';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { MailCheck } from 'lucide-react';
+import { MailCheck, Eye, EyeOff } from 'lucide-react';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.'}),
@@ -28,6 +28,7 @@ export function SignupForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -96,9 +97,9 @@ export function SignupForm() {
         <div className="space-y-4">
             <Alert variant="default" className="border-green-500/50 text-green-700 dark:text-green-400 [&>svg]:text-green-700 dark:[&>svg]:text-green-400">
                 <MailCheck className="h-4 w-4" />
-                <AlertTitle>Check your email!</AlertTitle>
+                <AlertTitle>Welcome to BHOLO!</AlertTitle>
                 <AlertDescription>
-                   We've sent a verification link to your email address. Please click the link to continue.
+                   Your account has been created. We've sent a verification link to your email address. Please click the link to continue.
                 </AlertDescription>
             </Alert>
              <Button onClick={() => router.push('/login')} className="w-full">
@@ -146,7 +147,16 @@ export function SignupForm() {
               <FormItem>
                 <FormLabel>Password</FormLabel>
                 <FormControl>
-                  <Input type="password" placeholder="••••••••" {...field} />
+                  <div className="relative">
+                    <Input type={showPassword ? "text" : "password"} placeholder="••••••••" {...field} />
+                     <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground"
+                    >
+                        {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
