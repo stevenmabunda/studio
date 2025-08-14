@@ -570,7 +570,7 @@ export function Post(props: PostProps) {
                 src={media[0].url}
                 loop
                 muted
-                controls
+                playsInline
                 poster={videoThumbnail || ''}
                 className="w-full h-auto max-h-96 object-contain bg-black"
                 onClick={(e) => e.stopPropagation()}
@@ -612,7 +612,7 @@ export function Post(props: PostProps) {
         )}
         <div className="mt-4 flex items-center justify-between text-muted-foreground">
           <div className="flex items-center -ml-3">
-              <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-primary" onClick={handleActionClick(handlePostClick)}>
+              <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-primary" onClick={handlePostClick}>
                   <MessageCircle className="h-5 w-5" />
                   <span>{commentCount > 0 ? commentCount : ''}</span>
               </Button>
