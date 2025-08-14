@@ -10,7 +10,6 @@ import { db, storage } from '@/lib/firebase/config';
 import { collection, addDoc, serverTimestamp, getDocs, query, type Timestamp, doc, updateDoc, runTransaction, deleteDoc, orderBy, getDoc, setDoc, writeBatch, limit, onSnapshot, where } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { formatTimestamp } from '@/lib/utils';
-import { extractPostTopics } from '@/ai/flows/extract-post-topics';
 import type { ReplyMedia } from '@/components/create-comment';
 import { getMediaPosts } from '@/app/(app)/profile/actions';
 import { getRecentPosts } from '@/app/(app)/home/actions';
@@ -37,6 +36,47 @@ type PostContextType = {
 };
 
 const PostContext = createContext<PostContextType | undefined>(undefined);
+
+// Simple keyword extraction logic
+const commonStopWords = new Set(['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', 'her', 'hers', 'herself', 'it', 'its', 'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that', 'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while', 'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't', 'can', 'will', 'just', 'don', 'should', 'now']);
+
+function extractKeywords(text: string): string[] {
+  if (!text) return [];
+
+  // Remove punctuation and convert to lowercase
+  const cleanedText = text.replace(/[.,!?:;()"']/g, '');
+  const words = cleanedText.split(/\s+/);
+
+  const topics: Set<string> = new Set();
+  
+  // Find multi-word capitalized phrases (potential proper nouns)
+  const capitalizedPhrases = text.match(/\b([A-Z][a-z']*\s*)+/g) || [];
+  capitalizedPhrases.forEach(phrase => {
+    const trimmedPhrase = phrase.trim();
+    if (trimmedPhrase.split(' ').length > 1) {
+       topics.add(trimmedPhrase.toLowerCase());
+    }
+  });
+
+
+  // Find individual words and hashtags
+  words.forEach(word => {
+    // Add hashtags
+    if (word.startsWith('#')) {
+      topics.add(word.substring(1).toLowerCase());
+      return;
+    }
+    
+    const lowerWord = word.toLowerCase();
+    // Add non-stop words that are reasonably long
+    if (!commonStopWords.has(lowerWord) && lowerWord.length > 2) {
+      topics.add(lowerWord);
+    }
+  });
+  
+  return Array.from(topics);
+}
+
 
 export function PostProvider({ children }: { children: ReactNode }) {
   const [forYouPosts, setForYouPosts] = useState<PostType[]>([]);
@@ -200,24 +240,22 @@ export function PostProvider({ children }: { children: ReactNode }) {
 
         const docRef = await addDoc(collection(db, "posts"), postDataForDb);
 
+        // Extract and log keywords in the background.
         if (text) {
-            extractPostTopics({ content: text })
-                .then(async ({ topics }) => {
-                    if (!db) return;
-                    const topicsCollectionRef = collection(db, 'topics');
-                    const batch = writeBatch(db);
-                    for (const topic of topics) {
-                        const newTopicRef = doc(topicsCollectionRef);
-                        batch.set(newTopicRef, {
-                            topic: topic.toLowerCase(),
-                            createdAt: serverTimestamp(),
-                        });
-                    }
-                    await batch.commit();
-                })
-                .catch(error => {
-                    console.error("Background topic extraction failed:", error);
-                });
+          const topics = extractKeywords(text);
+          if (topics.length > 0 && db) {
+            const topicsCollectionRef = collection(db, 'topics');
+            const batch = writeBatch(db);
+            for (const topic of topics) {
+              const newTopicRef = doc(topicsCollectionRef);
+              batch.set(newTopicRef, {
+                topic: topic.toLowerCase(),
+                createdAt: serverTimestamp(),
+              });
+            }
+            // Fire and forget, don't block UI
+            batch.commit().catch(err => console.error("Failed to write topics", err));
+          }
         }
         
         const createdAt = new Date();
