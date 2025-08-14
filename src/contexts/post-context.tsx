@@ -43,24 +43,21 @@ const commonStopWords = new Set(['i', 'me', 'my', 'myself', 'we', 'our', 'ours',
 function extractKeywords(text: string): string[] {
   if (!text) return [];
 
-  // Remove punctuation and convert to lowercase
-  const cleanedText = text.replace(/[.,!?:;()"']/g, '');
-  const words = cleanedText.split(/\s+/);
+  const topics = new Set<string>();
+  const phraseWords = new Set<string>();
 
-  const topics: Set<string> = new Set();
-  
-  // Find multi-word capitalized phrases (potential proper nouns)
-  const capitalizedPhrases = text.match(/\b([A-Z][a-z']*\s*)+/g) || [];
+  // 1. Find and add multi-word capitalized phrases first.
+  const capitalizedPhrases = text.match(/\b([A-Z][a-z']*\s*){2,}/g) || [];
   capitalizedPhrases.forEach(phrase => {
-    const trimmedPhrase = phrase.trim();
-    if (trimmedPhrase.split(' ').length > 1) {
-       topics.add(trimmedPhrase.toLowerCase());
-    }
+    const trimmedPhrase = phrase.trim().toLowerCase();
+    topics.add(trimmedPhrase);
+    // Keep track of the individual words that make up these phrases.
+    trimmedPhrase.split(/\s+/).forEach(word => phraseWords.add(word));
   });
 
-
-  // Find individual words and hashtags
-  words.forEach(word => {
+  // 2. Process the whole text for hashtags and single words.
+  const allWords = text.replace(/[.,!?:;()"']/g, '').split(/\s+/);
+  allWords.forEach(word => {
     // Add hashtags
     if (word.startsWith('#')) {
       topics.add(word.substring(1).toLowerCase());
@@ -68,15 +65,15 @@ function extractKeywords(text: string): string[] {
     }
     
     const lowerWord = word.toLowerCase();
-    // Add non-stop words that are reasonably long
-    if (!commonStopWords.has(lowerWord) && lowerWord.length > 2) {
+
+    // 3. Add single words ONLY if they are not part of an already added phrase.
+    if (!commonStopWords.has(lowerWord) && lowerWord.length > 2 && !phraseWords.has(lowerWord)) {
       topics.add(lowerWord);
     }
   });
-  
+
   return Array.from(topics);
 }
-
 
 export function PostProvider({ children }: { children: ReactNode }) {
   const [forYouPosts, setForYouPosts] = useState<PostType[]>([]);
@@ -249,7 +246,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
             for (const topic of topics) {
               const newTopicRef = doc(topicsCollectionRef);
               batch.set(newTopicRef, {
-                topic: topic.toLowerCase(),
+                topic: topic,
                 createdAt: serverTimestamp(),
               });
             }
