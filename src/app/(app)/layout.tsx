@@ -39,16 +39,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     );
   }
 
-  // Use a different layout for the mobile post page
-  const isPostPage = pathname.startsWith('/post/');
-  if (isPostPage) {
-      return (
-           <div className="md:hidden w-full h-screen">
-               {children}
-           </div>
-      )
-  }
-
   return (
     <>
       {/* Desktop Layout: Centered wrapper with sticky sidebars and a single scrollable main area */}
