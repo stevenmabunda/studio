@@ -134,7 +134,7 @@ export default function HomePage() {
   const lastScrollY = useRef(0);
 
   useEffect(() => {
-    document.title = 'BHOLO';
+    document.title = 'Home | BHOLO';
   }, []);
   
   useEffect(() => {
