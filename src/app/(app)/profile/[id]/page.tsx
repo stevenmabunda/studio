@@ -66,6 +66,15 @@ export default function ProfilePage() {
   const hasFetchedLikedPosts = useRef(false);
   const hasFetchedMediaPosts = useRef(false);
 
+  useEffect(() => {
+    if (profile) {
+      document.title = `${profile.displayName} | BHOLO`;
+    }
+    return () => {
+      document.title = 'BHOLO';
+    };
+  }, [profile]);
+
   const fetchProfileData = useCallback(async () => {
     if (!profileId) return;
     setProfileLoading(true);

@@ -65,6 +65,15 @@ export default function SearchPage() {
   const [joinedCommunityIds, setJoinedCommunityIds] = useState<Set<string>>(new Set());
   const [followedUserIds, setFollowedUserIds] = useState<Set<string>>(new Set());
 
+  useEffect(() => {
+    if (initialQuery) {
+      document.title = `#${initialQuery} | BHOLO`;
+    }
+    return () => {
+      document.title = 'BHOLO';
+    };
+  }, [initialQuery]);
+
   const fetchInitialData = useCallback(async () => {
     if (user) {
       setLoading(true);

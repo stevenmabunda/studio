@@ -133,6 +133,9 @@ export default function HomePage() {
   const [isHeaderHidden, setIsHeaderHidden] = useState(false);
   const lastScrollY = useRef(0);
 
+  useEffect(() => {
+    document.title = 'BHOLO';
+  }, []);
   
   useEffect(() => {
     // This effect runs only when the component mounts and the posts are loaded.
