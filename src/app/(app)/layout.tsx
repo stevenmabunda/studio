@@ -7,7 +7,6 @@ import { SidebarNav } from '@/components/sidebar-nav';
 import { RightSidebar } from '@/components/right-sidebar';
 import { PublicLayout } from '@/components/public-layout';
 import { MobileBottomNav } from '@/components/mobile-bottom-nav';
-import { MobileTopBar } from '@/components/mobile-top-bar';
 import { FloatingCreatePostButton } from '@/components/floating-create-post-button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -40,10 +39,15 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     );
   }
 
-  // Hide the generic mobile top bar on pages that have their own custom header, like the post detail page.
+  // Use a different layout for the mobile post page
   const isPostPage = pathname.startsWith('/post/');
-  const isHomePage = pathname === '/home';
-  const showGenericMobileTopBar = !isPostPage && !isHomePage;
+  if (isPostPage) {
+      return (
+           <div className="md:hidden w-full h-screen">
+               {children}
+           </div>
+      )
+  }
 
   return (
     <>
@@ -70,7 +74,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       
       {/* Mobile Layout */}
       <div className="md:hidden w-full">
-          {showGenericMobileTopBar && <MobileTopBar />}
             <main className="w-full pb-16">
               {children}
             </main>

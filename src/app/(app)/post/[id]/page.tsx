@@ -115,19 +115,26 @@ export default function PostPage() {
     }
   }
 
-  const Header = () => (
-    <header className="sticky top-0 z-10 flex items-center gap-4 border-b bg-background/80 p-4 backdrop-blur-sm">
-        <Button variant="ghost" size="icon" className="h-8 w-8 -ml-2" onClick={handleBack}>
+  const Header = ({ post, onBack }: { post: PostType | null, onBack: () => void }) => (
+    <header className="sticky top-0 z-10 flex items-center gap-4 border-b bg-background/80 p-4 backdrop-blur-sm h-14">
+        <Button variant="ghost" size="icon" className="h-8 w-8 -ml-2" onClick={onBack}>
             <ArrowLeft />
         </Button>
-        <h1 className="text-xl font-bold">Post</h1>
+        <div>
+            <h1 className="text-xl font-bold">Post</h1>
+             {post && (
+                <p className="text-xs text-muted-foreground truncate max-w-[200px]">
+                    by @{post.authorHandle}
+                </p>
+            )}
+        </div>
     </header>
-  )
+  );
 
   if (loadingPost) {
     return (
         <div>
-            <Header />
+            <Header post={null} onBack={handleBack} />
             <PostSkeleton />
         </div>
     );
@@ -136,7 +143,7 @@ export default function PostPage() {
   if (!post) {
       return (
           <div>
-              <Header />
+              <Header post={null} onBack={handleBack} />
               <div className="p-8 text-center text-muted-foreground">
                 <h2 className="text-xl font-bold">Post not found</h2>
                 <p>This post may have been deleted.</p>
@@ -146,8 +153,9 @@ export default function PostPage() {
   }
 
   return (
-    <div className="h-full min-h-screen">
-        <Header />
+    <div className="h-screen flex flex-col">
+      <Header post={post} onBack={handleBack} />
+      <div className="flex-1 overflow-y-auto">
         <Post {...post} isStandalone={true} />
         <CreateComment onComment={handleCreateComment} />
         <div className="divide-y divide-border">
@@ -216,6 +224,7 @@ export default function PostPage() {
                 </div>
             )}
         </div>
+      </div>
     </div>
   );
 }
