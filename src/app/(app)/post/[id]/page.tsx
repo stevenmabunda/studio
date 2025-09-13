@@ -182,7 +182,7 @@ export default function PostPage() {
                 ))
             ) : comments.length > 0 ? (
                  comments.map((comment) => (
-                    <Post key={comment.id} {...comment} />
+                    <Post key={`comment-${comment.id}`} {...comment} />
                  ))
             ) : (
                  <div className="p-8 text-center text-muted-foreground">
