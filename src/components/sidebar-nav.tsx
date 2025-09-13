@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -64,12 +65,11 @@ export function SidebarNav() {
   const handleLogout = async () => {
     if (!auth) {
       console.error('Firebase not configured, cannot log out.');
-      // Optionally, show a toast to the user.
       return;
     }
     await signOut(auth);
-    router.push('/login');
-    router.refresh();
+    // Force a full page reload to ensure all state is cleared.
+    window.location.href = '/login';
   };
 
   const userHandle = user?.email?.split('@')[0] || 'user';
