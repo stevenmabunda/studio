@@ -19,6 +19,8 @@ export type PostType = {
   media?: Array<{
     url: string;
     type: 'image' | 'video';
+    width?: number;
+    height?: number;
     hint?: string;
   }>;
   poll?: {
@@ -36,3 +38,5 @@ export type MatchType = {
   isLive: boolean;
   isUpcoming: boolean;
 };
+
+    

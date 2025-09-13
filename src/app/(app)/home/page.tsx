@@ -49,7 +49,7 @@ function VideoFeed() {
     }
   }, [loadingMore, hasMore, videoPosts]);
 
-  const lastVideoElementRef = useCallback(node => {
+  const lastVideoElementRef = useCallback((node: any) => {
     if (loadingMore) return;
     if (observer.current) observer.current.disconnect();
     observer.current = new IntersectionObserver(entries => {
@@ -358,3 +358,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    

@@ -12,6 +12,8 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { LoginOrSignupDialog } from "./login-or-signup-dialog";
+import type { PostType } from "@/lib/data";
+
 
 export type ReplyMedia = {
   file: File;
@@ -23,7 +25,7 @@ const EMOJIS = [
     '😀', '😂', '😍', '🤔', '😭', '🙏', '❤️', '🔥', '👍', '⚽️', '🥅', '🏆', '🎉', '👏', '🚀', '💯'
 ];
 
-export function CreateComment({ onComment }: { onComment: (data: { text: string; media: ReplyMedia[] }) => Promise<void> }) {
+export function CreateComment({ onComment, onCommentCreated }: { onComment: (data: { text: string; media: ReplyMedia[] }) => Promise<PostType | null>, onCommentCreated: (newComment: PostType) => void }) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [text, setText] = useState("");
@@ -39,7 +41,6 @@ export function CreateComment({ onComment }: { onComment: (data: { text: string;
     if (!files.length) return;
 
     const fileType = files[0].type.startsWith('image/') ? 'image' : 'video';
-    const isVideo = fileType === 'video';
 
     if (media.length > 0) {
       toast({ variant: 'destructive', description: "You can only attach one media item to a reply." });
@@ -85,7 +86,10 @@ export function CreateComment({ onComment }: { onComment: (data: { text: string;
     setPosting(true);
 
     try {
-      await onComment({ text, media });
+      const newComment = await onComment({ text, media });
+      if (newComment) {
+          onCommentCreated(newComment);
+      }
       media.forEach(m => URL.revokeObjectURL(m.previewUrl));
       setText("");
       setMedia([]);
@@ -197,3 +201,5 @@ export function CreateComment({ onComment }: { onComment: (data: { text: string;
     </div>
   );
 }
+
+    

@@ -366,8 +366,7 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
     const { user } = useAuth();
     const { toast } = useToast();
     const [isSaving, setIsSaving] = useState(false);
-    const [isSyncing, setIsSyncing] = useState(false);
-
+    
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
     const [bannerFile, setBannerFile] = useState<File | null>(null);
     const [avatarPreview, setAvatarPreview] = useState<string>(profile?.photoURL || '');
@@ -455,7 +454,7 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
             window.removeEventListener('mousemove', handleMouseMove as any);
             window.removeEventListener('mouseup', handleMouseUp);
         };
-    }, [isDragging]);
+    }, [isDragging, handleMouseMove]);
 
 
     const uploadImage = async (file: File, path: string): Promise<string> => {
@@ -464,23 +463,6 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
         await uploadBytes(storageRef, file);
         return await getDownloadURL(storageRef);
     };
-
-    const handleSyncPosts = async () => {
-        if (!user) return;
-        setIsSyncing(true);
-        try {
-            const result = await updateUserPosts(user.uid);
-            if (result.success) {
-                toast({ title: "Success", description: `${result.updatedCount} posts have been updated with your new profile info!` });
-            } else {
-                 toast({ variant: 'destructive', title: "Error", description: result.error || "Could not sync posts." });
-            }
-        } catch (error) {
-            toast({ variant: 'destructive', title: "Error", description: "An unexpected error occurred while syncing." });
-        } finally {
-            setIsSyncing(false);
-        }
-    }
 
     const onSubmit = async (data: z.infer<typeof profileFormSchema>) => {
         if (!user || !db || !profile) return;
@@ -513,10 +495,10 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
                 bannerPosition: bannerPosition, // Save the new banner position
             }, { merge: true });
 
-            // Automatically sync posts after profile update
-            await updateUserPosts(user.uid);
+            // This is slow and should be moved to a Cloud Function.
+            // await updateUserPosts(user.uid);
 
-            toast({ title: "Success", description: "Profile updated and posts synced!" });
+            toast({ title: "Success", description: "Profile updated! Changes to your posts will appear shortly." });
             onProfileUpdate();
             onOpenChange(false);
         } catch (error) {
@@ -535,7 +517,7 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
                 <DialogHeader>
                     <DialogTitle>Edit profile</DialogTitle>
                      <DialogDescription>
-                        Make changes to your profile here. Click save when you're done. Your posts will be automatically synced.
+                        Make changes to your profile here. Click save when you're done. 
                     </DialogDescription>
                 </DialogHeader>
 
@@ -600,13 +582,6 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
 
                             <Controller name="favouriteClub" control={form.control} render={({ field }) => <Input placeholder="Favourite Club" {...field} />} />
                             {form.formState.errors.favouriteClub && <p className="text-sm text-destructive">{form.formState.errors.favouriteClub.message}</p>}
-
-                            <div className="border-t pt-4">
-                                <Button type="button" variant="secondary" onClick={handleSyncPosts} disabled={isSyncing}>
-                                    {isSyncing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
-                                    Sync My Posts
-                                </Button>
-                            </div>
                         </form>
                     </div>
                 </ScrollArea>
@@ -624,5 +599,7 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
     );
 }
 
+
+    
 
     

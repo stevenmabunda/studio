@@ -22,20 +22,7 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 
 
-type Comment = {
-  id: string;
-  authorId: string;
-  authorName: string;
-  authorHandle: string;
-  authorAvatar: string;
-  content: string;
-  createdAt: Timestamp;
-  media?: Array<{
-    url: string;
-    type: 'image' | 'video';
-    hint?: string;
-  }>;
-};
+type Comment = PostType;
 
 export default function PostPage() {
   const { user } = useAuth();
@@ -94,10 +81,24 @@ export default function PostPage() {
     const q = query(commentsRef, orderBy('createdAt', 'desc'));
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const fetchedComments = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as Comment[];
+      const fetchedComments = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        const createdAt = (data.createdAt as Timestamp)?.toDate();
+        return {
+            id: doc.id,
+            authorId: data.authorId,
+            authorName: data.authorName,
+            authorHandle: data.authorHandle,
+            authorAvatar: data.authorAvatar,
+            content: data.content,
+            timestamp: createdAt ? formatTimestamp(createdAt) : "now",
+            media: data.media || [],
+            // Fill in missing post fields for type compatibility
+            comments: 0,
+            reposts: 0,
+            likes: 0,
+        }
+      }) as Comment[];
       setComments(fetchedComments);
       setLoadingComments(false);
     }, (error) => {
@@ -112,12 +113,17 @@ export default function PostPage() {
   }, [postId]);
 
   const handleCreateComment = async (data: { text: string, media: ReplyMedia[] }) => {
-    if (!user || !postId) return;
+    if (!user || !postId) return null;
     try {
-        await addComment(postId, data);
+        return await addComment(postId, data);
     } catch (error) {
         console.error("Failed to add comment:", error);
+        return null;
     }
+  }
+
+  const handleCommentCreated = (newComment: PostType) => {
+    setComments(prev => [newComment as Comment, ...prev]);
   }
 
   const Header = ({ post, onBack }: { post: PostType | null, onBack: () => void }) => (
@@ -162,7 +168,7 @@ export default function PostPage() {
       <Header post={post} onBack={handleBack} />
       <div className="flex-1 overflow-y-auto">
         <Post {...post} isStandalone={true} />
-        <CreateComment onComment={handleCreateComment} />
+        <CreateComment onComment={handleCreateComment} onCommentCreated={handleCommentCreated} />
         <div className="divide-y divide-border">
             {loadingComments ? (
                 Array.from({length: 3}).map((_, i) => (
@@ -175,53 +181,9 @@ export default function PostPage() {
                     </div>
                 ))
             ) : comments.length > 0 ? (
-                 comments.map((comment) => {
-                    const hasMedia = comment.media && comment.media.length > 0;
-                    const isVideo = hasMedia && comment.media![0].type === 'video';
-                    return (
-                        <div key={comment.id} className="p-3 md:p-4">
-                            <div className="flex space-x-3 md:space-x-4">
-                                <Link href={`/profile/${comment.authorId}`} className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-                                    <Avatar>
-                                        <AvatarImage src={comment.authorAvatar} alt={comment.authorName} data-ai-hint="user avatar" />
-                                        <AvatarFallback>{comment.authorName.charAt(0)}</AvatarFallback>
-                                    </Avatar>
-                                </Link>
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-2 text-sm">
-                                        <Link href={`/profile/${comment.authorId}`} className="font-bold hover:underline" onClick={(e) => e.stopPropagation()}>
-                                            {comment.authorName}
-                                        </Link>
-                                        <span className="text-muted-foreground">@{comment.authorHandle}</span>
-                                        <span className="text-muted-foreground">·</span>
-                                        <span className="text-muted-foreground">{formatTimestamp(comment.createdAt.toDate())}</span>
-                                    </div>
-                                    <p className="mt-2 whitespace-pre-wrap">{comment.content}</p>
-                                    {hasMedia && (
-                                      <div className={cn("mt-3 rounded-2xl overflow-hidden border max-h-[400px]")}>
-                                        {isVideo ? (
-                                          <video
-                                            src={comment.media![0].url}
-                                            controls
-                                            className="w-full h-auto max-h-96 object-contain bg-black"
-                                          />
-                                        ) : (
-                                          <Image
-                                            src={comment.media![0].url}
-                                            alt={`Comment image`}
-                                            width={500}
-                                            height={500}
-                                            className="w-full h-auto max-h-[400px] object-contain"
-                                            data-ai-hint={comment.media![0].hint}
-                                          />
-                                        )}
-                                      </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    )
-                 })
+                 comments.map((comment) => (
+                    <Post key={comment.id} {...comment} />
+                 ))
             ) : (
                  <div className="p-8 text-center text-muted-foreground">
                     <h2 className="text-xl font-bold">No comments yet</h2>
@@ -233,3 +195,5 @@ export default function PostPage() {
     </div>
   );
 }
+
+    

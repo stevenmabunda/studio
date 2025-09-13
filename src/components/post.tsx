@@ -38,7 +38,6 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet";
 import { useRouter } from "next/navigation";
 import type { PostType } from "@/lib/data";
@@ -61,20 +60,8 @@ type PostProps = PostType & {
   isStandalone?: boolean;
 };
 
-type CommentType = {
-  id: string;
-  authorId: string;
-  authorName: string;
-  authorHandle: string;
-  authorAvatar: string;
-  content: string;
-  createdAt: Timestamp;
-  media?: Array<{
-    url: string;
-    type: 'image' | 'video';
-    hint?: string;
-  }>;
-};
+type CommentType = PostType;
+
 
 // Helper components for social icons
 const TwitterIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -158,7 +145,7 @@ function Comment({ comment }: { comment: CommentType }) {
                   </Link>
                   <span className="text-muted-foreground">@{comment.authorHandle}</span>
                   <span className="text-muted-foreground">·</span>
-                  <span className="text-muted-foreground">{formatTimestamp(comment.createdAt.toDate())}</span>
+                  <span className="text-muted-foreground">{comment.timestamp}</span>
               </div>
               <p className="mt-2 whitespace-pre-wrap">{comment.content}</p>
               {hasMedia && (
@@ -173,8 +160,8 @@ function Comment({ comment }: { comment: CommentType }) {
                     <Image
                       src={comment.media![0].url}
                       alt={`Comment image`}
-                      width={500}
-                      height={500}
+                      width={comment.media![0].width || 500}
+                      height={comment.media![0].height || 500}
                       className="w-full h-auto max-h-[400px] object-contain"
                       data-ai-hint={comment.media![0].hint}
                     />
@@ -328,10 +315,21 @@ export function Post(props: PostProps) {
       const commentsRef = collection(db, 'posts', id, 'comments');
       const q = query(commentsRef, orderBy('createdAt', 'desc'));
       unsubscribe = onSnapshot(q, (snapshot) => {
-        const fetchedComments = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as CommentType[];
+        const fetchedComments = snapshot.docs.map(doc => {
+            const data = doc.data();
+            const createdAt = (data.createdAt as Timestamp)?.toDate();
+            return {
+                id: doc.id,
+                authorId: data.authorId,
+                authorName: data.authorName,
+                authorHandle: data.authorHandle,
+                authorAvatar: data.authorAvatar,
+                content: data.content,
+                timestamp: createdAt ? formatTimestamp(createdAt) : "now",
+                media: data.media || [],
+                comments: 0, reposts: 0, likes: 0,
+            }
+        }) as CommentType[];
         setComments(fetchedComments);
         setLoadingComments(false);
       });
@@ -340,15 +338,22 @@ export function Post(props: PostProps) {
   }, [isImageViewerOpen, id]);
 
   const handleCreateComment = async (data: { text: string; media: ReplyMedia[] }) => {
-    if (!user || !id) return;
+    if (!user || !id) return null;
     try {
-      await addComment(id, data);
+      const newComment = await addComment(id, data);
       setCommentCount(prev => prev + 1);
+      return newComment;
     } catch (error) {
         toast({ variant: 'destructive', description: "Failed to post reply." });
         console.error("Failed to add comment:", error);
+        return null;
     }
   }
+
+  const handleCommentCreated = (newComment: PostType) => {
+    setComments(prev => [newComment, ...prev]);
+  };
+
 
   useEffect(() => {
     if (isStandalone && user && user.uid !== authorId) {
@@ -366,6 +371,7 @@ export function Post(props: PostProps) {
   const displayText = needsTruncation ? `${content.substring(0, 280)}` : content;
 
   const handlePostClick = () => {
+      if (id.startsWith('temp_')) return;
       if (!user) {
         setIsLoginDialogOpen(true);
         return;
@@ -581,8 +587,8 @@ export function Post(props: PostProps) {
                   <Image
                       src={media[0].url}
                       alt={media[0].hint || `Post image 1`}
-                      width={500}
-                      height={500}
+                      width={media[0].width || 500}
+                      height={media[0].height || 500}
                       className="w-full h-auto max-h-[500px] object-contain"
                       data-ai-hint={media[0].hint}
                   />
@@ -730,7 +736,8 @@ export function Post(props: PostProps) {
                                             <Image
                                                 src={image.url}
                                                 alt={`Enlarged view of post image ${index + 1}`}
-                                                fill
+                                                width={image.width || 1200}
+                                                height={image.height || 1200}
                                                 className="object-contain"
                                             />
                                         </div>
@@ -767,7 +774,7 @@ export function Post(props: PostProps) {
                                 </div>
                             </ScrollArea>
                             <div className="border-t">
-                                <CreateComment onComment={handleCreateComment} />
+                                <CreateComment onComment={handleCreateComment} onCommentCreated={handleCommentCreated} />
                             </div>
                         </div>
                     </aside>
@@ -777,3 +784,5 @@ export function Post(props: PostProps) {
       </div>
   );
 }
+
+    

@@ -11,27 +11,24 @@ import { collection, addDoc, serverTimestamp, getDocs, query, type Timestamp, do
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { formatTimestamp } from '@/lib/utils';
 import type { ReplyMedia } from '@/components/create-comment';
-import { getMediaPosts } from '@/app/(app)/profile/actions';
 import { getRecentPosts } from '@/app/(app)/home/actions';
 
 type PostContextType = {
   forYouPosts: PostType[];
   setForYouPosts: React.Dispatch<React.SetStateAction<PostType[]>>;
-  discoverPosts: PostType[];
   newForYouPosts: PostType[];
   showNewForYouPosts: () => void;
   addPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }) => Promise<void>;
   editPost: (postId: string, data: { text:string }) => Promise<void>;
   deletePost: (postId: string) => Promise<void>;
   addVote: (postId: string, choiceIndex: number) => Promise<void>;
-  addComment: (postId: string, data: { text: string; media: ReplyMedia[] }) => Promise<void>;
+  addComment: (postId: string, data: { text: string; media: ReplyMedia[] }) => Promise<PostType | null>;
   likePost: (postId: string, isLiked: boolean) => Promise<void>;
   repostPost: (postId: string, isReposted: boolean) => Promise<void>;
   bookmarkPost: (postId: string, isBookmarked: boolean) => Promise<void>;
   bookmarkedPostIds: Set<string>;
   loadingForYou: boolean;
   setLoadingForYou: React.Dispatch<React.SetStateAction<boolean>>;
-  loadingDiscover: boolean;
   fetchForYouPosts: (options?: { limit?: number; lastPostId?: string }) => Promise<PostType[]>;
 };
 
@@ -75,13 +72,23 @@ function extractKeywords(text: string): string[] {
   return Array.from(topics);
 }
 
+// Function to get image dimensions
+const getImageDimensions = (file: File): Promise<{ width: number; height: number }> => {
+  return new Promise((resolve) => {
+    const img = document.createElement('img');
+    img.onload = () => {
+      resolve({ width: img.width, height: img.height });
+      URL.revokeObjectURL(img.src);
+    };
+    img.src = URL.createObjectURL(file);
+  });
+};
+
 export function PostProvider({ children }: { children: ReactNode }) {
   const [forYouPosts, setForYouPosts] = useState<PostType[]>([]);
-  const [discoverPosts, setDiscoverPosts] = useState<PostType[]>([]);
   const [newForYouPosts, setNewForYouPosts] = useState<PostType[]>([]);
   
   const [loadingForYou, setLoadingForYou] = useState(true);
-  const [loadingDiscover, setLoadingDiscover] = useState(true);
 
   const { user } = useAuth();
   const [bookmarkedPostIds, setBookmarkedPostIds] = useState<Set<string>>(new Set());
@@ -119,38 +126,26 @@ export function PostProvider({ children }: { children: ReactNode }) {
     setNewForYouPosts([]);
   };
 
-  const fetchDiscoverAndBookmarks = useCallback(async () => {
-    if (!db) {
-        setLoadingDiscover(false);
+  const fetchBookmarks = useCallback(async () => {
+    if (!db || !user) {
+        setBookmarkedPostIds(new Set());
         return;
-    }
-    setLoadingDiscover(true);
-    try {
-        getMediaPosts().then(posts => {
-          setDiscoverPosts(posts);
-          setLoadingDiscover(false);
-        });
-        
-        if (user) {
-            const bookmarksRef = collection(db, 'users', user.uid, 'bookmarks');
-            const unsubscribe = onSnapshot(bookmarksRef, (snapshot) => {
-                const bookmarkIds = new Set(snapshot.docs.map(doc => doc.id));
-                setBookmarkedPostIds(bookmarkIds);
-            });
-            // Note: In a real app, you'd want to store and call this unsubscribe function on cleanup.
-            // For simplicity here, we're not.
-        } else {
-            setBookmarkedPostIds(new Set());
-        }
-    } catch (error) {
-        console.error("Error fetching discover/bookmark data:", error);
-        setLoadingDiscover(false);
-    }
+    };
+    
+    const bookmarksRef = collection(db, 'users', user.uid, 'bookmarks');
+    const unsubscribe = onSnapshot(bookmarksRef, (snapshot) => {
+        const bookmarkIds = new Set(snapshot.docs.map(doc => doc.id));
+        setBookmarkedPostIds(bookmarkIds);
+    });
+    return unsubscribe;
   }, [user]);
 
   useEffect(() => {
-    fetchDiscoverAndBookmarks();
-  }, [fetchDiscoverAndBookmarks]);
+    const unsubPromise = fetchBookmarks();
+    return () => {
+      unsubPromise.then(unsub => unsub && unsub());
+    }
+  }, [fetchBookmarks]);
 
 
   useEffect(() => {
@@ -206,16 +201,37 @@ export function PostProvider({ children }: { children: ReactNode }) {
         throw new Error("Cannot add post: user not logged in or Firebase not configured.");
     }
     
+    // Optimistic UI update
+    const createdAt = new Date();
+    const tempId = `temp_${Date.now()}`;
+    const optimisticPost: PostType = {
+      id: tempId,
+      authorId: user.uid,
+      authorName: user.displayName || 'Anonymous User',
+      authorHandle: user.email?.split('@')[0] || 'user',
+      authorAvatar: user.photoURL || 'https://placehold.co/40x40.png',
+      content: text,
+      timestamp: formatTimestamp(createdAt),
+      createdAt: createdAt.toISOString(),
+      comments: 0, reposts: 0, likes: 0, views: 0,
+      media: media.map(m => ({ url: m.previewUrl, type: m.type, hint: 'user uploaded content' })),
+      ...(poll && { poll }),
+      ...(location && { location }),
+      ...(tribeId && { tribeId }),
+      ...(communityId && { communityId }),
+    };
+    setForYouPosts(prev => [optimisticPost, ...prev]);
+
     try {
-        const mediaUrls = [];
-        for (const m of media) {
+        const mediaUploads = await Promise.all(media.map(async (m) => {
+            const { width, height } = m.type === 'image' ? await getImageDimensions(m.file) : { width: undefined, height: undefined };
             const fileName = `${user.uid}-${Date.now()}-${m.file.name}`;
             const storagePath = `posts/${user.uid}/${fileName}`;
             const storageRef = ref(storage, storagePath);
-            const snapshot = await uploadBytes(storageRef, m.file);
-            const downloadURL = await getDownloadURL(snapshot.ref);
-            mediaUrls.push({ url: downloadURL, type: m.type, hint: 'user uploaded content' });
-        }
+            await uploadBytes(storageRef, m.file);
+            const downloadURL = await getDownloadURL(storageRef);
+            return { url: downloadURL, type: m.type, width, height, hint: 'user uploaded content' };
+        }));
         
         const postDataForDb = {
           authorId: user.uid,
@@ -224,11 +240,8 @@ export function PostProvider({ children }: { children: ReactNode }) {
           authorAvatar: user.photoURL || 'https://placehold.co/40x40.png',
           content: text,
           createdAt: serverTimestamp(),
-          comments: 0,
-          reposts: 0,
-          likes: 0,
-          views: 0,
-          media: mediaUrls,
+          comments: 0, reposts: 0, likes: 0, views: 0,
+          media: mediaUploads,
           ...(poll && { poll }),
           ...(location && { location }),
           ...(tribeId && { tribeId }),
@@ -236,6 +249,9 @@ export function PostProvider({ children }: { children: ReactNode }) {
         };
 
         const docRef = await addDoc(collection(db, "posts"), postDataForDb);
+
+        // Update the optimistic post with the real ID and data
+        setForYouPosts(prev => prev.map(p => p.id === tempId ? { ...p, id: docRef.id, media: mediaUploads } : p));
 
         // Extract and log keywords in the background.
         if (text) {
@@ -245,42 +261,15 @@ export function PostProvider({ children }: { children: ReactNode }) {
             const batch = writeBatch(db);
             for (const topic of topics) {
               const newTopicRef = doc(topicsCollectionRef);
-              batch.set(newTopicRef, {
-                topic: topic,
-                createdAt: serverTimestamp(),
-              });
+              batch.set(newTopicRef, { topic: topic, createdAt: serverTimestamp() });
             }
-            // Fire and forget, don't block UI
             batch.commit().catch(err => console.error("Failed to write topics", err));
           }
         }
-        
-        const createdAt = new Date();
-        const newPost: PostType = {
-          id: docRef.id,
-          authorId: user.uid,
-          authorName: user.displayName || 'Anonymous User',
-          authorHandle: user.email?.split('@')[0] || 'user',
-          authorAvatar: user.photoURL || 'https://placehold.co/40x40.png',
-          content: text,
-          timestamp: formatTimestamp(createdAt),
-          createdAt: createdAt.toISOString(),
-          comments: 0,
-          reposts: 0,
-          likes: 0,
-          views: 0,
-          media: mediaUrls,
-          ...(poll && { poll }),
-          ...(location && { location }),
-          ...(tribeId && { tribeId }),
-          ...(communityId && { communityId }),
-        };
-        
-        // Add the new post to the top of the feed immediately.
-        setForYouPosts(prev => [newPost, ...prev]);
-
     } catch (error) {
         console.error("Failed to create post:", error);
+        // Revert optimistic update on failure
+        setForYouPosts(prev => prev.filter(p => p.id !== tempId));
         throw error;
     }
   };
@@ -292,7 +281,6 @@ export function PostProvider({ children }: { children: ReactNode }) {
     
     const updater = (posts: PostType[]) => posts.map(p => p.id === postId ? { ...p, content: data.text } : p)
     setForYouPosts(updater);
-    setDiscoverPosts(updater);
   };
 
   const deletePost = async (postId: string) => {
@@ -302,7 +290,6 @@ export function PostProvider({ children }: { children: ReactNode }) {
 
     const updater = (posts: PostType[]) => posts.filter(p => p.id !== postId)
     setForYouPosts(updater);
-    setDiscoverPosts(updater);
   };
 
   const addVote = async (postId: string, choiceIndex: number) => {
@@ -322,98 +309,93 @@ export function PostProvider({ children }: { children: ReactNode }) {
       });
 
     setForYouPosts(updater);
-    setDiscoverPosts(updater);
 
     try {
       await runTransaction(db, async (transaction) => {
         const postDoc = await transaction.get(postRef);
-        if (!postDoc.exists()) {
-          throw "Document does not exist!";
-        }
+        if (!postDoc.exists()) throw "Document does not exist!";
         
         const postData = postDoc.data();
         const currentChoices = postData.poll?.choices || [];
         
-        const newChoices = currentChoices.map((choice: { text: string, votes: number }, index: number) => {
-          if (index === choiceIndex) {
-            return { ...choice, votes: choice.votes + 1 };
-          }
-          return choice;
-        });
+        const newChoices = currentChoices.map((choice: { text: string, votes: number }, index: number) => 
+            index === choiceIndex ? { ...choice, votes: choice.votes + 1 } : choice
+        );
 
         transaction.update(postRef, { "poll.choices": newChoices });
       });
     } catch (error) {
       console.error("Failed to update vote in Firestore:", error);
-      // Re-fetch all data on error to ensure consistency
-      fetchDiscoverAndBookmarks();
+      fetchForYouPosts();
     }
   };
 
-  const addComment = async (postId: string, data: { text: string; media: ReplyMedia[] }) => {
+  const addComment = async (postId: string, data: { text: string; media: ReplyMedia[] }): Promise<PostType | null> => {
     if (!user || !db || !storage) {
         throw new Error("User not authenticated or Firebase not initialized.");
     }
     const { text, media } = data;
-    const postRef = doc(db, 'posts', postId);
-    const commentsCollectionRef = collection(postRef, 'comments');
-
-    const mediaUrls = [];
-    for (const m of media) {
-        const fileName = `${user.uid}-comment-${Date.now()}-${m.file.name}`;
-        const storagePath = `comments/${postId}/${fileName}`;
-        const storageRef = ref(storage, storagePath);
-        const snapshot = await uploadBytes(storageRef, m.file);
-        const downloadURL = await getDownloadURL(snapshot.ref);
-        mediaUrls.push({ url: downloadURL, type: m.type, hint: 'user uploaded reply' });
-    }
-
-    const commentData = {
+    
+    const createdAt = new Date();
+    const tempId = `temp_comment_${Date.now()}`;
+    const optimisticComment = {
+        id: tempId,
         authorId: user.uid,
         authorName: user.displayName || 'Anonymous User',
         authorHandle: user.email?.split('@')[0] || 'user',
         authorAvatar: user.photoURL || 'https://placehold.co/40x40.png',
         content: text,
-        media: mediaUrls,
-        createdAt: serverTimestamp(),
+        createdAt: { toDate: () => createdAt } as Timestamp,
+        media: media.map(m => ({ url: m.previewUrl, type: m.type, hint: 'user uploaded reply' }))
     };
 
     try {
-        await runTransaction(db, async (transaction) => {
-            const postDoc = await transaction.get(postRef);
-            if (!postDoc.exists()) {
-                throw "Post does not exist!";
-            }
-            
-            const newCommentCount = (postDoc.data().comments || 0) + 1;
-            
-            transaction.update(postRef, { comments: newCommentCount });
+        const postRef = doc(db, 'posts', postId);
+        const commentsCollectionRef = collection(postRef, 'comments');
 
-            const newCommentRef = doc(commentsCollectionRef);
-            transaction.set(newCommentRef, commentData);
-        });
+        const mediaUploads = await Promise.all(media.map(async (m) => {
+            const { width, height } = m.type === 'image' ? await getImageDimensions(m.file) : { width: undefined, height: undefined };
+            const fileName = `${user.uid}-comment-${Date.now()}-${m.file.name}`;
+            const storagePath = `comments/${postId}/${fileName}`;
+            const storageRef = ref(storage, storagePath);
+            await uploadBytes(storageRef, m.file);
+            const downloadURL = await getDownloadURL(storageRef);
+            return { url: downloadURL, type: m.type, width, height, hint: 'user uploaded reply' };
+        }));
+
+        const commentData = {
+            authorId: user.uid,
+            authorName: user.displayName || 'Anonymous User',
+            authorHandle: user.email?.split('@')[0] || 'user',
+            authorAvatar: user.photoURL || 'https://placehold.co/40x40.png',
+            content: text,
+            media: mediaUploads,
+            createdAt: serverTimestamp(),
+        };
+
+        const postDocBeforeUpdate = await getDoc(postRef);
+        const currentComments = postDocBeforeUpdate.data()?.comments || 0;
+
+        const newCommentRef = await addDoc(commentsCollectionRef, commentData);
+        await updateDoc(postRef, { comments: currentComments + 1 });
         
-        const updater = (posts: PostType[]) => posts.map(p => p.id === postId ? { ...p, comments: (p.comments || 0) + 1 } : p);
-        setForYouPosts(updater);
-        setDiscoverPosts(updater);
+        const finalComment = { ...optimisticComment, id: newCommentRef.id, media: mediaUploads };
+
+        setForYouPosts(prev => prev.map(p => p.id === postId ? { ...p, comments: p.comments + 1 } : p));
         
-        const postDoc = await getDoc(postRef);
-        if (postDoc.exists()) {
-            const postAuthorId = postDoc.data().authorId;
-            if (user.uid !== postAuthorId) {
-                const notificationRef = collection(db, 'users', postAuthorId, 'notifications');
-                await addDoc(notificationRef, {
-                    type: 'comment',
-                    fromUserId: user.uid,
-                    fromUserName: user.displayName || 'User',
-                    fromUserAvatar: user.photoURL || 'https://placehold.co/40x40.png',
-                    postId: postId,
-                    postContentSnippet: text.substring(0, 50),
-                    createdAt: serverTimestamp(),
-                    read: false,
-                });
-            }
+        // Notify author
+        const postAuthorId = postDocBeforeUpdate.data()?.authorId;
+        if (user.uid !== postAuthorId) {
+            const notificationRef = collection(db, 'users', postAuthorId, 'notifications');
+            addDoc(notificationRef, {
+                type: 'comment', fromUserId: user.uid, fromUserName: user.displayName || 'User',
+                fromUserAvatar: user.photoURL || 'https://placehold.co/40x40.png',
+                postId: postId, postContentSnippet: text.substring(0, 50),
+                createdAt: serverTimestamp(), read: false,
+            });
         }
+        
+        return finalComment as unknown as PostType;
 
     } catch (e) {
         console.error("Error adding comment: ", e);
@@ -429,9 +411,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
     try {
         await runTransaction(db, async (transaction) => {
             const postDoc = await transaction.get(postRef);
-            if (!postDoc.exists()) {
-                throw "Post does not exist!";
-            }
+            if (!postDoc.exists()) throw "Post does not exist!";
             
             const newLikeCount = postDoc.data().likes + (isLiked ? -1 : 1);
             transaction.update(postRef, { likes: Math.max(0, newLikeCount) });
@@ -450,19 +430,14 @@ export function PostProvider({ children }: { children: ReactNode }) {
                 if (postData && postData.authorId && user.uid !== postData.authorId) {
                     const notificationRef = collection(db, 'users', postData.authorId, 'notifications');
                     await addDoc(notificationRef, {
-                        type: 'like',
-                        fromUserId: user.uid,
-                        fromUserName: user.displayName || 'User',
+                        type: 'like', fromUserId: user.uid, fromUserName: user.displayName || 'User',
                         fromUserAvatar: user.photoURL || 'https://placehold.co/40x40.png',
-                        postId: postId,
-                        postContentSnippet: (postData.content || '').substring(0, 50),
-                        createdAt: serverTimestamp(),
-                        read: false,
+                        postId: postId, postContentSnippet: (postData.content || '').substring(0, 50),
+                        createdAt: serverTimestamp(), read: false,
                     });
                 }
             }
         }
-
     } catch (error) {
         console.error("Error updating likes:", error);
     }
@@ -474,9 +449,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
     try {
       await runTransaction(db, async (transaction) => {
         const postDoc = await transaction.get(postRef);
-        if (!postDoc.exists()) {
-          throw "Document does not exist!";
-        }
+        if (!postDoc.exists()) throw "Document does not exist!";
         const newReposts = postDoc.data().reposts + (isReposted ? -1 : 1);
         transaction.update(postRef, { reposts: newReposts < 0 ? 0 : newReposts });
       });
@@ -503,7 +476,6 @@ export function PostProvider({ children }: { children: ReactNode }) {
   const value = {
       forYouPosts,
       setForYouPosts,
-      discoverPosts,
       newForYouPosts,
       showNewForYouPosts,
       addPost,
@@ -517,7 +489,6 @@ export function PostProvider({ children }: { children: ReactNode }) {
       bookmarkedPostIds,
       loadingForYou,
       setLoadingForYou,
-      loadingDiscover,
       fetchForYouPosts,
   };
 
@@ -535,3 +506,5 @@ export function usePosts() {
   }
   return context;
 }
+
+    

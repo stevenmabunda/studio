@@ -350,7 +350,9 @@ export async function getMediaPosts(userId?: string): Promise<PostType[]> {
   }
 }
 
-
+// NOTE: This function is very slow and expensive on the client.
+// It is recommended to move this logic to a Cloud Function triggered
+// on user profile updates.
 export async function updateUserPosts(userId: string): Promise<{success: boolean, updatedCount: number, error?: string}> {
   if (!db || !userId) {
     return { success: false, updatedCount: 0, error: 'Database not available or user not specified.' };
@@ -463,4 +465,5 @@ export async function getUsersToFollow(currentUserId: string): Promise<ProfileDa
         return [];
     }
 }
+    
     
