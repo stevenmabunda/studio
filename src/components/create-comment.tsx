@@ -25,7 +25,7 @@ const EMOJIS = [
     '😀', '😂', '😍', '🤔', '😭', '🙏', '❤️', '🔥', '👍', '⚽️', '🥅', '🏆', '🎉', '👏', '🚀', '💯'
 ];
 
-export function CreateComment({ onComment, onCommentCreated }: { onComment: (data: { text: string; media: ReplyMedia[] }) => Promise<PostType | null>, onCommentCreated: (newComment: PostType) => void }) {
+export function CreateComment({ onComment }: { onComment: (data: { text: string; media: ReplyMedia[] }) => Promise<any> }) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [text, setText] = useState("");
@@ -86,15 +86,16 @@ export function CreateComment({ onComment, onCommentCreated }: { onComment: (dat
     setPosting(true);
 
     try {
-      const newComment = await onComment({ text, media });
-      if (newComment) {
-          onCommentCreated(newComment);
+      const result = await onComment({ text, media });
+      if (result) {
+          media.forEach(m => URL.revokeObjectURL(m.previewUrl));
+          setText("");
+          setMedia([]);
+          if (imageInputRef.current) imageInputRef.current.value = "";
+          if (videoInputRef.current) videoInputRef.current.value = "";
+      } else {
+        toast({ variant: 'destructive', description: 'Could not post reply. Please try again.' });
       }
-      media.forEach(m => URL.revokeObjectURL(m.previewUrl));
-      setText("");
-      setMedia([]);
-      if (imageInputRef.current) imageInputRef.current.value = "";
-      if (videoInputRef.current) videoInputRef.current.value = "";
     } catch (error) {
       console.error("Failed to create comment:", error);
     } finally {

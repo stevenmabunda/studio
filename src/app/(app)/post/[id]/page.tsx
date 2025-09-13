@@ -115,15 +115,13 @@ export default function PostPage() {
   const handleCreateComment = async (data: { text: string, media: ReplyMedia[] }) => {
     if (!user || !postId) return null;
     try {
-        return await addComment(postId, data);
+        // Let the onSnapshot listener handle the UI update.
+        await addComment(postId, data);
+        return true; // Indicate success
     } catch (error) {
         console.error("Failed to add comment:", error);
         return null;
     }
-  }
-
-  const handleCommentCreated = (newComment: PostType) => {
-    setComments(prev => [newComment as Comment, ...prev]);
   }
 
   const Header = ({ post, onBack }: { post: PostType | null, onBack: () => void }) => (
@@ -168,7 +166,7 @@ export default function PostPage() {
       <Header post={post} onBack={handleBack} />
       <div className="flex-1 overflow-y-auto">
         <Post {...post} isStandalone={true} />
-        <CreateComment onComment={handleCreateComment} onCommentCreated={handleCommentCreated} />
+        <CreateComment onComment={handleCreateComment} />
         <div className="divide-y divide-border">
             {loadingComments ? (
                 Array.from({length: 3}).map((_, i) => (
