@@ -68,7 +68,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (profile) {
-      document.title = `${profile.displayName} | BHOLO`;
+      document.title = `${profile.displayName} (@${profile.handle}) | BHOLO`;
     }
     return () => {
       document.title = 'BHOLO';

@@ -68,7 +68,7 @@ export default function PostPage() {
         if (docSnap.exists()) {
             const data = docSnap.data();
             const createdAt = (data.createdAt as Timestamp)?.toDate();
-            setPost({
+            const fetchedPost = {
                 id: docSnap.id,
                 authorId: data.authorId,
                 authorName: data.authorName,
@@ -81,7 +81,9 @@ export default function PostPage() {
                 media: data.media,
                 poll: data.poll,
                 timestamp: createdAt ? formatTimestamp(createdAt) : 'now',
-            } as PostType);
+            } as PostType;
+            setPost(fetchedPost);
+            document.title = `Post by @${fetchedPost.authorHandle} | BHOLO`;
         }
         setLoadingPost(false);
     };
@@ -103,7 +105,10 @@ export default function PostPage() {
         setLoadingComments(false);
     });
 
-    return () => unsubscribe();
+     return () => {
+      unsubscribe();
+      document.title = 'BHOLO'; // Reset title on unmount
+    };
   }, [postId]);
 
   const handleCreateComment = async (data: { text: string, media: ReplyMedia[] }) => {
