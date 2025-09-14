@@ -43,15 +43,15 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
         {/* <!-- Google tag (gtag.js) --> */}
         <Script async src="https://www.googletagmanager.com/gtag/js?id=G-WBBKJGCV3P"></Script>
-        <Script id="google-analytics">
-          {`
+        <Script id="google-analytics" dangerouslySetInnerHTML={{
+          __html: `
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
 
             gtag('config', 'G-WBBKJGCV3P');
-          `}
-        </Script>
+          `
+        }} />
       </head>
       <body className="font-body antialiased">
         <AuthProvider>
