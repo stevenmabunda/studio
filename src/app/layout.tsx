@@ -6,6 +6,7 @@ import { AuthProvider } from '@/contexts/auth-context';
 import { PostProvider } from '@/contexts/post-context';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { TabProvider } from '@/contexts/tab-context';
+import Script from 'next/script';
 
 export const metadata: Metadata = {
   title: 'BHOLO',
@@ -40,6 +41,17 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+        {/* <!-- Google tag (gtag.js) --> */}
+        <Script async src="https://www.googletagmanager.com/gtag/js?id=G-WBBKJGCV3P"></Script>
+        <Script id="google-analytics">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'G-WBBKJGCV3P');
+          `}
+        </Script>
       </head>
       <body className="font-body antialiased">
         <AuthProvider>
