@@ -193,7 +193,6 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
   const isPostable = text.trim().length > 0 || media.length > 0 || (showPoll && pollChoices.some(c => c.trim()));
   const hasVideo = media.length > 0 && media[0].type === 'video';
   const hasImages = media.length > 0 && media[0].type === 'image';
-  const maxImagesReached = media.length >= 4;
   const hasContent = showPoll || hasVideo || hasImages;
 
   const singleImage = hasImages && media.length === 1;
@@ -324,7 +323,7 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
                     </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-2 border-none bg-background/80 backdrop-blur-sm shadow-lg">
-                    <div className="grid grid-cols-6 gap-1">
+                    <div className="grid grid-cols-8 gap-1">
                         {EMOJIS.map((emoji) => (
                             <Button
                                 key={emoji}
@@ -352,3 +351,5 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
     </div>
   );
 }
+
+    
