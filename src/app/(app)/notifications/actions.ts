@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/lib/firebase/config';
-import { collection, query, orderBy, getDocs, type Timestamp, where } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, type Timestamp, where, writeBatch } from 'firebase/firestore';
 import { formatTimestamp } from '@/lib/utils';
 
 export type NotificationType = {
@@ -64,5 +64,32 @@ export async function getUnreadNotificationsCount(userId: string): Promise<numbe
   } catch (error) {
     console.error("Error fetching unread notifications count:", error);
     return 0;
+  }
+}
+
+export async function markNotificationsAsRead(userId: string): Promise<{success: boolean}> {
+  if (!db || !userId) {
+    return { success: false };
+  }
+
+  const notificationsRef = collection(db, 'users', userId, 'notifications');
+  const q = query(notificationsRef, where('read', '==', false));
+
+  try {
+    const unreadSnapshot = await getDocs(q);
+    if (unreadSnapshot.empty) {
+      return { success: true };
+    }
+
+    const batch = writeBatch(db);
+    unreadSnapshot.docs.forEach(doc => {
+      batch.update(doc.ref, { read: true });
+    });
+
+    await batch.commit();
+    return { success: true };
+  } catch (error) {
+    console.error("Error marking notifications as read:", error);
+    return { success: false };
   }
 }

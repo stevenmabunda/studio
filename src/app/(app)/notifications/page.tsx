@@ -2,7 +2,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserPlus, Heart, MessageCircle } from "lucide-react";
-import { getNotifications, type NotificationType } from './actions';
+import { getNotifications, markNotificationsAsRead, type NotificationType } from './actions';
 import { useAuth } from '@/hooks/use-auth';
 import { useEffect, useState } from 'react';
 import { Skeleton } from "@/components/ui/skeleton";
@@ -90,6 +90,9 @@ export default function NotificationsPage() {
             getNotifications(user.uid)
                 .then(setNotifications)
                 .finally(() => setLoading(false));
+
+            // Mark notifications as read when the page is viewed
+            markNotificationsAsRead(user.uid);
         } else {
             setLoading(false);
         }

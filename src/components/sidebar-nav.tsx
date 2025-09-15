@@ -112,9 +112,11 @@ export function SidebarNav() {
                   isActive={pathname.startsWith(item.href) && (item.href !== '/profile' || pathname === '/profile' || pathname.startsWith('/profile/'))}
                   className="text-lg h-14"
                 >
-                  <Link href={item.href === '/profile' && user ? `/profile/${user.uid}` : item.href}>
-                    <item.icon className="h-7 w-7" />
-                    <span className={pathname.startsWith(item.href) ? 'font-bold' : 'font-normal'}>{item.label}</span>
+                  <Link href={item.href === '/profile' && user ? `/profile/${user.uid}` : item.href} className="flex items-center justify-between w-full">
+                    <div className="flex items-center gap-2">
+                        <item.icon className="h-7 w-7" />
+                        <span className={pathname.startsWith(item.href) ? 'font-bold' : 'font-normal'}>{item.label}</span>
+                    </div>
                      {item.href === '/notifications' && unreadNotifications > 0 && (
                         <SidebarBadge count={unreadNotifications} />
                      )}

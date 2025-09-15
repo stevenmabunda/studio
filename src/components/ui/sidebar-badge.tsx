@@ -20,8 +20,8 @@ export function SidebarBadge({ count }: SidebarBadgeProps) {
           exit={{ scale: 0, opacity: 0 }}
           transition={{ type: 'spring', stiffness: 500, damping: 30 }}
           className={cn(
-            'absolute left-8 top-2 h-5 min-w-[20px] rounded-full bg-primary px-1.5 text-[11px] font-bold text-primary-foreground flex items-center justify-center',
-            'group-data-[collapsible=icon]:left-auto group-data-[collapsible=icon]:right-1 group-data-[collapsible=icon]:top-1.5'
+            'h-5 min-w-[20px] rounded-full bg-primary px-1.5 text-[11px] font-bold text-primary-foreground flex items-center justify-center',
+            'group-data-[collapsible=icon]:hidden'
           )}
         >
           {displayCount}
