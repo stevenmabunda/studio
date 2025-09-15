@@ -11,7 +11,7 @@ import { collection, addDoc, serverTimestamp, getDocs, query, type Timestamp, do
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { formatTimestamp } from '@/lib/utils';
 import type { ReplyMedia } from '@/components/create-comment';
-import { getRecentPosts } from '@/app/(app)/home/actions';
+import { getRecentPosts, getVideoPosts } from '@/app/(app)/home/actions';
 
 type PostContextType = {
   forYouPosts: PostType[];
@@ -224,13 +224,24 @@ export function PostProvider({ children }: { children: ReactNode }) {
 
     try {
         const mediaUploads = await Promise.all(media.map(async (m) => {
-            const { width, height } = m.type === 'image' ? await getImageDimensions(m.file) : { width: undefined, height: undefined };
             const fileName = `${user.uid}-${Date.now()}-${m.file.name}`;
             const storagePath = `posts/${user.uid}/${fileName}`;
             const storageRef = ref(storage, storagePath);
             await uploadBytes(storageRef, m.file);
             const downloadURL = await getDownloadURL(storageRef);
-            return { url: downloadURL, type: m.type, width, height, hint: 'user uploaded content' };
+
+            const baseMediaData = { 
+              url: downloadURL, 
+              type: m.type, 
+              hint: 'user uploaded content' 
+            };
+
+            if (m.type === 'image') {
+              const { width, height } = await getImageDimensions(m.file);
+              return { ...baseMediaData, width, height };
+            }
+
+            return baseMediaData;
         }));
         
         const postDataForDb = {
@@ -506,5 +517,3 @@ export function usePosts() {
   }
   return context;
 }
-
-    
