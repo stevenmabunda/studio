@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/lib/firebase/config';
-import { collection, query, orderBy, getDocs, type Timestamp } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, type Timestamp, where } from 'firebase/firestore';
 import { formatTimestamp } from '@/lib/utils';
 
 export type NotificationType = {
@@ -47,5 +47,22 @@ export async function getNotifications(userId: string): Promise<NotificationType
   } catch (error) {
     console.error("Error fetching notifications:", error);
     return [];
+  }
+}
+
+export async function getUnreadNotificationsCount(userId: string): Promise<number> {
+  if (!db || !userId) {
+    return 0;
+  }
+
+  const notificationsRef = collection(db, 'users', userId, 'notifications');
+  const q = query(notificationsRef, where('read', '==', false));
+
+  try {
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.size;
+  } catch (error) {
+    console.error("Error fetching unread notifications count:", error);
+    return 0;
   }
 }

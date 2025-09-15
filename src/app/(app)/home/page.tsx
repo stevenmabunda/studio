@@ -22,6 +22,8 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TrendingTopics } from '@/components/trending-topics';
 import { getVideoPosts } from './actions';
+import { db } from '@/lib/firebase/config';
+import { onSnapshot, collection, query, where } from 'firebase/firestore';
 
 
 function VideoFeed() {
@@ -132,6 +134,20 @@ export default function HomePage() {
 
   const [isHeaderHidden, setIsHeaderHidden] = useState(false);
   const lastScrollY = useRef(0);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+
+  useEffect(() => {
+    if (user && db) {
+      const notificationsRef = collection(db, 'users', user.uid, 'notifications');
+      const q = query(notificationsRef, where('read', '==', false));
+      
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        setUnreadNotifications(snapshot.size);
+      });
+
+      return () => unsubscribe();
+    }
+  }, [user]);
 
   useEffect(() => {
     document.title = 'Home | BHOLO';
@@ -281,8 +297,13 @@ export default function HomePage() {
                     </Link>
                      <div className="flex items-center gap-1">
                         <Link href="/notifications" passHref>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 relative">
                                 <Bell className="h-5 w-5" />
+                                {unreadNotifications > 0 && (
+                                    <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-bold">
+                                        {unreadNotifications > 9 ? '9+' : unreadNotifications}
+                                    </span>
+                                )}
                                 <span className="sr-only">Notifications</span>
                             </Button>
                         </Link>
@@ -358,5 +379,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    

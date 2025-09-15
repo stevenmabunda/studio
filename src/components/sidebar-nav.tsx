@@ -18,10 +18,10 @@ import { Button } from './ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { CreatePost, type Media } from './create-post';
 import { usePosts } from '@/contexts/post-context';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { signOut } from 'firebase/auth';
-import { auth } from '@/lib/firebase/config';
+import { auth, db } from '@/lib/firebase/config';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,6 +32,8 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import type { PostType } from '@/lib/data';
 import Image from 'next/image';
+import { onSnapshot, collection, query, where } from 'firebase/firestore';
+import { SidebarBadge } from './ui/sidebar-badge';
 
 const navItems = [
   { href: '/home', label: 'Home', icon: Home },
@@ -50,6 +52,20 @@ export function SidebarNav() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+
+  useEffect(() => {
+    if (user && db) {
+      const notificationsRef = collection(db, 'users', user.uid, 'notifications');
+      const q = query(notificationsRef, where('read', '==', false));
+      
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        setUnreadNotifications(snapshot.size);
+      });
+
+      return () => unsubscribe();
+    }
+  }, [user]);
 
   const handlePost = async (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null }) => {
     try {
@@ -99,6 +115,9 @@ export function SidebarNav() {
                   <Link href={item.href === '/profile' && user ? `/profile/${user.uid}` : item.href}>
                     <item.icon className="h-7 w-7" />
                     <span className={pathname.startsWith(item.href) ? 'font-bold' : 'font-normal'}>{item.label}</span>
+                     {item.href === '/notifications' && unreadNotifications > 0 && (
+                        <SidebarBadge count={unreadNotifications} />
+                     )}
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
