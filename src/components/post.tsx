@@ -351,10 +351,6 @@ export function Post(props: PostProps) {
     }
   }
 
-  const handleCommentCreated = (newComment: PostType) => {
-    setComments(prev => [newComment, ...prev]);
-  };
-
 
   useEffect(() => {
     if (isStandalone && user && user.uid !== authorId) {
@@ -751,11 +747,6 @@ export function Post(props: PostProps) {
                             <Button variant="ghost" size="icon" className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 text-white h-10 w-10 bg-black/30 hover:bg-black/50 hover:text-white rounded-full opacity-50 group-hover/viewer:opacity-100 transition-opacity" onClick={scrollNext}>
                                 <ChevronRight className="h-6 w-6"/>
                             </Button>
-                            <DialogClose asChild>
-                                <Button variant="ghost" size="icon" className="absolute top-2 right-2 text-white h-10 w-10 bg-black/30 hover:bg-black/50 hover:text-white">
-                                    <X className="h-6 w-6"/>
-                                </Button>
-                            </DialogClose>
                         </div>
                     </div>
 
@@ -768,14 +759,14 @@ export function Post(props: PostProps) {
                                     {loadingComments ? (
                                         Array.from({length: 3}).map((_, i) => <CommentSkeleton key={i} />)
                                     ) : comments.length > 0 ? (
-                                        comments.map((comment) => <Comment key={comment.id} comment={comment} />)
+                                        comments.map((comment) => <Comment key={`comment-${comment.id}`} comment={comment} />)
                                     ) : (
                                         <p className="p-8 text-center text-muted-foreground text-sm">No comments yet.</p>
                                     )}
                                 </div>
                             </ScrollArea>
                             <div className="border-t">
-                                <CreateComment onComment={handleCreateComment} onCommentCreated={handleCommentCreated} />
+                                <CreateComment onComment={handleCreateComment} />
                             </div>
                         </div>
                     </aside>
@@ -785,5 +776,3 @@ export function Post(props: PostProps) {
       </div>
   );
 }
-
-    
