@@ -106,7 +106,7 @@ function ReplyDialog({ post, onReply, open, onOpenChange }: { post: PostType, on
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="p-0 gap-0" onPointerDownOutside={(e) => e.preventDefault()}>
+            <DialogContent className="p-0 gap-0" onPointerDownOutside={(e) => e.preventDefault()} onClick={(e) => e.stopPropagation()}>
                 <DialogHeader className="p-4 border-b">
                      <DialogTitle className="sr-only">Reply to post</DialogTitle>
                     <DialogClose asChild>
