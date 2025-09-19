@@ -4,7 +4,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { MessageCircle, Repeat, Heart, Share2, MoreHorizontal, Edit, Trash2, Bookmark, Copy, X, ChevronLeft, ChevronRight, Link2 } from "lucide-react";
+import { MessageCircle, Repeat, Heart, Share2, MoreHorizontal, Edit, Trash2, Bookmark, Copy, X, ChevronLeft, ChevronRight, Link2, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
@@ -108,6 +108,7 @@ function ReplyDialog({ post, onReply, open, onOpenChange }: { post: PostType, on
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="p-0 gap-0" onPointerDownOutside={(e) => e.preventDefault()}>
                 <DialogHeader className="p-4 border-b">
+                     <DialogTitle className="sr-only">Reply to post</DialogTitle>
                     <DialogClose asChild>
                          <Button variant="ghost" size="icon" className="absolute left-2 top-2 h-8 w-8 rounded-full">
                             <X className="h-5 w-5" />
