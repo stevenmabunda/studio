@@ -62,6 +62,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 type PostProps = PostType & {
   isStandalone?: boolean;
+  isReplyView?: boolean;
 };
 
 type CommentType = PostType;
@@ -108,7 +109,7 @@ function ReplyDialog({ post, onReply, open, onOpenChange }: { post: PostType, on
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="p-0 gap-0" onPointerDownOutside={(e) => e.preventDefault()} onClick={(e) => e.stopPropagation()}>
                 <DialogHeader className="p-4 border-b">
-                    <DialogTitle className="sr-only">Reply to post</DialogTitle>
+                     <DialogTitle className="sr-only">Reply to post</DialogTitle>
                     <DialogClose asChild>
                          <Button variant="ghost" size="icon" className="absolute left-2 top-2 h-8 w-8 rounded-full">
                             <X className="h-5 w-5" />
@@ -270,6 +271,7 @@ export function Post(props: PostProps) {
     media,
     poll,
     isStandalone = false,
+    isReplyView = false,
   } = props;
   
   const router = useRouter();
@@ -438,7 +440,7 @@ export function Post(props: PostProps) {
 
   const handlePostClick = () => {
       if (id.startsWith('temp_')) return;
-      if (!isStandalone) {
+      if (!isStandalone && !isReplyView) {
           sessionStorage.setItem('scrollY', String(window.scrollY));
           sessionStorage.setItem('scrollPostId', id);
           router.push(`/post/${id}`);
@@ -549,14 +551,17 @@ export function Post(props: PostProps) {
     4: 'grid-cols-2 grid-rows-2',
   }[imageCount] || '';
 
-  const renderPostContent = (options: { includeMedia: boolean, isForDialog?: boolean }) => (
-    <div className="flex space-x-3 md:space-x-4 p-3 md:p-4">
-      <Link href={`/profile/${authorId}`} className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-        <Avatar>
-          <AvatarImage src={authorAvatar} alt={authorName} data-ai-hint="user avatar" />
-          <AvatarFallback>{authorName.charAt(0)}</AvatarFallback>
-        </Avatar>
-      </Link>
+  const mainPostContent = (
+    <div className={cn("flex space-x-3 md:space-x-4", isReplyView ? 'p-3 md:p-4 pb-0' : 'p-3 md:p-4')}>
+      <div className="flex flex-col items-center">
+          <Link href={`/profile/${authorId}`} className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+            <Avatar>
+              <AvatarImage src={authorAvatar} alt={authorName} data-ai-hint="user avatar" />
+              <AvatarFallback>{authorName.charAt(0)}</AvatarFallback>
+            </Avatar>
+          </Link>
+          {isReplyView && <div className="w-0.5 grow bg-border my-2" />}
+      </div>
       <div className="flex-1 min-w-0">
         <div className="flex justify-between items-start gap-2">
             <div className="flex-1 min-w-0">
@@ -565,11 +570,13 @@ export function Post(props: PostProps) {
                         {authorName}
                     </Link>
                     <span className="text-sm text-muted-foreground truncate">@{authorHandle}</span>
-                    <span className="text-muted-foreground">·</span>
-                    <span className="text-sm text-muted-foreground flex-shrink-0">{timestamp}</span>
+                    {!isReplyView && <>
+                        <span className="text-muted-foreground">·</span>
+                        <span className="text-sm text-muted-foreground flex-shrink-0">{timestamp}</span>
+                    </>}
                 </div>
             </div>
-           {isAuthor && !options.isForDialog ? (
+           {isAuthor && !isReplyView ? (
                 <div className="flex-shrink-0">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -590,7 +597,7 @@ export function Post(props: PostProps) {
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
-           ) : user && isStandalone && !options.isForDialog ? (
+           ) : user && isStandalone && !isReplyView ? (
                 <div className="flex-shrink-0 -mr-2">
                      <FollowButton
                         profileId={authorId}
@@ -600,7 +607,7 @@ export function Post(props: PostProps) {
                     />
                 </div>
            ) : (
-                isAuthor || options.isForDialog ? null : 
+                isAuthor || isReplyView ? null : 
                 <div className="flex-shrink-0">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -625,7 +632,7 @@ export function Post(props: PostProps) {
            )}
         </div>
         <p className="mt-2 whitespace-pre-wrap text-sm">
-          {linkify(displayText)}
+          {linkify(isReplyView ? content : displayText)}
           {needsTruncation && (
             <button
               onClick={(e) => {
@@ -640,7 +647,7 @@ export function Post(props: PostProps) {
         </p>
         {poll && <Poll poll={poll} postId={id} />}
         
-        {options.includeMedia && mediaExists && (
+        {mediaExists && !isReplyView && (
           <div className={cn("mt-3 rounded-2xl overflow-hidden border", imageCount > 1 && "aspect-video")}>
             {isVideo ? (
               <video
@@ -689,7 +696,7 @@ export function Post(props: PostProps) {
             )}
           </div>
         )}
-        {!options.isForDialog && (
+        {!isReplyView && (
             <div className="mt-4 flex items-center justify-between text-muted-foreground">
             <div className="flex items-center -ml-3">
                 <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-primary" onClick={handleCommentClick}>
@@ -756,11 +763,11 @@ export function Post(props: PostProps) {
 
   return (
       <div 
-        className={!isStandalone ? 'cursor-pointer hover:bg-accent/20' : ''} 
+        className={cn(!isStandalone && !isReplyView && 'cursor-pointer hover:bg-accent/20')} 
         onClick={handlePostClick}
         data-post-id={id}
       >
-          {renderPostContent({ includeMedia: true, isForDialog: false })}
+          {mainPostContent}
           <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
               <AlertDialogContent onClick={e => e.stopPropagation()}>
                   <AlertDialogHeader>
@@ -835,7 +842,23 @@ export function Post(props: PostProps) {
                     <aside className="w-full md:w-[380px] md:h-full bg-background flex flex-col overflow-y-hidden flex-shrink-0 max-h-[40vh] md:max-h-full">
                         <div className="flex-1 flex flex-col min-h-0">
                             <ScrollArea className="flex-1">
-                                {renderPostContent({ includeMedia: false, isForDialog: true })}
+                                <div className="flex space-x-3 md:space-x-4 p-3 md:p-4">
+                                    <Link href={`/profile/${authorId}`} className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                                        <Avatar>
+                                        <AvatarImage src={authorAvatar} alt={authorName} data-ai-hint="user avatar" />
+                                        <AvatarFallback>{authorName.charAt(0)}</AvatarFallback>
+                                        </Avatar>
+                                    </Link>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <Link href={`/profile/${authorId}`} className="font-bold hover:underline truncate" onClick={(e) => e.stopPropagation()}>
+                                                {authorName}
+                                            </Link>
+                                            <span className="text-sm text-muted-foreground truncate">@{authorHandle}</span>
+                                        </div>
+                                        <p className="mt-2 whitespace-pre-wrap text-sm">{linkify(content)}</p>
+                                    </div>
+                                </div>
                                 <div className="divide-y divide-border border-t">
                                     {loadingComments ? (
                                         Array.from({length: 3}).map((_, i) => <CommentSkeleton key={i} />)

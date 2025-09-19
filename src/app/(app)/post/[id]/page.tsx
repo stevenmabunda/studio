@@ -5,7 +5,6 @@ import { Post } from '@/components/post';
 import { CreateComment, type ReplyMedia } from '@/components/create-comment';
 import { useState, useEffect } from 'react';
 import type { PostType } from '@/lib/data';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/hooks/use-auth';
 import { usePosts } from '@/contexts/post-context';
 import { db } from '@/lib/firebase/config';
@@ -13,13 +12,9 @@ import { collection, query, onSnapshot, orderBy, type Timestamp, doc, getDoc } f
 import { formatTimestamp } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ArrowLeft } from 'lucide-react';
 import { PostSkeleton } from '@/components/post-skeleton';
 import { Button } from '@/components/ui/button';
-import Image from 'next/image';
-import { cn } from '@/lib/utils';
 
 
 type Comment = PostType;
@@ -38,7 +33,11 @@ export default function PostPage() {
   
   const handleBack = () => {
     // We simply go back in history. The home page's useEffect will handle scroll restoration.
-    router.back();
+    if (window.history.length > 1) {
+      router.back();
+    } else {
+      router.push('/home'); // Fallback for direct navigation
+    }
   };
 
   useEffect(() => {
@@ -124,18 +123,13 @@ export default function PostPage() {
     }
   }
 
-  const Header = ({ post, onBack }: { post: PostType | null, onBack: () => void }) => (
+  const Header = ({ onBack, isReplying }: { onBack: () => void, isReplying: boolean }) => (
     <header className="sticky top-0 z-10 flex items-center gap-4 border-b bg-background/80 p-4 backdrop-blur-sm h-14">
         <Button variant="ghost" size="icon" className="h-8 w-8 -ml-2" onClick={onBack}>
             <ArrowLeft />
         </Button>
         <div>
-            <h1 className="text-xl font-bold">Post</h1>
-             {post && (
-                <p className="text-xs text-muted-foreground truncate max-w-[200px]">
-                    by @{post.authorHandle}
-                </p>
-            )}
+            <h1 className="text-xl font-bold">{isReplying ? 'Reply' : 'Post'}</h1>
         </div>
     </header>
   );
@@ -143,7 +137,7 @@ export default function PostPage() {
   if (loadingPost) {
     return (
         <div>
-            <Header post={null} onBack={handleBack} />
+            <Header onBack={handleBack} isReplying={false} />
             <PostSkeleton />
         </div>
     );
@@ -152,7 +146,7 @@ export default function PostPage() {
   if (!post) {
       return (
           <div>
-              <Header post={null} onBack={handleBack} />
+              <Header onBack={handleBack} isReplying={false} />
               <div className="p-8 text-center text-muted-foreground">
                 <h2 className="text-xl font-bold">Post not found</h2>
                 <p>This post may have been deleted.</p>
@@ -163,11 +157,11 @@ export default function PostPage() {
 
   return (
     <div className="h-screen flex flex-col">
-      <Header post={post} onBack={handleBack} />
+      <Header onBack={handleBack} isReplying />
       <div className="flex-1 overflow-y-auto">
-        <Post {...post} isStandalone={true} />
+        <Post {...post} isReplyView={true} />
         <CreateComment onComment={handleCreateComment} />
-        <div className="divide-y divide-border">
+        <div className="divide-y divide-border border-t">
             {loadingComments ? (
                 Array.from({length: 3}).map((_, i) => (
                     <div key={i} className="flex space-x-3 md:space-x-4 p-3 md:p-4">
