@@ -1,9 +1,10 @@
 
+
 'use client';
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { MessageCircle, Repeat, Heart, Share2, CheckCircle2, MoreHorizontal, Edit, Trash2, Bookmark, MapPin, Copy, X, ChevronLeft, ChevronRight, Link2 } from "lucide-react";
+import { MessageCircle, Repeat, Heart, Share2, MoreHorizontal, Edit, Trash2, Bookmark, Copy, X, ChevronLeft, ChevronRight, Link2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
@@ -56,6 +57,8 @@ import { collection, onSnapshot, orderBy, query, type Timestamp } from "firebase
 import { Skeleton } from "./ui/skeleton";
 import useEmblaCarousel from 'embla-carousel-react';
 import { LoginOrSignupDialog } from "./login-or-signup-dialog";
+import { useIsMobile } from "@/hooks/use-mobile";
+
 
 type PostProps = PostType & {
   isStandalone?: boolean;
@@ -69,11 +72,74 @@ const TwitterIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M22 4s-.7 2.1-2 3.4c1.6 1.4 2.8 3.2 3 5.2-1.4 1.1-3.5 2.2-6 2.2-2.3 0-4.6-1.1-6.8-2.2C5.3 14.3 4.1 12.3 3 10c1.8 1.4 3.9 2.4 6.3 2.5.1 0 .2 0 .3 0 2.3 0 4.2-1.1 5.7-2.2-.1-.1-.2-.2-.2-.3-.1-.3-.2-.5-.3-.8-.3-.9-.6-1.8-1-2.7-.4-.9-.9-1.8-1.4-2.6-1.1-1.4-2.6-2.3-4.2-2.3-1.4 0-2.8.7-3.9 1.8" /></svg>
 );
 const FacebookIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /></svg>
 );
 const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" /></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" /></svg>
 );
+
+function ReplyDialog({ post, onReply, open, onOpenChange }: { post: PostType, onReply: (data: { text: string; media: ReplyMedia[] }) => Promise<PostType | null>, open: boolean, onOpenChange: (open: boolean) => void }) {
+    const { toast } = useToast();
+    const router = useRouter();
+
+    const handleCreateReply = async (data: { text: string; media: ReplyMedia[] }) => {
+        try {
+            const newComment = await onReply(data);
+            if (newComment) {
+                onOpenChange(false);
+                toast({
+                    description: "Your reply was sent.",
+                    action: (
+                        <Button variant="outline" size="sm" onClick={() => router.push(`/post/${post.id}`)}>
+                            View
+                        </Button>
+                    ),
+                });
+                return newComment;
+            }
+             return null;
+        } catch (error) {
+            toast({ variant: 'destructive', description: "Failed to send reply." });
+            return null;
+        }
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="p-0 gap-0" onPointerDownOutside={(e) => e.preventDefault()}>
+                <DialogHeader className="p-4 border-b">
+                    <DialogClose asChild>
+                         <Button variant="ghost" size="icon" className="absolute left-2 top-2 h-8 w-8 rounded-full">
+                            <X className="h-5 w-5" />
+                        </Button>
+                    </DialogClose>
+                </DialogHeader>
+                <div className="p-4">
+                    <div className="flex space-x-3">
+                        <div className="flex flex-col items-center">
+                            <Avatar className="h-10 w-10">
+                                <AvatarImage src={post.authorAvatar} alt={post.authorName} />
+                                <AvatarFallback>{post.authorName.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <div className="w-0.5 grow bg-border my-2" />
+                        </div>
+                        <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                                <span className="font-bold">{post.authorName}</span>
+                                <span className="text-sm text-muted-foreground">@{post.authorHandle}</span>
+                            </div>
+                            <p className="mt-1 text-sm whitespace-pre-wrap">{post.content}</p>
+                            <p className="mt-4 text-sm text-muted-foreground">
+                                Replying to <span className="text-primary">@{post.authorHandle}</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <CreateComment onComment={handleCreateReply} />
+            </DialogContent>
+        </Dialog>
+    );
+}
 
 function Poll({ poll, postId }: { poll: NonNullable<PostType['poll']>, postId: string }) {
   const [votedChoice, setVotedChoice] = useState<number | null>(null);
@@ -209,6 +275,7 @@ export function Post(props: PostProps) {
   const { user } = useAuth();
   const { editPost, deletePost, likePost, repostPost, bookmarkPost, bookmarkedPostIds, addComment } = usePosts();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const [comments, setComments] = useState<CommentType[]>([]);
   const [loadingComments, setLoadingComments] = useState(false);
@@ -223,6 +290,7 @@ export function Post(props: PostProps) {
   const [editedContent, setEditedContent] = useState(content);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isShareSheetOpen, setShareSheetOpen] = useState(false);
+  const [isReplyDialogOpen, setIsReplyDialogOpen] = useState(false);
 
   const [isImageViewerOpen, setIsImageViewerOpen] = useState(false);
   const [imageViewerStartIndex, setImageViewerStartIndex] = useState(0);
@@ -369,16 +437,25 @@ export function Post(props: PostProps) {
 
   const handlePostClick = () => {
       if (id.startsWith('temp_')) return;
-      if (!user) {
-        setIsLoginDialogOpen(true);
-        return;
-      }
       if (!isStandalone) {
           sessionStorage.setItem('scrollY', String(window.scrollY));
           sessionStorage.setItem('scrollPostId', id);
           router.push(`/post/${id}`);
       }
   }
+
+  const handleCommentClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!user) {
+        setIsLoginDialogOpen(true);
+        return;
+    }
+    if (isMobile || isStandalone) {
+        router.push(`/post/${id}`);
+    } else {
+        setIsReplyDialogOpen(true);
+    }
+  };
 
   const handleActionClick = (action: () => void) => (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -471,7 +548,7 @@ export function Post(props: PostProps) {
     4: 'grid-cols-2 grid-rows-2',
   }[imageCount] || '';
 
-  const renderPostContent = (options: { includeMedia: boolean }) => (
+  const renderPostContent = (options: { includeMedia: boolean, isForDialog?: boolean }) => (
     <div className="flex space-x-3 md:space-x-4 p-3 md:p-4">
       <Link href={`/profile/${authorId}`} className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
         <Avatar>
@@ -491,7 +568,7 @@ export function Post(props: PostProps) {
                     <span className="text-sm text-muted-foreground flex-shrink-0">{timestamp}</span>
                 </div>
             </div>
-           {isAuthor ? (
+           {isAuthor && !options.isForDialog ? (
                 <div className="flex-shrink-0">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -512,7 +589,7 @@ export function Post(props: PostProps) {
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
-           ) : user && isStandalone ? (
+           ) : user && isStandalone && !options.isForDialog ? (
                 <div className="flex-shrink-0 -mr-2">
                      <FollowButton
                         profileId={authorId}
@@ -522,7 +599,7 @@ export function Post(props: PostProps) {
                     />
                 </div>
            ) : (
-                isAuthor ? null : 
+                isAuthor || options.isForDialog ? null : 
                 <div className="flex-shrink-0">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -611,65 +688,67 @@ export function Post(props: PostProps) {
             )}
           </div>
         )}
-        <div className="mt-4 flex items-center justify-between text-muted-foreground">
-          <div className="flex items-center -ml-3">
-              <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-primary" onClick={handlePostClick}>
-                  <MessageCircle className="h-5 w-5" />
-                  <span>{commentCount > 0 ? commentCount : ''}</span>
-              </Button>
-              <Button variant="ghost" size="sm" className={cn("flex items-center gap-2", isLiked ? 'text-green-500' : 'hover:text-green-500')} onClick={handleActionClick(handleRepost)}>
-                <Repeat className="h-5 w-5" />
-                <span>{repostCount > 0 ? repostCount : ''}</span>
-              </Button>
-              <Button variant="ghost" size="sm" className={cn("flex items-center gap-2", isLiked ? 'text-red-500' : 'hover:text-red-500')} onClick={handleActionClick(handleLike)}>
-                <Heart className={cn("h-5 w-5", isLiked && 'fill-current')} />
-                <span>{likeCount > 0 ? likeCount : ''}</span>
-              </Button>
-          </div>
-          <div className="flex items-center -mr-3">
-              <Button variant="ghost" size="icon" className={cn("hover:text-primary", isBookmarked && "text-primary")} onClick={handleActionClick(handleBookmark)}>
-                  <Bookmark className={cn("h-5 w-5", isBookmarked && 'fill-current')} />
-              </Button>
-              <Sheet open={isShareSheetOpen} onOpenChange={setShareSheetOpen}>
-                  <SheetTrigger asChild>
-                      <Button variant="ghost" size="icon" className="hover:text-primary" onClick={(e) => e.stopPropagation()}>
-                          <Share2 className="h-5 w-5" />
-                      </Button>
-                  </SheetTrigger>
-                  <SheetContent side="bottom" className="rounded-t-lg" onClick={(e) => e.stopPropagation()}>
-                      <SheetHeader>
-                          <SheetTitle>Share Post</SheetTitle>
-                      </SheetHeader>
-                      <div className="grid grid-cols-4 gap-4 py-4">
-                          <a href={getShareUrl('twitter')} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center group">
-                              <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
-                                  <TwitterIcon className="h-7 w-7" />
-                              </div>
-                              <span className="text-xs">Twitter</span>
-                          </a>
-                          <a href={getShareUrl('facebook')} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center group">
-                              <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
-                                  <FacebookIcon className="h-7 w-7" />
-                              </div>
-                              <span className="text-xs">Facebook</span>
-                          </a>
-                          <a href={getShareUrl('whatsapp')} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center group">
-                              <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
-                                  <WhatsAppIcon className="h-7 w-7" />
-                              </div>
-                              <span className="text-xs">WhatsApp</span>
-                          </a>
-                          <button onClick={handleCopyLink} className="flex flex-col items-center gap-2 text-center group">
-                              <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
-                                  <Copy className="h-7 w-7" />
-                              </div>
-                              <span className="text-xs">Copy Link</span>
-                          </button>
-                      </div>
-                  </SheetContent>
-              </Sheet>
-          </div>
-        </div>
+        {!options.isForDialog && (
+            <div className="mt-4 flex items-center justify-between text-muted-foreground">
+            <div className="flex items-center -ml-3">
+                <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-primary" onClick={handleCommentClick}>
+                    <MessageCircle className="h-5 w-5" />
+                    <span>{commentCount > 0 ? commentCount : ''}</span>
+                </Button>
+                <Button variant="ghost" size="sm" className={cn("flex items-center gap-2", isLiked ? 'text-green-500' : 'hover:text-green-500')} onClick={handleActionClick(handleRepost)}>
+                  <Repeat className="h-5 w-5" />
+                  <span>{repostCount > 0 ? repostCount : ''}</span>
+                </Button>
+                <Button variant="ghost" size="sm" className={cn("flex items-center gap-2", isLiked ? 'text-red-500' : 'hover:text-red-500')} onClick={handleActionClick(handleLike)}>
+                  <Heart className={cn("h-5 w-5", isLiked && 'fill-current')} />
+                  <span>{likeCount > 0 ? likeCount : ''}</span>
+                </Button>
+            </div>
+            <div className="flex items-center -mr-3">
+                <Button variant="ghost" size="icon" className={cn("hover:text-primary", isBookmarked && "text-primary")} onClick={handleActionClick(handleBookmark)}>
+                    <Bookmark className={cn("h-5 w-5", isBookmarked && 'fill-current')} />
+                </Button>
+                <Sheet open={isShareSheetOpen} onOpenChange={setShareSheetOpen}>
+                    <SheetTrigger asChild>
+                        <Button variant="ghost" size="icon" className="hover:text-primary" onClick={(e) => e.stopPropagation()}>
+                            <Share2 className="h-5 w-5" />
+                        </Button>
+                    </SheetTrigger>
+                    <SheetContent side="bottom" className="rounded-t-lg" onClick={(e) => e.stopPropagation()}>
+                        <SheetHeader>
+                            <SheetTitle>Share Post</SheetTitle>
+                        </SheetHeader>
+                        <div className="grid grid-cols-4 gap-4 py-4">
+                            <a href={getShareUrl('twitter')} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center group">
+                                <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
+                                    <TwitterIcon className="h-7 w-7" />
+                                </div>
+                                <span className="text-xs">Twitter</span>
+                            </a>
+                            <a href={getShareUrl('facebook')} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center group">
+                                <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
+                                    <FacebookIcon className="h-7 w-7" />
+                                </div>
+                                <span className="text-xs">Facebook</span>
+                            </a>
+                            <a href={getShareUrl('whatsapp')} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center group">
+                                <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
+                                    <WhatsAppIcon className="h-7 w-7" />
+                                </div>
+                                <span className="text-xs">WhatsApp</span>
+                            </a>
+                            <button onClick={handleCopyLink} className="flex flex-col items-center gap-2 text-center group">
+                                <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
+                                    <Copy className="h-7 w-7" />
+                                </div>
+                                <span className="text-xs">Copy Link</span>
+                            </button>
+                        </div>
+                    </SheetContent>
+                </Sheet>
+            </div>
+            </div>
+        )}
       </div>
     </div>
   );
@@ -680,7 +759,7 @@ export function Post(props: PostProps) {
         onClick={handlePostClick}
         data-post-id={id}
       >
-          {renderPostContent({ includeMedia: true })}
+          {renderPostContent({ includeMedia: true, isForDialog: false })}
           <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
               <AlertDialogContent onClick={e => e.stopPropagation()}>
                   <AlertDialogHeader>
@@ -716,12 +795,17 @@ export function Post(props: PostProps) {
                   </DialogFooter>
               </DialogContent>
           </Dialog>
+          {!isMobile && <ReplyDialog post={props} onReply={handleCreateComment} open={isReplyDialogOpen} onOpenChange={setIsReplyDialogOpen} />}
            <Dialog open={isImageViewerOpen} onOpenChange={setIsImageViewerOpen}>
                 <DialogContent 
                     className="max-w-none w-screen h-screen bg-black/90 border-none shadow-none p-0 flex flex-col md:flex-row"
                     onClick={(e) => e.stopPropagation()}
                 >
                     <DialogTitle className="sr-only">Image Viewer</DialogTitle>
+                     <DialogClose className="absolute right-4 top-4 z-10 rounded-full p-2 bg-black/50 text-white opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+                        <X className="h-6 w-6" />
+                        <span className="sr-only">Close</span>
+                    </DialogClose>
                     
                     {/* Main Image Content */}
                     <div className="flex-1 flex flex-col min-h-0 md:h-full">
@@ -754,7 +838,7 @@ export function Post(props: PostProps) {
                     <aside className="w-full md:w-[380px] md:h-full bg-background flex flex-col overflow-y-hidden flex-shrink-0 max-h-[40vh] md:max-h-full">
                         <div className="flex-1 flex flex-col min-h-0">
                             <ScrollArea className="flex-1">
-                                {renderPostContent({ includeMedia: false })}
+                                {renderPostContent({ includeMedia: false, isForDialog: true })}
                                 <div className="divide-y divide-border border-t">
                                     {loadingComments ? (
                                         Array.from({length: 3}).map((_, i) => <CommentSkeleton key={i} />)
