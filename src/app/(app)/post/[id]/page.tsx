@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { Post } from '@/components/post';
@@ -123,13 +124,13 @@ export default function PostPage() {
     }
   }
 
-  const Header = ({ onBack, isReplying }: { onBack: () => void, isReplying: boolean }) => (
+  const Header = ({ onBack }: { onBack: () => void }) => (
     <header className="sticky top-0 z-10 flex items-center gap-4 border-b bg-background/80 p-4 backdrop-blur-sm h-14">
         <Button variant="ghost" size="icon" className="h-8 w-8 -ml-2" onClick={onBack}>
             <ArrowLeft />
         </Button>
         <div>
-            <h1 className="text-xl font-bold">{isReplying ? 'Reply' : 'Post'}</h1>
+            <h1 className="text-xl font-bold">Post</h1>
         </div>
     </header>
   );
@@ -137,7 +138,7 @@ export default function PostPage() {
   if (loadingPost) {
     return (
         <div>
-            <Header onBack={handleBack} isReplying={false} />
+            <Header onBack={handleBack} />
             <PostSkeleton />
         </div>
     );
@@ -146,7 +147,7 @@ export default function PostPage() {
   if (!post) {
       return (
           <div>
-              <Header onBack={handleBack} isReplying={false} />
+              <Header onBack={handleBack} />
               <div className="p-8 text-center text-muted-foreground">
                 <h2 className="text-xl font-bold">Post not found</h2>
                 <p>This post may have been deleted.</p>
@@ -157,10 +158,10 @@ export default function PostPage() {
 
   return (
     <div className="h-screen flex flex-col">
-      <Header onBack={handleBack} isReplying />
+      <Header onBack={handleBack} />
       <div className="flex-1 overflow-y-auto">
-        <Post {...post} isReplyView={true} />
-        <CreateComment onComment={handleCreateComment} />
+        <Post {...post} isStandalone={true} />
+        
         <div className="divide-y divide-border border-t">
             {loadingComments ? (
                 Array.from({length: 3}).map((_, i) => (
@@ -174,7 +175,7 @@ export default function PostPage() {
                 ))
             ) : comments.length > 0 ? (
                  comments.map((comment) => (
-                    <Post key={`comment-${comment.id}`} {...comment} />
+                    <Post key={`comment-${comment.id}`} {...comment} isReplyView={true} />
                  ))
             ) : (
                  <div className="p-8 text-center text-muted-foreground">

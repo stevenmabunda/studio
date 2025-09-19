@@ -107,7 +107,7 @@ function ReplyDialog({ post, onReply, open, onOpenChange }: { post: PostType, on
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="p-0 gap-0" onPointerDownOutside={(e) => e.preventDefault()} onClick={(e) => e.stopPropagation()}>
+            <DialogContent className="p-0 gap-0" onClick={(e) => e.stopPropagation()}>
                 <DialogHeader className="p-4 border-b">
                      <DialogTitle className="sr-only">Reply to post</DialogTitle>
                     <DialogClose asChild>
@@ -453,11 +453,8 @@ export function Post(props: PostProps) {
         setIsLoginDialogOpen(true);
         return;
     }
-    if (isMobile || isStandalone) {
-        router.push(`/post/${id}`);
-    } else {
-        setIsReplyDialogOpen(true);
-    }
+    // Always open dialog now for a consistent experience
+    setIsReplyDialogOpen(true);
   };
 
   const handleActionClick = (action: () => void) => (e: React.MouseEvent) => {
@@ -575,6 +572,7 @@ export function Post(props: PostProps) {
                         <span className="text-sm text-muted-foreground flex-shrink-0">{timestamp}</span>
                     </>}
                 </div>
+                 {isReplyView && <p className="text-sm text-muted-foreground">Replying to <Link href={`/profile/${props.authorId}`} className="text-primary">@{props.authorHandle}</Link></p>}
             </div>
            {isAuthor && !isReplyView ? (
                 <div className="flex-shrink-0">
@@ -631,20 +629,37 @@ export function Post(props: PostProps) {
                 </div>
            )}
         </div>
-        <p className="mt-2 whitespace-pre-wrap text-sm">
-          {linkify(isReplyView ? content : displayText)}
-          {needsTruncation && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsExpanded(true);
-              }}
-              className="text-primary hover:underline ml-1"
-            >
-              ...more
-            </button>
-          )}
-        </p>
+        
+        {isEditing ? (
+            <div className="mt-2">
+                <Textarea
+                    value={editedContent}
+                    onChange={(e) => setEditedContent(e.target.value)}
+                    className="min-h-[80px] text-base"
+                    autoFocus
+                />
+                <div className="mt-2 flex justify-end gap-2">
+                    <Button variant="outline" size="sm" onClick={() => { setIsEditing(false); setEditedContent(content); }}>Cancel</Button>
+                    <Button size="sm" onClick={handleEditSave}>Save</Button>
+                </div>
+            </div>
+        ) : (
+            <p className={cn("whitespace-pre-wrap", isReplyView ? "mt-1" : "mt-2", isStandalone && "text-lg")}>
+                {linkify(isReplyView ? content : displayText)}
+                {needsTruncation && (
+                    <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setIsExpanded(true);
+                    }}
+                    className="text-primary hover:underline ml-1"
+                    >
+                    ...more
+                    </button>
+                )}
+            </p>
+        )}
+
         {poll && <Poll poll={poll} postId={id} />}
         
         {mediaExists && !isReplyView && (
@@ -787,29 +802,16 @@ export function Post(props: PostProps) {
                   </AlertDialogFooter>
               </AlertDialogContent>
           </AlertDialog>
-          <Dialog open={isEditing} onOpenChange={setIsEditing}>
-              <DialogContent onClick={e => e.stopPropagation()}>
-                  <DialogHeader>
-                      <DialogTitle>Edit Post</DialogTitle>
-                  </DialogHeader>
-                  <Textarea
-                      value={editedContent}
-                      onChange={(e) => setEditedContent(e.target.value)}
-                      className="min-h-[120px] text-base"
-                  />
-                  <DialogFooter>
-                      <Button variant="outline" onClick={() => { setIsEditing(false); setEditedContent(content); }}>Cancel</Button>
-                      <Button onClick={handleEditSave}>Save</Button>
-                  </DialogFooter>
-              </DialogContent>
-          </Dialog>
-          {!isMobile && <ReplyDialog post={props} onReply={handleCreateComment} open={isReplyDialogOpen} onOpenChange={setIsReplyDialogOpen} />}
+          <ReplyDialog post={props} onReply={handleCreateComment} open={isReplyDialogOpen} onOpenChange={setIsReplyDialogOpen} />
            <Dialog open={isImageViewerOpen} onOpenChange={setIsImageViewerOpen}>
                 <DialogContent 
                     className="max-w-none w-screen h-screen bg-black/90 border-none shadow-none p-0 flex flex-col md:flex-row"
                     onClick={(e) => e.stopPropagation()}
                 >
                     <DialogTitle className="sr-only">Image Viewer</DialogTitle>
+                    <DialogClose className="absolute right-2 top-2 z-10 text-white h-10 w-10 bg-black/30 hover:bg-black/50 hover:text-white rounded-full">
+                        <X className="h-6 w-6" />
+                    </DialogClose>
                     
                     {/* Main Image Content */}
                     <div className="flex-1 flex flex-col min-h-0 md:h-full">
