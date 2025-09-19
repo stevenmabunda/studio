@@ -79,20 +79,16 @@ export default function ProfilePage() {
     if (!profileId) return;
     setProfileLoading(true);
     setFollowLoading(true);
-    setPostsLoading(true);
     try {
-        const [fetchedProfile, fetchedPosts] = await Promise.all([
-            getUserProfile(profileId),
-            getUserPosts(profileId)
-        ]);
+        const fetchedProfile = await getUserProfile(profileId);
 
         if (fetchedProfile) {
             setProfile(fetchedProfile);
         } else {
            toast({ variant: 'destructive', title: "Error", description: "Profile not found." });
            router.push('/home'); // Redirect if profile doesn't exist
+           return;
         }
-        setUserPosts(fetchedPosts);
 
         if (currentUser && currentUser.uid !== profileId) {
             const followStatus = await getIsFollowing(currentUser.uid, profileId);
@@ -105,9 +101,21 @@ export default function ProfilePage() {
     } finally {
         setProfileLoading(false);
         setFollowLoading(false);
-        setPostsLoading(false);
     }
   }, [profileId, toast, router, currentUser]);
+  
+  const fetchPosts = useCallback(async () => {
+      if (!profileId) return;
+      setPostsLoading(true);
+      try {
+          const posts = await getUserPosts(profileId);
+          setUserPosts(posts);
+      } catch (error) {
+          console.error("Error fetching user posts:", error);
+      } finally {
+          setPostsLoading(false);
+      }
+  }, [profileId]);
 
 
   const handleTabChange = async (value: string) => {
@@ -141,8 +149,9 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!authLoading) {
         fetchProfileData();
+        fetchPosts();
     }
-  }, [authLoading, fetchProfileData]);
+  }, [authLoading, fetchProfileData, fetchPosts]);
 
   if (authLoading || profileLoading || !currentUser) {
       return (
