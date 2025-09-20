@@ -44,6 +44,15 @@ interface SportMonksFixture {
     }[];
 }
 
+// Type for a League with today's fixtures nested
+interface SportMonksLeagueWithFixtures {
+    id: number;
+    name: string;
+    image_path: string;
+    today: SportMonksFixture[];
+}
+
+
 // Helper function to get today's date in YYYY-MM-DD format
 function getTodayDateString(): string {
     const today = new Date();
@@ -133,10 +142,18 @@ async function fetchFromSportMonksApi<T>(endpoint: string, params?: URLSearchPar
 export async function getFixturesByDateFromApi(): Promise<MatchType[]> {
   const today = getTodayDateString();
   const params = new URLSearchParams({
-    include: 'league;participants;scores;state',
+    include: 'today.scores;today.participants;today.state;today.league',
   });
-  const apiData = await fetchFromSportMonksApi<SportMonksFixture[]>(`fixtures/date/${today}`, params);
-  return apiData ? mapSportMonksToMatchType(apiData.data) : [];
+  const apiData = await fetchFromSportMonksApi<SportMonksLeagueWithFixtures[]>(`leagues/date/${today}`, params);
+
+  if (!apiData || !apiData.data) {
+    return [];
+  }
+
+  // The new endpoint returns leagues, each containing fixtures. We need to extract them.
+  const allFixtures = apiData.data.flatMap(league => league.today || []);
+
+  return mapSportMonksToMatchType(allFixtures);
 }
 
 // Service function to get live matches from SportMonks
