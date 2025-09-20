@@ -1,4 +1,3 @@
-
 'use client';
 import { TrendingTopics } from "@/components/trending-topics";
 import { WhoToFollow } from "./who-to-follow";
@@ -7,6 +6,7 @@ import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { CreatorProgramPromo } from "./creator-program-promo";
 import Link from "next/link";
+import { LiveMatches } from "./live-matches";
 
 export function RightSidebar() {
   const router = useRouter();
@@ -31,6 +31,7 @@ export function RightSidebar() {
         />
       </div>
       <CreatorProgramPromo />
+      <LiveMatches />
       <TrendingTopics />
       <WhoToFollow />
        <footer className="mt-auto text-xs text-muted-foreground">
