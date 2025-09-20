@@ -1,4 +1,3 @@
-
 // IMPORTANT: This file should not be marked with 'use server'
 // as it is a pure data-fetching utility and doesn't need to be
 // directly callable from the client. It will be used by server actions.
@@ -6,6 +5,7 @@
 import type { MatchType } from "@/lib/data";
 
 const PREMIER_LEAGUE_ID = 8;
+const PREMIER_LEAGUE_SEASON_ID = 25583;
 
 // Generic API Response Structure
 interface SportMonksApiResponse<T> {
@@ -52,6 +52,29 @@ interface SportMonksLeagueWithFixtures {
     name: string;
     image_path: string;
     today: SportMonksFixture[];
+}
+
+export interface SportMonksStanding {
+    id: number;
+    participant_id: number;
+    league_id: number;
+    season_id: number;
+    stage_id: number;
+    group_id: number;
+    round_id: number;
+    standing_rule_id: number;
+    position: number;
+    result: string;
+    points: number;
+    participant: {
+        id: number;
+        name: string;
+        image_path: string;
+    };
+    details: {
+        type_id: number;
+        value: number;
+    }[];
 }
 
 
@@ -146,7 +169,7 @@ async function fetchFromSportMonksApi<T>(endpoint: string, params?: URLSearchPar
 export async function getFixturesByDateFromApi(): Promise<MatchType[]> {
   const today = getTodayDateString();
   const params = new URLSearchParams({
-    include: 'today.scores;today.participants;today.state;today.league',
+    include: 'today.scores;today.participants;today.league;today.state;today.periods',
   });
   const apiData = await fetchFromSportMonksApi<SportMonksLeagueWithFixtures[]>(`leagues/date/${today}`, params);
 
@@ -154,14 +177,14 @@ export async function getFixturesByDateFromApi(): Promise<MatchType[]> {
     return [];
   }
   
-  // Extract fixtures from all leagues and flatten into a single array
-  const allFixtures = apiData.data.flatMap(league => league.today || []);
-
-  if (allFixtures.length === 0) {
-      return [];
+  // Filter for Premier League fixtures only
+  const premierLeague = apiData.data.find(league => league.id === PREMIER_LEAGUE_ID);
+  
+  if (!premierLeague || !premierLeague.today || premierLeague.today.length === 0) {
+    return [];
   }
 
-  return mapSportMonksToMatchType(allFixtures);
+  return mapSportMonksToMatchType(premierLeague.today);
 }
 
 // Service function to get live matches from SportMonks
@@ -176,6 +199,19 @@ export async function getLiveMatchesFromSportMonks(): Promise<MatchType[]> {
   }
   
   return apiData ? mapSportMonksToMatchType(apiData.data) : [];
+}
+
+export async function getStandingsBySeasonId(seasonId: number = PREMIER_LEAGUE_SEASON_ID): Promise<SportMonksStanding[]> {
+    const params = new URLSearchParams({
+        include: 'participant;details.type',
+    });
+    const apiData = await fetchFromSportMonksApi<SportMonksStanding[]>(`standings/seasons/${seasonId}`, params);
+
+    if (!apiData || !apiData.data) {
+        return [];
+    }
+    
+    return apiData.data;
 }
 
 

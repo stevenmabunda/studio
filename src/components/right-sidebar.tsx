@@ -1,4 +1,3 @@
-
 'use client';
 import { TrendingTopics } from "@/components/trending-topics";
 import { WhoToFollow } from "./who-to-follow";
@@ -8,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { CreatorProgramPromo } from "./creator-program-promo";
 import Link from "next/link";
 import { FixturesWidget } from "./fixtures-widget";
+import { StandingsWidget } from "./standings-widget";
 
 export function RightSidebar() {
   const router = useRouter();
@@ -33,6 +33,7 @@ export function RightSidebar() {
       </div>
       <CreatorProgramPromo />
       <FixturesWidget />
+      <StandingsWidget />
       <TrendingTopics />
       <WhoToFollow />
        <footer className="mt-auto text-xs text-muted-foreground">
