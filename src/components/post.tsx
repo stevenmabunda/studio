@@ -110,11 +110,6 @@ function ReplyDialog({ post, onReply, open, onOpenChange }: { post: PostType, on
             <DialogContent className="p-0 gap-0" onClick={(e) => e.stopPropagation()}>
                 <DialogHeader className="p-4 border-b">
                      <DialogTitle className="sr-only">Reply to post</DialogTitle>
-                    <DialogClose asChild>
-                         <Button variant="ghost" size="icon" className="absolute left-2 top-2 h-8 w-8 rounded-full">
-                            <X className="h-5 w-5" />
-                        </Button>
-                    </DialogClose>
                 </DialogHeader>
                 <div className="p-4">
                     <div className="flex space-x-3">
@@ -808,9 +803,6 @@ export function Post(props: PostProps) {
                     onClick={(e) => e.stopPropagation()}
                 >
                     <DialogTitle className="sr-only">Image Viewer</DialogTitle>
-                    <DialogClose className="absolute right-2 top-2 z-50 text-white h-10 w-10 bg-black/30 hover:bg-black/50 hover:text-white rounded-full">
-                        <X className="h-6 w-6" />
-                    </DialogClose>
                     
                     {/* Main Image Content */}
                     <div className="flex-1 flex flex-col min-h-0 md:h-full">
