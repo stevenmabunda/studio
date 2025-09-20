@@ -19,7 +19,9 @@ interface SportMonksFixture {
     name: string;
     starting_at: string;
     result_info: string;
-    state: string; // e.g., 'LIVE', 'NS' (Not Started), 'FT' (Full Time)
+    state: {
+        state: string; // e.g., 'LIVE', 'NS' (Not Started), 'FT' (Full Time)
+    };
     league: {
         id: number;
         name: string;
@@ -62,9 +64,10 @@ function mapSportMonksToMatchType(fixtures: SportMonksFixture[]): MatchType[] {
 
         const homeScore = fixture.scores.find(s => s.participant_id === homeTeam?.id)?.score.goals;
         const awayScore = fixture.scores.find(s => s.participant_id === awayTeam?.id)?.score.goals;
-
-        const isLive = fixture.state === 'LIVE';
-        const isUpcoming = fixture.state === 'NS';
+        
+        const matchState = fixture.state.state;
+        const isLive = matchState === 'LIVE';
+        const isUpcoming = matchState === 'NS';
         
         let timeDisplay: string;
         if (isLive) {
@@ -82,7 +85,7 @@ function mapSportMonksToMatchType(fixtures: SportMonksFixture[]): MatchType[] {
             id: fixture.id,
             team1: { name: homeTeam?.name || 'TBD', logo: homeTeam?.image_path },
             team2: { name: awayTeam?.name || 'TBD', logo: awayTeam?.image_path },
-            score: (homeScore !== undefined && awayScore !== undefined) ? `${homeScore} - ${awayScore}` : '0 - 0',
+            score: (homeScore !== undefined && awayScore !== undefined) ? `${homeScore} - ${awayScore}` : undefined,
             time: timeDisplay,
             league: fixture.league.name,
             isLive: isLive,
@@ -130,11 +133,21 @@ async function fetchFromSportMonksApi<T>(endpoint: string, params?: URLSearchPar
 export async function getFixturesByDateFromApi(): Promise<MatchType[]> {
   const today = getTodayDateString();
   const params = new URLSearchParams({
-    include: 'league;participants;scores;periods',
+    include: 'league;participants;scores;state',
   });
   const apiData = await fetchFromSportMonksApi<SportMonksFixture[]>(`fixtures/date/${today}`, params);
   return apiData ? mapSportMonksToMatchType(apiData.data) : [];
 }
+
+// Service function to get live matches from SportMonks
+export async function getLiveMatchesFromSportMonks(): Promise<MatchType[]> {
+  const params = new URLSearchParams({
+    include: 'participants;scores;periods;events;league.country;round;state',
+  });
+  const apiData = await fetchFromSportMonksApi<SportMonksFixture[]>('livescores/inplay', params);
+  return apiData ? mapSportMonksToMatchType(apiData.data) : [];
+}
+
 
 interface SportMonksCountry {
     id: number;

@@ -29,25 +29,31 @@ function MatchSkeleton() {
 }
 
 
-export function FixturesWidget({ isPage = false }: { isPage?: boolean }) {
-    const [matches, setMatches] = useState<MatchType[]>([]);
-    const [loading, setLoading] = useState(true);
+export function FixturesWidget({ isPage = false, matches: propMatches, loading: propLoading, emptyMessage = "No fixtures scheduled for today." }: { isPage?: boolean, matches?: MatchType[], loading?: boolean, emptyMessage?: string }) {
+    const [internalMatches, setInternalMatches] = useState<MatchType[]>([]);
+    const [internalLoading, setInternalLoading] = useState(true);
+
+    const matches = propMatches !== undefined ? propMatches : internalMatches;
+    const loading = propLoading !== undefined ? propLoading : internalLoading;
 
     useEffect(() => {
-        const fetchMatches = async () => {
-            setLoading(true);
-            try {
-                const fixtures = await getTodaysFixtures();
-                setMatches(fixtures);
-            } catch (error) {
-                console.error("Failed to fetch fixtures:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
+        // Only fetch if matches are not being passed as props
+        if (propMatches === undefined) {
+            const fetchMatches = async () => {
+                setInternalLoading(true);
+                try {
+                    const fixtures = await getTodaysFixtures();
+                    setInternalMatches(fixtures);
+                } catch (error) {
+                    console.error("Failed to fetch fixtures:", error);
+                } finally {
+                    setInternalLoading(false);
+                }
+            };
 
-        fetchMatches();
-    }, []);
+            fetchMatches();
+        }
+    }, [propMatches]);
 
     const content = (
         <div className="flex flex-col gap-4">
@@ -86,7 +92,7 @@ export function FixturesWidget({ isPage = false }: { isPage?: boolean }) {
                 ))
             ) : (
                 <div className="text-center text-muted-foreground p-4">
-                    <p>No fixtures scheduled for today.</p>
+                    <p>{emptyMessage}</p>
                 </div>
             )}
             

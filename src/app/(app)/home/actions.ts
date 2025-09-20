@@ -6,7 +6,7 @@ import {
   type GenerateTrendingHashtagsInput,
   type GenerateTrendingHashtagsOutput,
 } from '@/ai/flows/generate-trending-hashtags';
-import { getFixturesByDateFromApi } from '@/services/sportmonks-service';
+import { getFixturesByDateFromApi, getLiveMatchesFromSportMonks } from '@/services/sportmonks-service';
 import type { MatchType, PostType } from '@/lib/data';
 import { db } from '@/lib/firebase/config';
 import { collection, getDocs, query, where, orderBy, type Timestamp, limit, startAfter, doc, getDoc } from 'firebase/firestore';
@@ -25,6 +25,16 @@ export async function getTodaysFixtures(): Promise<MatchType[]> {
     return matches;
   } catch (error) {
     console.error("Error in getTodaysFixtures server action:", error);
+    return [];
+  }
+}
+
+export async function getLiveMatches(): Promise<MatchType[]> {
+  try {
+    const matches = await getLiveMatchesFromSportMonks();
+    return matches;
+  } catch (error) {
+    console.error("Error in getLiveMatches server action:", error);
     return [];
   }
 }
