@@ -21,9 +21,11 @@ import Image from "next/image";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TrendingTopics } from '@/components/trending-topics';
-import { getVideoPosts } from './actions';
+import { getVideoPosts, getLiveMatches } from './actions';
 import { db } from '@/lib/firebase/config';
 import { onSnapshot, collection, query, where } from 'firebase/firestore';
+import type { MatchType } from '@/lib/data';
+import { FixturesWidget } from '@/components/fixtures-widget';
 
 
 function VideoFeed() {
@@ -109,6 +111,39 @@ function VideoFeed() {
       )}
     </div>
   );
+}
+
+function LiveTabContent() {
+    const [liveMatches, setLiveMatches] = useState<MatchType[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchLiveMatches = async () => {
+            setLoading(true);
+            try {
+                const matches = await getLiveMatches();
+                setLiveMatches(matches);
+            } catch (error) {
+                console.error("Failed to fetch live matches:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchLiveMatches();
+        const intervalId = setInterval(fetchLiveMatches, 60000); // Refresh every minute
+
+        return () => clearInterval(intervalId);
+    }, []);
+
+    return (
+        <FixturesWidget 
+            isPage={true} 
+            matches={liveMatches} 
+            loading={loading} 
+            emptyMessage="No matches are currently live." 
+        />
+    );
 }
 
 
@@ -371,9 +406,7 @@ export default function HomePage() {
             <DiscoverFeed />
           </TabsContent>
           <TabsContent value="live" className="h-full">
-            <div className="p-4">
-                <Link href="/live" className="text-primary hover:underline">View All Live Matches</Link>
-            </div>
+            <LiveTabContent />
           </TabsContent>
            <TabsContent value="trending" className="h-full p-4">
              <TrendingTopics />
