@@ -1,30 +1,30 @@
 
 'use client';
-import { getLiveMatches } from "@/app/(app)/home/actions";
+import { getTodaysFixtures } from "@/app/(app)/home/actions";
 import { FixturesWidget } from "@/components/fixtures-widget";
 import { useEffect, useState } from "react";
 import type { MatchType } from "@/lib/data";
 
 export default function LivePage() {
-    const [liveMatches, setLiveMatches] = useState<MatchType[]>([]);
+    const [todaysMatches, setTodaysMatches] = useState<MatchType[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchLiveMatches = async () => {
+        const fetchFixtures = async () => {
             setLoading(true);
             try {
-                const matches = await getLiveMatches();
-                setLiveMatches(matches);
+                const matches = await getTodaysFixtures();
+                setTodaysMatches(matches);
             } catch (error) {
-                console.error("Failed to fetch live matches:", error);
+                console.error("Failed to fetch today's fixtures:", error);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchLiveMatches();
-         // Refresh every 60 seconds
-        const intervalId = setInterval(fetchLiveMatches, 60000);
+        fetchFixtures();
+         // Refresh every 5 minutes
+        const intervalId = setInterval(fetchFixtures, 5 * 60 * 1000);
 
         return () => clearInterval(intervalId);
     }, []);
@@ -32,10 +32,10 @@ export default function LivePage() {
     return (
         <div className="flex h-full min-h-screen flex-col">
             <header className="sticky top-0 z-10 border-b bg-background/80 p-4 backdrop-blur-sm">
-                <h1 className="text-xl font-bold">Live Matches</h1>
+                <h1 className="text-xl font-bold">Today's Fixtures</h1>
             </header>
             <main className="flex-1">
-                <FixturesWidget isPage={true} matches={liveMatches} loading={loading} emptyMessage="No matches are currently live." />
+                <FixturesWidget isPage={true} matches={todaysMatches} loading={loading} emptyMessage="No fixtures scheduled for today." />
             </main>
         </div>
     );
