@@ -4,7 +4,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { MessageCircle, Repeat, Heart, Share2, MoreHorizontal, Edit, Trash2, Bookmark, Copy, X, ChevronLeft, ChevronRight, Link2, CheckCircle2 } from "lucide-react";
+import { MessageCircle, Repeat, Heart, Share2, MoreHorizontal, Edit, Trash2, Bookmark, Copy, X, ChevronLeft, ChevronRight, Link2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
@@ -57,7 +57,7 @@ import { collection, onSnapshot, orderBy, query, type Timestamp } from "firebase
 import { Skeleton } from "./ui/skeleton";
 import useEmblaCarousel from 'embla-carousel-react';
 import { LoginOrSignupDialog } from "./login-or-signup-dialog";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { ProfileHoverCard } from "./profile-hover-card";
 
 
 type PostProps = PostType & {
@@ -91,7 +91,7 @@ function ReplyDialog({ post, onReply, open, onOpenChange }: { post: PostType, on
                 toast({
                     description: "Your reply was sent.",
                     action: (
-                        <Button variant="outline" size="sm" onClick={() => router.push(`/post/${post.id}`)}>
+                        <Button variant="outline" size="sm" onClick={() => router.push(`/post/${post.id}#comments`)}>
                             View
                         </Button>
                     ),
@@ -125,7 +125,6 @@ function ReplyDialog({ post, onReply, open, onOpenChange }: { post: PostType, on
                                 <span className="font-bold">{post.authorName}</span>
                                 <span className="text-sm text-muted-foreground">@{post.authorHandle}</span>
                             </div>
-                            <p className="mt-1 text-sm whitespace-pre-wrap">{post.content}</p>
                             <p className="mt-4 text-sm text-muted-foreground">
                                 Replying to <span className="text-primary">@{post.authorHandle}</span>
                             </p>
@@ -165,7 +164,7 @@ function Poll({ poll, postId }: { poll: NonNullable<PostType['poll']>, postId: s
                 <div className="flex justify-between items-center text-sm">
                   <div className="flex items-center font-medium">
                     {choice.text}
-                    {hasVotedThisChoice && <CheckCircle2 className="ml-2 h-4 w-4 text-primary" />}
+                    {hasVotedThisChoice && <Check className="ml-2 h-4 w-4 text-primary" />}
                   </div>
                   <span className="font-bold">{percentage.toFixed(0)}%</span>
                 </div>
@@ -273,7 +272,6 @@ export function Post(props: PostProps) {
   const { user } = useAuth();
   const { editPost, deletePost, likePost, repostPost, bookmarkPost, bookmarkedPostIds, addComment } = usePosts();
   const { toast } = useToast();
-  const isMobile = useIsMobile();
 
   const [comments, setComments] = useState<CommentType[]>([]);
   const [loadingComments, setLoadingComments] = useState(false);
@@ -545,21 +543,25 @@ export function Post(props: PostProps) {
   const mainPostContent = (
     <div className={cn("flex space-x-3 md:space-x-4", isReplyView ? 'p-3 md:p-4 pb-0' : 'p-3 md:p-4')}>
       <div className="flex flex-col items-center">
-          <Link href={`/profile/${authorId}`} className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-            <Avatar>
-              <AvatarImage src={authorAvatar} alt={authorName} data-ai-hint="user avatar" />
-              <AvatarFallback>{authorName.charAt(0)}</AvatarFallback>
-            </Avatar>
-          </Link>
+          <ProfileHoverCard userId={authorId}>
+            <Link href={`/profile/${authorId}`} className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+              <Avatar>
+                <AvatarImage src={authorAvatar} alt={authorName} data-ai-hint="user avatar" />
+                <AvatarFallback>{authorName.charAt(0)}</AvatarFallback>
+              </Avatar>
+            </Link>
+          </ProfileHoverCard>
           {isReplyView && <div className="w-0.5 grow bg-border my-2" />}
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex justify-between items-start gap-2">
             <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                    <Link href={`/profile/${authorId}`} className="font-bold hover:underline truncate" onClick={(e) => e.stopPropagation()}>
-                        {authorName}
-                    </Link>
+                    <ProfileHoverCard userId={authorId}>
+                      <Link href={`/profile/${authorId}`} className="font-bold hover:underline truncate" onClick={(e) => e.stopPropagation()}>
+                          {authorName}
+                      </Link>
+                    </ProfileHoverCard>
                     <span className="text-sm text-muted-foreground truncate">@{authorHandle}</span>
                     {!isReplyView && <>
                         <span className="text-muted-foreground">·</span>

@@ -4,7 +4,7 @@
 
 import { Post } from '@/components/post';
 import { CreateComment, type ReplyMedia } from '@/components/create-comment';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { PostType } from '@/lib/data';
 import { useAuth } from '@/hooks/use-auth';
 import { usePosts } from '@/contexts/post-context';
@@ -31,6 +31,7 @@ export default function PostPage() {
   const [loadingPost, setLoadingPost] = useState(true);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loadingComments, setLoadingComments] = useState(true);
+  const commentSectionRef = useRef<HTMLDivElement>(null);
   
   const handleBack = () => {
     // We simply go back in history. The home page's useEffect will handle scroll restoration.
@@ -101,6 +102,13 @@ export default function PostPage() {
       }) as Comment[];
       setComments(fetchedComments);
       setLoadingComments(false);
+
+      // Check if we should scroll to comments after they load
+      if (window.location.hash === '#comments' && commentSectionRef.current) {
+        setTimeout(() => {
+            commentSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+      }
     }, (error) => {
         console.error("Error fetching comments snapshot:", error);
         setLoadingComments(false);
@@ -162,7 +170,9 @@ export default function PostPage() {
       <div className="flex-1 overflow-y-auto">
         <Post {...post} isStandalone={true} />
         
-        <CreateComment onComment={handleCreateComment} />
+        <div ref={commentSectionRef} id="comments">
+          <CreateComment onComment={handleCreateComment} />
+        </div>
 
         <div className="divide-y divide-border border-t">
             {loadingComments ? (
