@@ -115,6 +115,7 @@ function ReplyDialog({ post, onReply, open, onOpenChange }: { post: PostType, on
             <DialogContent className="p-0 gap-0" onClick={(e) => e.stopPropagation()}>
                 <DialogHeader className="p-4 border-b">
                      <DialogTitle className="sr-only">Reply to post</DialogTitle>
+                     <DialogClose />
                 </DialogHeader>
                 <div className="p-4">
                     <div className="flex space-x-3">
@@ -573,7 +574,6 @@ export function Post(props: PostProps) {
                         <span className="text-sm text-muted-foreground flex-shrink-0">{timestamp}</span>
                     </>}
                 </div>
-                 {isReplyView && <p className="text-sm text-muted-foreground">Replying to <Link href={`/profile/${props.authorId}`} className="text-primary">@{props.authorHandle}</Link></p>}
             </div>
            {isAuthor && !isReplyView ? (
                 <div className="flex-shrink-0">
