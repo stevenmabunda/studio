@@ -8,7 +8,7 @@ export function CreatorProgramPromo() {
       <CardContent className="p-4 space-y-3">
         <h2 className="text-xl font-bold">Become a BHOLO Creator</h2>
         <p className="text-sm text-muted-foreground">
-            From fan to football content king. Create content, build your community, and earn rewards.
+            Create football content, build your community, and earn rewards.
         </p>
         <Button asChild size="sm" className="rounded-full font-bold px-4">
           <Link href="/creators">Join Now</Link>
