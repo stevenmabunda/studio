@@ -1,10 +1,10 @@
+
 'use client';
 import { TrendingTopics } from "@/components/trending-topics";
 import { WhoToFollow } from "./who-to-follow";
 import { Input } from "./ui/input";
 import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { CreatorProgramPromo } from "./creator-program-promo";
 import Link from "next/link";
 import { FixturesWidget } from "./fixtures-widget";
 
@@ -30,7 +30,6 @@ export function RightSidebar() {
             onKeyDown={handleSearch}
         />
       </div>
-      <CreatorProgramPromo />
       <FixturesWidget />
       <TrendingTopics />
       <WhoToFollow />
