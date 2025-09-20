@@ -162,6 +162,8 @@ export default function PostPage() {
       <div className="flex-1 overflow-y-auto">
         <Post {...post} isStandalone={true} />
         
+        <CreateComment onComment={handleCreateComment} />
+
         <div className="divide-y divide-border border-t">
             {loadingComments ? (
                 Array.from({length: 3}).map((_, i) => (
