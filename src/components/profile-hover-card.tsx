@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -82,7 +83,7 @@ export function ProfileHoverCard({ children, userId }: ProfileHoverCardProps) {
   return (
     <HoverCard open={isOpen} onOpenChange={setIsOpen}>
       <HoverCardTrigger asChild>{children}</HoverCardTrigger>
-      <HoverCardContent className="w-80" side="top">
+      <HoverCardContent className="w-80" side="top" onClick={(e) => e.stopPropagation()}>
         {loading || !profile ? (
           <ProfileHoverCardSkeleton />
         ) : (
