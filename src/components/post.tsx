@@ -79,14 +79,14 @@ const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" /></svg>
 );
 
-function ReplyDialog({ post, onReply, open, onOpenChange }: { post: PostType, onReply: (data: { text: string; media: ReplyMedia[] }) => Promise<PostType | null>, open: boolean, onOpenChange: (open: boolean) => void }) {
+function ReplyDialog({ post, onReply, open, onOpenChange }: { post: PostType, onReply: (data: { text: string; media: ReplyMedia[] }) => Promise<boolean | null>, open: boolean, onOpenChange: (open: boolean) => void }) {
     const { toast } = useToast();
     const router = useRouter();
 
     const handleCreateReply = async (data: { text: string; media: ReplyMedia[] }) => {
         try {
-            const newComment = await onReply(data);
-            if (newComment) {
+            const success = await onReply(data);
+            if (success) {
                 onOpenChange(false);
                 toast({
                     description: "Your reply was sent.",
@@ -96,7 +96,7 @@ function ReplyDialog({ post, onReply, open, onOpenChange }: { post: PostType, on
                         </Button>
                     ),
                 });
-                return newComment;
+                return true;
             }
              return null;
         } catch (error) {
@@ -412,9 +412,9 @@ export function Post(props: PostProps) {
   const handleCreateComment = async (data: { text: string; media: ReplyMedia[] }) => {
     if (!user || !id) return null;
     try {
-      const newComment = await addComment(id, data);
+      await addComment(id, data);
       setCommentCount(prev => prev + 1);
-      return newComment;
+      return true; // Indicate success
     } catch (error) {
         toast({ variant: 'destructive', description: "Failed to post reply." });
         console.error("Failed to add comment:", error);
@@ -453,7 +453,6 @@ export function Post(props: PostProps) {
         setIsLoginDialogOpen(true);
         return;
     }
-    // Always open dialog now for a consistent experience
     setIsReplyDialogOpen(true);
   };
 
@@ -809,7 +808,7 @@ export function Post(props: PostProps) {
                     onClick={(e) => e.stopPropagation()}
                 >
                     <DialogTitle className="sr-only">Image Viewer</DialogTitle>
-                    <DialogClose className="absolute right-2 top-2 z-10 text-white h-10 w-10 bg-black/30 hover:bg-black/50 hover:text-white rounded-full">
+                    <DialogClose className="absolute right-2 top-2 z-50 text-white h-10 w-10 bg-black/30 hover:bg-black/50 hover:text-white rounded-full">
                         <X className="h-6 w-6" />
                     </DialogClose>
                     

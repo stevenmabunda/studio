@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import type { ReactNode } from 'react';
@@ -22,7 +23,7 @@ type PostContextType = {
   editPost: (postId: string, data: { text:string }) => Promise<void>;
   deletePost: (postId: string) => Promise<void>;
   addVote: (postId: string, choiceIndex: number) => Promise<void>;
-  addComment: (postId: string, data: { text: string; media: ReplyMedia[] }) => Promise<PostType | null>;
+  addComment: (postId: string, data: { text: string; media: ReplyMedia[] }) => Promise<boolean | null>;
   likePost: (postId: string, isLiked: boolean) => Promise<void>;
   repostPost: (postId: string, isReposted: boolean) => Promise<void>;
   bookmarkPost: (postId: string, isBookmarked: boolean) => Promise<void>;
@@ -341,25 +342,12 @@ export function PostProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const addComment = async (postId: string, data: { text: string; media: ReplyMedia[] }): Promise<PostType | null> => {
+  const addComment = async (postId: string, data: { text: string; media: ReplyMedia[] }): Promise<boolean | null> => {
     if (!user || !db || !storage) {
         throw new Error("User not authenticated or Firebase not initialized.");
     }
     const { text, media } = data;
     
-    const createdAt = new Date();
-    const tempId = `temp_comment_${Date.now()}`;
-    const optimisticComment = {
-        id: tempId,
-        authorId: user.uid,
-        authorName: user.displayName || 'Anonymous User',
-        authorHandle: user.email?.split('@')[0] || 'user',
-        authorAvatar: user.photoURL || 'https://placehold.co/40x40.png',
-        content: text,
-        createdAt: { toDate: () => createdAt } as Timestamp,
-        media: media.map(m => ({ url: m.previewUrl, type: m.type, hint: 'user uploaded reply' }))
-    };
-
     try {
         const postRef = doc(db, 'posts', postId);
         const commentsCollectionRef = collection(postRef, 'comments');
@@ -387,11 +375,9 @@ export function PostProvider({ children }: { children: ReactNode }) {
         const postDocBeforeUpdate = await getDoc(postRef);
         const currentComments = postDocBeforeUpdate.data()?.comments || 0;
 
-        const newCommentRef = await addDoc(commentsCollectionRef, commentData);
+        await addDoc(commentsCollectionRef, commentData);
         await updateDoc(postRef, { comments: currentComments + 1 });
         
-        const finalComment = { ...optimisticComment, id: newCommentRef.id, media: mediaUploads };
-
         setForYouPosts(prev => prev.map(p => p.id === postId ? { ...p, comments: p.comments + 1 } : p));
         
         // Notify author
@@ -406,7 +392,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
             });
         }
         
-        return finalComment as unknown as PostType;
+        return true;
 
     } catch (e) {
         console.error("Error adding comment: ", e);
