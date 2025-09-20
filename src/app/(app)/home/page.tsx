@@ -21,11 +21,9 @@ import Image from "next/image";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TrendingTopics } from '@/components/trending-topics';
-import { getVideoPosts, getLiveMatches } from './actions';
+import { getVideoPosts } from './actions';
 import { db } from '@/lib/firebase/config';
 import { onSnapshot, collection, query, where } from 'firebase/firestore';
-import type { MatchType } from '@/lib/data';
-import { FixturesWidget } from '@/components/fixtures-widget';
 
 
 function VideoFeed() {
@@ -112,40 +110,6 @@ function VideoFeed() {
     </div>
   );
 }
-
-function LiveTabContent() {
-    const [liveMatches, setLiveMatches] = useState<MatchType[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const fetchLiveMatches = async () => {
-            setLoading(true);
-            try {
-                const matches = await getLiveMatches();
-                setLiveMatches(matches);
-            } catch (error) {
-                console.error("Failed to fetch live matches:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchLiveMatches();
-        const intervalId = setInterval(fetchLiveMatches, 60000); // Refresh every minute
-
-        return () => clearInterval(intervalId);
-    }, []);
-
-    return (
-        <FixturesWidget 
-            isPage={true} 
-            matches={liveMatches} 
-            loading={loading} 
-            emptyMessage="No matches are currently live." 
-        />
-    );
-}
-
 
 export default function HomePage() {
   const { 
@@ -353,7 +317,6 @@ export default function HomePage() {
                  <TabsList className="flex w-full justify-evenly border-b bg-transparent p-0 overflow-x-auto no-scrollbar">
                     <TabsTrigger value="foryou" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">For You</TabsTrigger>
                     <TabsTrigger value="discover" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Discover</TabsTrigger>
-                    <TabsTrigger value="live" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Live</TabsTrigger>
                     <TabsTrigger value="trending" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Trending</TabsTrigger>
                     <TabsTrigger value="video" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Video</TabsTrigger>
                 </TabsList>
@@ -363,7 +326,6 @@ export default function HomePage() {
                  <TabsList className="flex w-full justify-evenly border-b bg-transparent p-0 overflow-x-auto no-scrollbar">
                     <TabsTrigger value="foryou" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">For You</TabsTrigger>
                     <TabsTrigger value="discover" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Discover</TabsTrigger>
-                     <TabsTrigger value="live" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Live</TabsTrigger>
                     <TabsTrigger value="trending" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Trending</TabsTrigger>
                     <TabsTrigger value="video" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Video</TabsTrigger>
                 </TabsList>
@@ -404,9 +366,6 @@ export default function HomePage() {
           </TabsContent>
           <TabsContent value="discover" className="h-full">
             <DiscoverFeed />
-          </TabsContent>
-          <TabsContent value="live" className="h-full">
-            <LiveTabContent />
           </TabsContent>
            <TabsContent value="trending" className="h-full p-4">
              <TrendingTopics />
