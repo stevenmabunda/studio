@@ -171,20 +171,22 @@ export async function getFixturesByDateFromApi(): Promise<MatchType[]> {
   const params = new URLSearchParams({
     include: 'today.scores;today.participants;today.league;today.state;today.periods',
   });
+
   const apiData = await fetchFromSportMonksApi<SportMonksLeagueWithFixtures[]>(`leagues/date/${today}`, params);
 
   if (!apiData || !apiData.data) {
     return [];
   }
   
-  // Filter for Premier League fixtures only
-  const premierLeague = apiData.data.find(league => league.id === PREMIER_LEAGUE_ID);
-  
-  if (!premierLeague || !premierLeague.today || premierLeague.today.length === 0) {
+  // The API returns an array of leagues, each with a 'today' property containing fixtures.
+  // We need to flatten this structure.
+  const allTodaysFixtures = apiData.data.flatMap(league => league.today || []);
+
+  if (allTodaysFixtures.length === 0) {
     return [];
   }
-
-  return mapSportMonksToMatchType(premierLeague.today);
+  
+  return mapSportMonksToMatchType(allTodaysFixtures);
 }
 
 // Service function to get live matches from SportMonks
