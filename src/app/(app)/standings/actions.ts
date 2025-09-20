@@ -15,6 +15,10 @@ export interface Standing {
 
 // Helper function to extract a specific detail value from the details array
 const getDetailValue = (details: SportMonksStanding['details'], typeId: number): number => {
+    // The details array might be empty or null in some API responses.
+    if (!details) {
+        return 0;
+    }
     const detail = details.find(d => d.type_id === typeId);
     return detail ? detail.value : 0;
 };
@@ -24,7 +28,7 @@ export async function getLeagueStandings(seasonId?: number): Promise<Standing[]>
     try {
         const standingsData = await getStandingsBySeasonId(seasonId);
 
-        if (!standingsData) {
+        if (!standingsData || standingsData.length === 0) {
             return [];
         }
 
