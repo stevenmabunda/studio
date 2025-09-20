@@ -1,19 +1,19 @@
+
 // IMPORTANT: This file should not be marked with 'use server'
 // as it is a pure data-fetching utility and doesn't need to be
 // directly callable from the client. It will be used by server actions.
 
 import type { MatchType } from "@/lib/data";
 
-
 // Generic API Response Structure
 interface SportMonksApiResponse<T> {
     data: T;
-    subscription: any[];
-    rate_limit: any;
-    timezone: string;
+    subscription?: any[];
+    rate_limit?: any;
+    timezone?: string;
 }
 
-// Type for a single Fixture/Match
+// Type for a single Fixture/Match from SportMonks
 interface SportMonksFixture {
     id: number;
     name: string;
@@ -38,8 +38,19 @@ interface SportMonksFixture {
     }[];
     periods: {
         minutes: number | null;
+        // Add other properties if available in the API response for periods
     }[];
 }
+
+// Helper function to get today's date in YYYY-MM-DD format
+function getTodayDateString(): string {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
 
 // Helper function to map SportMonks fixture data to our app's MatchType
 function mapSportMonksToMatchType(fixtures: SportMonksFixture[]): MatchType[] {
@@ -52,17 +63,30 @@ function mapSportMonksToMatchType(fixtures: SportMonksFixture[]): MatchType[] {
         const homeScore = fixture.scores.find(s => s.participant_id === homeTeam?.id)?.score.goals;
         const awayScore = fixture.scores.find(s => s.participant_id === awayTeam?.id)?.score.goals;
 
-        const liveMinutes = fixture.periods?.[fixture.periods.length - 1]?.minutes;
+        const isLive = fixture.state === 'LIVE';
+        const isUpcoming = fixture.state === 'NS';
+        
+        let timeDisplay: string;
+        if (isLive) {
+            // Find current period's minutes
+            const liveMinutes = fixture.periods?.find(p => p.minutes !== null)?.minutes;
+            timeDisplay = liveMinutes ? `${liveMinutes}'` : 'Live';
+        } else if (isUpcoming) {
+            const startTime = new Date(fixture.starting_at);
+            timeDisplay = startTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+        } else {
+            timeDisplay = 'FT';
+        }
 
         return {
             id: fixture.id,
             team1: { name: homeTeam?.name || 'TBD', logo: homeTeam?.image_path },
             team2: { name: awayTeam?.name || 'TBD', logo: awayTeam?.image_path },
             score: (homeScore !== undefined && awayScore !== undefined) ? `${homeScore} - ${awayScore}` : '0 - 0',
-            time: liveMinutes ? `${liveMinutes}'` : 'Live',
+            time: timeDisplay,
             league: fixture.league.name,
-            isLive: true,
-            isUpcoming: false,
+            isLive: isLive,
+            isUpcoming: isUpcoming,
         };
     });
 }
@@ -85,7 +109,7 @@ async function fetchFromSportMonksApi<T>(endpoint: string, params?: URLSearchPar
   try {
     const response = await fetch(url, {
       method: 'GET',
-      // Cache results for 60 seconds for live data
+      // Cache results for 60 seconds to balance between real-time data and API usage
       next: { revalidate: 60 } 
     });
 
@@ -102,12 +126,13 @@ async function fetchFromSportMonksApi<T>(endpoint: string, params?: URLSearchPar
   }
 }
 
-// Service function to get live matches from SportMonks
-export async function getLiveMatchesFromSportMonks(): Promise<MatchType[]> {
+// Service function to get fixtures for a given date from SportMonks
+export async function getFixturesByDateFromApi(): Promise<MatchType[]> {
+  const today = getTodayDateString();
   const params = new URLSearchParams({
     include: 'league;participants;scores;periods',
   });
-  const apiData = await fetchFromSportMonksApi<SportMonksFixture[]>('livescores', params);
+  const apiData = await fetchFromSportMonksApi<SportMonksFixture[]>(`fixtures/date/${today}`, params);
   return apiData ? mapSportMonksToMatchType(apiData.data) : [];
 }
 

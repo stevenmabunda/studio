@@ -1,14 +1,14 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getLiveMatches } from '@/app/(app)/home/actions';
+import { getTodaysFixtures } from '@/app/(app)/home/actions';
 import type { MatchType } from '@/lib/data';
 import Image from 'next/image';
 import { Skeleton } from './ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import Link from 'next/link';
-import { TrendingTopics } from './trending-topics';
 
 function MatchSkeleton() {
     return (
@@ -29,7 +29,7 @@ function MatchSkeleton() {
 }
 
 
-export function LiveMatches({ isPage = false }: { isPage?: boolean }) {
+export function FixturesWidget({ isPage = false }: { isPage?: boolean }) {
     const [matches, setMatches] = useState<MatchType[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -37,10 +37,10 @@ export function LiveMatches({ isPage = false }: { isPage?: boolean }) {
         const fetchMatches = async () => {
             setLoading(true);
             try {
-                const liveMatches = await getLiveMatches();
-                setMatches(liveMatches);
+                const fixtures = await getTodaysFixtures();
+                setMatches(fixtures);
             } catch (error) {
-                console.error("Failed to fetch live matches:", error);
+                console.error("Failed to fetch fixtures:", error);
             } finally {
                 setLoading(false);
             }
@@ -67,9 +67,15 @@ export function LiveMatches({ isPage = false }: { isPage?: boolean }) {
                                 <span className="font-bold truncate">{match.team1.name}</span>
                             </div>
                             <div className="flex items-center gap-2 font-mono text-base">
-                                <span className="font-bold">{match.score?.split('-')[0].trim()}</span>
-                                <span className="text-muted-foreground text-xs">{match.time}</span>
-                                <span className="font-bold">{match.score?.split('-')[1].trim()}</span>
+                                {match.isLive ? (
+                                    <>
+                                        <span className="font-bold">{match.score?.split('-')[0].trim()}</span>
+                                        <span className="text-primary text-xs animate-pulse">LIVE</span>
+                                        <span className="font-bold">{match.score?.split('-')[1].trim()}</span>
+                                    </>
+                                ) : (
+                                    <span className="text-muted-foreground text-xs font-sans font-bold">{match.time}</span>
+                                )}
                             </div>
                             <div className="flex items-center gap-2 justify-end w-2/5 truncate">
                                 <span className="font-bold truncate text-right">{match.team2.name}</span>
@@ -79,12 +85,8 @@ export function LiveMatches({ isPage = false }: { isPage?: boolean }) {
                     </div>
                 ))
             ) : (
-                <div className="text-center p-4">
-                    <h2 className="text-lg font-bold">NO LIVE MATCHES RIGHT NOW</h2>
-                    <p className="text-muted-foreground">But there are live conversations, dive in!</p>
-                    <div className="mt-4 text-left">
-                        <TrendingTopics />
-                    </div>
+                <div className="text-center text-muted-foreground p-4">
+                    <p>No fixtures scheduled for today.</p>
                 </div>
             )}
             
@@ -103,7 +105,7 @@ export function LiveMatches({ isPage = false }: { isPage?: boolean }) {
     return (
         <Card className="bg-secondary">
             <CardHeader className="p-4">
-                <CardTitle className="text-lg font-bold text-primary">Live Events</CardTitle>
+                <CardTitle className="text-lg font-bold text-primary">Today's Fixtures</CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-0">
                 {content}
