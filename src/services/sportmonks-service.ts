@@ -5,6 +5,8 @@
 
 import type { MatchType } from "@/lib/data";
 
+const PREMIER_LEAGUE_ID = 8;
+
 // Generic API Response Structure
 interface SportMonksApiResponse<T> {
     data: T;
@@ -71,8 +73,10 @@ function mapSportMonksToMatchType(fixtures: SportMonksFixture[]): MatchType[] {
         const homeTeam = fixture.participants.find(p => p.meta.location === 'home');
         const awayTeam = fixture.participants.find(p => p.meta.location === 'away');
 
-        const homeScore = fixture.scores.find(s => s.participant_id === homeTeam?.id)?.score.goals;
-        const awayScore = fixture.scores.find(s => s.participant_id === awayTeam?.id)?.score.goals;
+        const homeScoreObj = fixture.scores.find(s => s.participant_id === homeTeam?.id && s.description === 'CURRENT');
+        const awayScoreObj = fixture.scores.find(s => s.participant_id === awayTeam?.id && s.description === 'CURRENT');
+        const homeScore = homeScoreObj?.score.goals;
+        const awayScore = awayScoreObj?.score.goals;
         
         const matchState = fixture.state.state;
         const isLive = matchState === 'LIVE';
@@ -150,19 +154,31 @@ export async function getFixturesByDateFromApi(): Promise<MatchType[]> {
     return [];
   }
 
-  // The new endpoint returns leagues, each containing fixtures. We need to extract them.
-  const allFixtures = apiData.data.flatMap(league => league.today || []);
+  // Find the specific league from the response (Premier League)
+  const premierLeague = apiData.data.find(league => league.id === PREMIER_LEAGUE_ID);
+  
+  if (!premierLeague || !premierLeague.today) {
+    return [];
+  }
 
-  return mapSportMonksToMatchType(allFixtures);
+  return mapSportMonksToMatchType(premierLeague.today);
 }
 
 // Service function to get live matches from SportMonks
 export async function getLiveMatchesFromSportMonks(): Promise<MatchType[]> {
   const params = new URLSearchParams({
-    include: 'participants;scores;periods;events;league.country;round;state',
+    include: 'participants;scores;periods;league;state',
   });
   const apiData = await fetchFromSportMonksApi<SportMonksFixture[]>('livescores/inplay', params);
-  return apiData ? mapSportMonksToMatchType(apiData.data) : [];
+
+  if (!apiData || !apiData.data) {
+      return [];
+  }
+  
+  // Filter for only Premier League live matches
+  const premierLeagueLiveMatches = apiData.data.filter(fixture => fixture.league.id === PREMIER_LEAGUE_ID);
+
+  return apiData ? mapSportMonksToMatchType(premierLeagueLiveMatches) : [];
 }
 
 
