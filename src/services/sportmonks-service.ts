@@ -153,15 +153,15 @@ export async function getFixturesByDateFromApi(): Promise<MatchType[]> {
   if (!apiData || !apiData.data) {
     return [];
   }
-
-  // Find the specific league from the response (Premier League)
-  const premierLeague = apiData.data.find(league => league.id === PREMIER_LEAGUE_ID);
   
-  if (!premierLeague || !premierLeague.today) {
-    return [];
+  // Extract fixtures from all leagues and flatten into a single array
+  const allFixtures = apiData.data.flatMap(league => league.today || []);
+
+  if (allFixtures.length === 0) {
+      return [];
   }
 
-  return mapSportMonksToMatchType(premierLeague.today);
+  return mapSportMonksToMatchType(allFixtures);
 }
 
 // Service function to get live matches from SportMonks
@@ -175,10 +175,7 @@ export async function getLiveMatchesFromSportMonks(): Promise<MatchType[]> {
       return [];
   }
   
-  // Filter for only Premier League live matches
-  const premierLeagueLiveMatches = apiData.data.filter(fixture => fixture.league.id === PREMIER_LEAGUE_ID);
-
-  return apiData ? mapSportMonksToMatchType(premierLeagueLiveMatches) : [];
+  return apiData ? mapSportMonksToMatchType(apiData.data) : [];
 }
 
 
