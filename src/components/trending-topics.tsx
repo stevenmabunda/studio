@@ -43,7 +43,7 @@ export function TrendingTopics() {
   }, []);
 
   return (
-    <Card className="bg-secondary">
+    <Card>
       <CardHeader className="p-4">
         <CardTitle className="text-xl font-bold">What's happening</CardTitle>
       </CardHeader>

@@ -111,7 +111,7 @@ export function FixturesWidget({ isPage = false, matches: propMatches, loading: 
     }
 
     return (
-        <Card className="bg-secondary">
+        <Card>
             <CardHeader className="p-4">
                 <CardTitle className="text-xl font-bold">Today's Fixtures</CardTitle>
             </CardHeader>
