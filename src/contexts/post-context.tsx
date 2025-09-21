@@ -19,7 +19,7 @@ type PostContextType = {
   setForYouPosts: React.Dispatch<React.SetStateAction<PostType[]>>;
   newForYouPosts: PostType[];
   showNewForYouPosts: () => void;
-  addPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }) => Promise<void>;
+  addPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }) => Promise<PostType | null>;
   editPost: (postId: string, data: { text:string }) => Promise<void>;
   deletePost: (postId: string) => Promise<void>;
   addVote: (postId: string, choiceIndex: number) => Promise<void>;
@@ -198,7 +198,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
 
-  const addPost = async ({ text, media, poll, location, tribeId, communityId }: { text: string; media: Media[]; poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }) => {
+  const addPost = async ({ text, media, poll, location, tribeId, communityId }: { text: string; media: Media[]; poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }): Promise<PostType | null> => {
     if (!user || !db || !storage) {
         throw new Error("Cannot add post: user not logged in or Firebase not configured.");
     }
@@ -263,8 +263,10 @@ export function PostProvider({ children }: { children: ReactNode }) {
 
         const docRef = await addDoc(collection(db, "posts"), postDataForDb);
 
+        const finalPost = { ...optimisticPost, id: docRef.id, media: mediaUploads };
+
         // Update the optimistic post with the real ID and data
-        setForYouPosts(prev => prev.map(p => p.id === tempId ? { ...p, id: docRef.id, media: mediaUploads } : p));
+        setForYouPosts(prev => prev.map(p => p.id === tempId ? finalPost : p));
 
         // Extract and log keywords in the background.
         if (text) {
@@ -279,6 +281,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
             batch.commit().catch(err => console.error("Failed to write topics", err));
           }
         }
+        return finalPost;
     } catch (error) {
         console.error("Failed to create post:", error);
         // Revert optimistic update on failure

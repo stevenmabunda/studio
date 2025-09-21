@@ -1,8 +1,9 @@
 
+
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Home, Plus, Search, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import React, { useState } from 'react';
@@ -13,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import type { PostType } from '@/lib/data';
 import { ScrollArea } from './ui/scroll-area';
 import { useAuth } from '@/hooks/use-auth';
+import { Button } from './ui/button';
 
 const navItems = [
   { href: '/home', icon: Home, label: 'Home' },
@@ -23,6 +25,7 @@ const navItems = [
 
 export function MobileBottomNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const { user } = useAuth();
   const { addPost } = usePosts();
   const { toast } = useToast();
@@ -30,9 +33,20 @@ export function MobileBottomNav() {
   
   const handlePost = async (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null }) => {
     try {
-        await addPost(data);
+        const newPost = await addPost(data);
         setIsDialogOpen(false);
-        toast({ description: "Your post has been published!" });
+        if (newPost) {
+          toast({ 
+            description: "Your post has been published!",
+            action: (
+              <Button variant="outline" size="sm" onClick={() => router.push(`/post/${newPost.id}`)}>
+                View
+              </Button>
+            ),
+          });
+        } else {
+            toast({ description: "Your post has been published!" });
+        }
     } catch (error) {
         console.error("Failed to create post from dialog:", error);
         toast({ variant: 'destructive', description: "Something went wrong. Please try again." });
