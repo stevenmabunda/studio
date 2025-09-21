@@ -1,6 +1,8 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import * as React from "react"
+import { format } from 'date-fns';
+
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -72,4 +74,12 @@ export function formatTimestamp(date: Date): string {
     
     // Format as date for anything older than a week
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+export function formatDetailedTimestamp(date: Date): string {
+    if (!date || isNaN(date.getTime())) {
+        return '';
+    }
+    // "8:26 AM · Sep 20, 2025"
+    return format(date, "h:mm a · MMM d, yyyy");
 }
