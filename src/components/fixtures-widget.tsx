@@ -111,13 +111,9 @@ export function FixturesWidget({ isPage = false, matches: propMatches, loading: 
     }
 
     return (
-        <Card>
-            <CardHeader className="p-4">
-                <CardTitle className="text-xl font-bold">Today's Fixtures</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 pt-0">
-                {content}
-            </CardContent>
-        </Card>
+        <div>
+            <h2 className="text-xl font-bold text-primary mb-4">Today's Fixtures</h2>
+            {content}
+        </div>
     );
 }

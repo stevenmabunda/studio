@@ -75,11 +75,8 @@ export function WhoToFollow() {
   }
 
   return (
-    <Card>
-      <CardHeader className="p-4">
-        <CardTitle className="text-xl font-bold">Who to follow</CardTitle>
-      </CardHeader>
-      <CardContent className="p-4 pt-0">
+    <div>
+        <h2 className="text-xl font-bold text-primary mb-4">Who to follow</h2>
         <div className="flex flex-col gap-4">
           {loading ? (
             <>
@@ -117,7 +114,6 @@ export function WhoToFollow() {
             </div>
           )}
         </div>
-      </CardContent>
-    </Card>
+    </div>
   );
 }

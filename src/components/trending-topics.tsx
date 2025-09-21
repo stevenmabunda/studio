@@ -43,11 +43,8 @@ export function TrendingTopics() {
   }, []);
 
   return (
-    <Card>
-      <CardHeader className="p-4">
-        <CardTitle className="text-xl font-bold">What's happening</CardTitle>
-      </CardHeader>
-      <CardContent className="p-4 pt-0">
+     <div>
+        <h2 className="text-xl font-bold text-primary mb-4">What's happening</h2>
         <div className="space-y-4">
           {loading ? (
             Array.from({ length: 5 }).map((_, i) => (
@@ -80,7 +77,6 @@ export function TrendingTopics() {
             </>
           )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
   );
 }
