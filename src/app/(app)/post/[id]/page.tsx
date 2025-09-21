@@ -10,7 +10,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { usePosts } from '@/contexts/post-context';
 import { db } from '@/lib/firebase/config';
 import { collection, query, onSnapshot, orderBy, type Timestamp, doc, getDoc } from 'firebase/firestore';
-import { formatTimestamp } from '@/lib/utils';
+import { formatTimestamp, cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
@@ -175,10 +175,10 @@ export default function PostPage() {
           <CreateComment onComment={handleCreateComment} />
         </div>
 
-        <div className="divide-y divide-border border-t">
+        <div className="border-t">
             {loadingComments ? (
                 Array.from({length: 3}).map((_, i) => (
-                    <div key={i} className="flex space-x-3 md:space-x-4 p-3 md:p-4">
+                    <div key={i} className="flex space-x-3 md:space-x-4 p-3 md:p-4 border-b">
                         <Skeleton className="h-10 w-10 rounded-full" />
                         <div className="flex-1 space-y-2">
                             <Skeleton className="h-4 w-3/5" />
@@ -187,8 +187,13 @@ export default function PostPage() {
                     </div>
                 ))
             ) : comments.length > 0 ? (
-                 comments.map((comment) => (
-                    <Post key={`comment-${comment.id}`} {...comment} isReplyView={true} />
+                 comments.map((comment, index) => (
+                    <div key={`comment-${comment.id}`} className={cn(
+                        "border-b",
+                        index % 2 !== 0 && "border-b-transparent"
+                    )}>
+                        <Post {...comment} isReplyView={true} />
+                    </div>
                  ))
             ) : (
                  <div className="p-8 text-center text-muted-foreground">
@@ -201,5 +206,3 @@ export default function PostPage() {
     </div>
   );
 }
-
-    
