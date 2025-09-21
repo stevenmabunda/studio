@@ -110,8 +110,8 @@ export function FixturesWidget({ isPage = false, matches: propMatches, loading: 
     }
 
     return (
-        <div>
-            <h2 className="text-xl font-bold mb-4">Today's Fixtures</h2>
+        <div className="border border-border rounded-lg p-4">
+            <h2 className="text-xl font-bold mb-4 text-primary">Today's Fixtures</h2>
             {content}
         </div>
     );

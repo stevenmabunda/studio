@@ -42,8 +42,8 @@ export function TrendingTopics() {
   }, []);
 
   return (
-     <div>
-        <h2 className="text-xl font-bold mb-4">What's happening</h2>
+     <div className="border border-border rounded-lg p-4">
+        <h2 className="text-xl font-bold mb-4 text-primary">Join the conversation</h2>
         <div className="space-y-4">
           {loading ? (
             Array.from({ length: 5 }).map((_, i) => (
