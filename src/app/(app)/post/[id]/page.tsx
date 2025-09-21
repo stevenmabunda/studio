@@ -69,6 +69,7 @@ export default function PostPage() {
                 media: data.media,
                 poll: data.poll,
                 timestamp: createdAt ? formatTimestamp(createdAt) : 'now',
+                createdAt: createdAt ? createdAt.toISOString() : undefined,
             } as PostType;
             setPost(fetchedPost);
             document.title = `Post by @${fetchedPost.authorHandle} | BHOLO`;
