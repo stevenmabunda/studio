@@ -68,13 +68,14 @@ type PostProps = PostType & {
 
 type CommentType = PostType;
 
-function CommentEngagement({ parentPostId, commentId, initialLikes }: { parentPostId: string, commentId: string, initialLikes: number }) {
+function CommentEngagement({ parentPostId, commentId, initialLikes, onReplyClick }: { parentPostId: string, commentId: string, initialLikes: number, onReplyClick: () => void }) {
     const { user } = useAuth();
     const { likeComment } = usePosts();
     const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
     
     const [likeCount, setLikeCount] = useState(initialLikes);
     const [isLiked, setIsLiked] = useState(false);
+    const [isReposted, setIsReposted] = useState(false);
 
     const handleActionClick = (action: () => void) => (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -89,16 +90,28 @@ function CommentEngagement({ parentPostId, commentId, initialLikes }: { parentPo
         const newIsLiked = !isLiked;
         setIsLiked(newIsLiked);
         setLikeCount(prev => prev + (newIsLiked ? 1 : -1));
-        likeComment(parentPostId, commentId, !isLiked);
+        likeComment(parentPostId, commentId, !newIsLiked);
     };
+    
+    const handleRepost = () => {
+      // NOTE: Reposting comments is often a more complex feature (e.g., quote tweet).
+      // For now, this is a UI-only interaction.
+      setIsReposted(!isReposted);
+    }
+    
+    const handleReply = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onReplyClick();
+    }
+
 
     return (
          <div className="flex items-center justify-between text-muted-foreground max-w-xs mt-2">
             <div className="flex items-center -ml-3">
-                <Button variant="ghost" size='icon' className="h-8 w-8 flex items-center gap-2 hover:text-primary" onClick={(e) => e.stopPropagation()}>
+                <Button variant="ghost" size='icon' className="h-8 w-8 flex items-center gap-2 hover:text-primary" onClick={handleReply}>
                     <MessageCircle className="h-5 w-5" />
                 </Button>
-                <Button variant="ghost" size='icon' className="h-8 w-8 flex items-center gap-2 hover:text-green-500" onClick={(e) => e.stopPropagation()}>
+                <Button variant="ghost" size='icon' className={cn("h-8 w-8 flex items-center gap-2 hover:text-green-500", isReposted && "text-green-500")} onClick={handleActionClick(handleRepost)}>
                     <Repeat className="h-5 w-5" />
                 </Button>
                 <Button variant="ghost" size='icon' className={cn("h-8 w-8 flex items-center gap-2", isLiked ? 'text-red-500' : 'hover:text-red-500')} onClick={handleActionClick(handleLike)}>
@@ -238,7 +251,7 @@ function Poll({ poll, postId }: { poll: NonNullable<PostType['poll']>, postId: s
   );
 }
 
-function Comment({ comment, parentPostId }: { comment: CommentType, parentPostId: string }) {
+function Comment({ comment, parentPostId, onReplyClick }: { comment: CommentType, parentPostId: string, onReplyClick: () => void }) {
   const hasMedia = comment.media && comment.media.length > 0;
   const isVideo = hasMedia && comment.media![0].type === 'video';
   
@@ -279,7 +292,12 @@ function Comment({ comment, parentPostId }: { comment: CommentType, parentPostId
                   )}
                 </div>
               )}
-               <CommentEngagement parentPostId={parentPostId} commentId={comment.id} initialLikes={comment.likes} />
+               <CommentEngagement 
+                    parentPostId={parentPostId} 
+                    commentId={comment.id} 
+                    initialLikes={comment.likes}
+                    onReplyClick={onReplyClick}
+                />
           </div>
       </div>
     </div>
@@ -444,7 +462,7 @@ export function Post(props: PostProps) {
                 content: data.content,
                 timestamp: createdAt ? formatTimestamp(createdAt) : "now",
                 media: data.media || [],
-                comments: 0, reposts: 0, likes: 0,
+                comments: 0, reposts: 0, likes: data.likes || 0,
             }
         }) as CommentType[];
         setComments(fetchedComments);
@@ -513,13 +531,13 @@ export function Post(props: PostProps) {
   const handleLike = () => {
     setIsLiked(!isLiked);
     setLikeCount(isLiked ? likeCount - 1 : likeCount + 1);
-    likePost(id, isLiked);
+    likePost(id, !isLiked);
   };
 
   const handleRepost = () => {
     setIsReposted(!isReposted);
     setRepostCount(isReposted ? repostCount - 1 : repostCount + 1);
-    repostPost(id, isReposted);
+    repostPost(id, !isReposted);
   };
 
   const handleBookmark = () => {
@@ -828,7 +846,12 @@ export function Post(props: PostProps) {
         </div>
         
          {isReplyView && parentPostId && (
-            <CommentEngagement parentPostId={parentPostId} commentId={id} initialLikes={initialLikes} />
+            <CommentEngagement 
+                parentPostId={parentPostId} 
+                commentId={id} 
+                initialLikes={initialLikes} 
+                onReplyClick={handleCommentClick}
+            />
         )}
       </div>
     </div>
@@ -920,7 +943,7 @@ export function Post(props: PostProps) {
                                     {loadingComments ? (
                                         Array.from({length: 3}).map((_, i) => <CommentSkeleton key={i} />)
                                     ) : comments.length > 0 ? (
-                                        comments.map((comment) => <Comment key={`comment-${comment.id}`} comment={comment} parentPostId={id} />)
+                                        comments.map((comment) => <Comment key={`comment-${comment.id}`} comment={comment} parentPostId={id} onReplyClick={() => setIsReplyDialogOpen(true)} />)
                                     ) : (
                                         <p className="p-8 text-center text-muted-foreground text-sm">No comments yet.</p>
                                     )}
