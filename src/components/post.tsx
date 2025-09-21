@@ -549,7 +549,7 @@ export function Post(props: PostProps) {
   }[imageCount] || '';
 
   const mainPostContent = (
-    <div className={cn("flex space-x-3 md:space-x-4", isReplyView ? 'p-3 md:p-4 pb-0' : 'p-3 md:p-4')}>
+    <div className={cn("flex space-x-3 md:space-x-4", isReplyView ? 'p-3 md:p-4' : 'p-3 md:p-4')}>
       <div className="flex flex-col items-center">
           <ProfileHoverCard userId={authorId}>
             <Link href={`/profile/${authorId}`} className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
@@ -570,15 +570,11 @@ export function Post(props: PostProps) {
                       </Link>
                     </ProfileHoverCard>
                     <span className="text-sm text-muted-foreground truncate">@{authorHandle}</span>
-                    {!isReplyView && !isStandalone && (
-                        <>
-                            <span className="text-muted-foreground">·</span>
-                            <span className="text-sm text-muted-foreground flex-shrink-0">{timestamp}</span>
-                        </>
-                    )}
+                    <span className="text-muted-foreground">·</span>
+                    <span className="text-sm text-muted-foreground flex-shrink-0">{timestamp}</span>
                 </div>
             </div>
-           {isAuthor && !isReplyView ? (
+           {isAuthor ? (
                 <div className="flex-shrink-0">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -609,7 +605,6 @@ export function Post(props: PostProps) {
                     />
                 </div>
            ) : (
-                isAuthor || isReplyView ? null : 
                 <div className="flex-shrink-0">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -648,7 +643,7 @@ export function Post(props: PostProps) {
                 </div>
             </div>
         ) : (
-            <p className={cn("whitespace-pre-wrap", isReplyView ? "mt-1" : "mt-2", isStandalone && "text-lg")}>
+            <p className={cn("whitespace-pre-wrap", "mt-2", isStandalone && "text-lg")}>
                 {linkify(isReplyView ? content : displayText)}
                 {needsTruncation && (
                     <button
@@ -666,7 +661,7 @@ export function Post(props: PostProps) {
 
         {poll && <Poll poll={poll} postId={id} />}
         
-        {mediaExists && !isReplyView && (
+        {mediaExists && (
           <div className={cn("mt-3 rounded-2xl overflow-hidden border", imageCount > 1 && "aspect-video")}>
             {isVideo ? (
               <video
@@ -728,67 +723,65 @@ export function Post(props: PostProps) {
             </div>
         )}
         
-        {!isReplyView && (
-            <div className={cn("flex items-center justify-between text-muted-foreground", isStandalone ? "py-2 my-2" : "mt-4")}>
-                <div className="flex items-center -ml-3">
-                    <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-primary" onClick={handleCommentClick}>
-                        <MessageCircle className="h-5 w-5" />
-                        <span>{commentCount > 0 ? commentCount : ''}</span>
-                    </Button>
-                    <Button variant="ghost" size="sm" className={cn("flex items-center gap-2", isReposted ? 'text-green-500' : 'hover:text-green-500')} onClick={handleActionClick(handleRepost)}>
-                        <Repeat className="h-5 w-5" />
-                        <span>{repostCount > 0 ? repostCount : ''}</span>
-                    </Button>
-                    <Button variant="ghost" size="sm" className={cn("flex items-center gap-2", isLiked ? 'text-red-500' : 'hover:text-red-500')} onClick={handleActionClick(handleLike)}>
-                        <Heart className={cn("h-5 w-5", isLiked && 'fill-current')} />
-                        <span>{likeCount > 0 ? likeCount : ''}</span>
-                    </Button>
-                </div>
-                <div className="flex items-center -mr-3">
-                    <Button variant="ghost" size="icon" className={cn("hover:text-primary", isBookmarked && "text-primary")} onClick={handleActionClick(handleBookmark)}>
-                        <Bookmark className={cn("h-5 w-5", isBookmarked && 'fill-current')} />
-                    </Button>
-                    <Sheet open={isShareSheetOpen} onOpenChange={setShareSheetOpen}>
-                        <SheetTrigger asChild>
-                            <Button variant="ghost" size="icon" className="hover:text-primary" onClick={(e) => e.stopPropagation()}>
-                                <Share2 className="h-5 w-5" />
-                            </Button>
-                        </SheetTrigger>
-                        <SheetContent side="bottom" className="rounded-t-lg" onClick={(e) => e.stopPropagation()}>
-                            <SheetHeader>
-                                <SheetTitle>Share Post</SheetTitle>
-                            </SheetHeader>
-                            <div className="grid grid-cols-4 gap-4 py-4">
-                                <a href={getShareUrl('twitter')} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center group">
-                                    <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
-                                        <TwitterIcon className="h-7 w-7" />
-                                    </div>
-                                    <span className="text-xs">Twitter</span>
-                                </a>
-                                <a href={getShareUrl('facebook')} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center group">
-                                    <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
-                                        <FacebookIcon className="h-7 w-7" />
-                                    </div>
-                                    <span className="text-xs">Facebook</span>
-                                </a>
-                                <a href={getShareUrl('whatsapp')} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center group">
-                                    <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
-                                        <WhatsAppIcon className="h-7 w-7" />
-                                    </div>
-                                    <span className="text-xs">WhatsApp</span>
-                                </a>
-                                <button onClick={handleCopyLink} className="flex flex-col items-center gap-2 text-center group">
-                                    <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
-                                        <Copy className="h-7 w-7" />
-                                    </div>
-                                    <span className="text-xs">Copy Link</span>
-                                </button>
-                            </div>
-                        </SheetContent>
-                    </Sheet>
-                </div>
+        <div className={cn("flex items-center justify-between text-muted-foreground", isStandalone && !isReplyView ? "py-2 my-2" : "mt-4", isReplyView && "max-w-xs")}>
+            <div className="flex items-center -ml-3">
+                <Button variant="ghost" size={isReplyView ? 'icon' : 'sm'} className={cn("flex items-center gap-2 hover:text-primary", isReplyView && "h-8 w-8")} onClick={handleCommentClick}>
+                    <MessageCircle className="h-5 w-5" />
+                    {!isReplyView && <span>{commentCount > 0 ? commentCount : ''}</span>}
+                </Button>
+                <Button variant="ghost" size={isReplyView ? 'icon' : 'sm'} className={cn("flex items-center gap-2", isReposted ? 'text-green-500' : 'hover:text-green-500', isReplyView && "h-8 w-8")} onClick={handleActionClick(handleRepost)}>
+                    <Repeat className="h-5 w-5" />
+                    {!isReplyView && <span>{repostCount > 0 ? repostCount : ''}</span>}
+                </Button>
+                <Button variant="ghost" size={isReplyView ? 'icon' : 'sm'} className={cn("flex items-center gap-2", isLiked ? 'text-red-500' : 'hover:text-red-500', isReplyView && "h-8 w-8")} onClick={handleActionClick(handleLike)}>
+                    <Heart className={cn("h-5 w-5", isLiked && 'fill-current')} />
+                    {!isReplyView && <span>{likeCount > 0 ? likeCount : ''}</span>}
+                </Button>
             </div>
-        )}
+            <div className="flex items-center -mr-3">
+                <Button variant="ghost" size="icon" className={cn("hover:text-primary", isBookmarked && "text-primary", isReplyView && "h-8 w-8")} onClick={handleActionClick(handleBookmark)}>
+                    <Bookmark className={cn("h-5 w-5", isBookmarked && 'fill-current')} />
+                </Button>
+                <Sheet open={isShareSheetOpen} onOpenChange={setShareSheetOpen}>
+                    <SheetTrigger asChild>
+                        <Button variant="ghost" size="icon" className={cn("hover:text-primary", isReplyView && "h-8 w-8")} onClick={(e) => e.stopPropagation()}>
+                            <Share2 className="h-5 w-5" />
+                        </Button>
+                    </SheetTrigger>
+                    <SheetContent side="bottom" className="rounded-t-lg" onClick={(e) => e.stopPropagation()}>
+                        <SheetHeader>
+                            <SheetTitle>Share Post</SheetTitle>
+                        </SheetHeader>
+                        <div className="grid grid-cols-4 gap-4 py-4">
+                            <a href={getShareUrl('twitter')} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center group">
+                                <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
+                                    <TwitterIcon className="h-7 w-7" />
+                                </div>
+                                <span className="text-xs">Twitter</span>
+                            </a>
+                            <a href={getShareUrl('facebook')} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center group">
+                                <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
+                                    <FacebookIcon className="h-7 w-7" />
+                                </div>
+                                <span className="text-xs">Facebook</span>
+                            </a>
+                            <a href={getShareUrl('whatsapp')} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center group">
+                                <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
+                                    <WhatsAppIcon className="h-7 w-7" />
+                                </div>
+                                <span className="text-xs">WhatsApp</span>
+                            </a>
+                            <button onClick={handleCopyLink} className="flex flex-col items-center gap-2 text-center group">
+                                <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
+                                    <Copy className="h-7 w-7" />
+                                </div>
+                                <span className="text-xs">Copy Link</span>
+                            </button>
+                        </div>
+                    </SheetContent>
+                </Sheet>
+            </div>
+        </div>
       </div>
     </div>
   );

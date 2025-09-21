@@ -66,6 +66,7 @@ export default function PostPage() {
                 comments: data.comments,
                 reposts: data.reposts,
                 likes: data.likes,
+                views: data.views,
                 media: data.media,
                 poll: data.poll,
                 timestamp: createdAt ? formatTimestamp(createdAt) : 'now',
@@ -96,9 +97,9 @@ export default function PostPage() {
             timestamp: createdAt ? formatTimestamp(createdAt) : "now",
             media: data.media || [],
             // Fill in missing post fields for type compatibility
-            comments: 0,
-            reposts: 0,
-            likes: 0,
+            comments: data.comments || 0,
+            reposts: data.reposts || 0,
+            likes: data.likes || 0,
         }
       }) as Comment[];
       setComments(fetchedComments);
