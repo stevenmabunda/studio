@@ -559,10 +559,9 @@ export function Post(props: PostProps) {
               </Avatar>
             </Link>
           </ProfileHoverCard>
-          {isStandalone && !isReplyView && (
-              <div className="w-0.5 grow bg-border my-4" />
+          {isReplyView && (
+              <div className="w-0.5 grow bg-border my-2" />
           )}
-          {isReplyView && <div className="w-0.5 grow bg-border my-2" />}
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex justify-between items-start gap-2">
@@ -733,7 +732,7 @@ export function Post(props: PostProps) {
         )}
         
         {!isReplyView && (
-            <div className={cn("flex items-center justify-between text-muted-foreground", isStandalone ? "py-2 border-y" : "mt-4")}>
+            <div className={cn("flex items-center justify-between text-muted-foreground", isStandalone ? "py-2" : "mt-4")}>
                 <div className="flex items-center -ml-3">
                     <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-primary" onClick={handleCommentClick}>
                         <MessageCircle className="h-5 w-5" />
@@ -768,7 +767,7 @@ export function Post(props: PostProps) {
                                         <TwitterIcon className="h-7 w-7" />
                                     </div>
                                     <span className="text-xs">Twitter</span>
-                                </a>
+                                a>
                                 <a href={getShareUrl('facebook')} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center group">
                                     <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
                                         <FacebookIcon className="h-7 w-7" />
