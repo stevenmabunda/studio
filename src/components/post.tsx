@@ -559,9 +559,6 @@ export function Post(props: PostProps) {
               </Avatar>
             </Link>
           </ProfileHoverCard>
-          {isStandalone && !isReplyView && (
-              <div className="w-0.5 grow bg-border my-2" />
-          )}
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex justify-between items-start gap-2">
@@ -732,7 +729,7 @@ export function Post(props: PostProps) {
         )}
         
         {!isReplyView && (
-            <div className={cn("flex items-center justify-between text-muted-foreground", isStandalone ? "py-2 border-y my-2" : "mt-4")}>
+            <div className={cn("flex items-center justify-between text-muted-foreground", isStandalone ? "py-2 my-2" : "mt-4")}>
                 <div className="flex items-center -ml-3">
                     <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-primary" onClick={handleCommentClick}>
                         <MessageCircle className="h-5 w-5" />
