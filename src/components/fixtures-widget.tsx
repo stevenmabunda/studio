@@ -97,9 +97,11 @@ export function FixturesWidget({ isPage = false, matches: propMatches, loading: 
             )}
             
             {!isPage && matches.length > 0 && (
-                <Button variant="link" className="p-0 text-primary w-fit text-sm" asChild>
-                    <Link href="/live">View all</Link>
-                </Button>
+                <div className="pt-4">
+                    <Button variant="link" className="p-0 text-primary w-fit text-sm" asChild>
+                        <Link href="/live">Show more</Link>
+                    </Button>
+                </div>
             )}
         </div>
     );
@@ -111,7 +113,7 @@ export function FixturesWidget({ isPage = false, matches: propMatches, loading: 
     return (
         <Card className="bg-secondary">
             <CardHeader className="p-4">
-                <CardTitle className="text-lg font-bold text-primary">Today's Fixtures</CardTitle>
+                <CardTitle className="text-xl font-bold">Today's Fixtures</CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-0">
                 {content}

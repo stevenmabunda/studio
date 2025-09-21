@@ -45,13 +45,13 @@ export function TrendingTopics() {
   return (
     <Card className="bg-secondary">
       <CardHeader className="p-4">
-        <CardTitle className="text-lg font-bold text-primary">Join the conversation</CardTitle>
+        <CardTitle className="text-xl font-bold">What's happening</CardTitle>
       </CardHeader>
       <CardContent className="p-4 pt-0">
         <div className="space-y-4">
           {loading ? (
             Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="space-y-1">
+                <div key={i} className="space-y-1 py-1">
                   <Skeleton className="h-4 w-3/5" />
                   <Skeleton className="h-5 w-4/5" />
                   <Skeleton className="h-4 w-2/5" />
@@ -61,11 +61,11 @@ export function TrendingTopics() {
           ) : (
             <>
               {topics.map((item, index) => (
-                <Link href={`/search?q=${encodeURIComponent(item.topic)}`} key={index} className="group cursor-pointer block">
+                <Link href={`/search?q=${encodeURIComponent(item.topic)}`} key={index} className="group cursor-pointer block p-2 -m-2 rounded-md hover:bg-white/5">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <p className="text-sm text-muted-foreground">{item.category}</p>
-                      <p className="font-bold text-base group-hover:underline">{item.topic}</p>
+                      <p className="font-bold text-base">{item.topic}</p>
                       <p className="text-sm text-muted-foreground">{item.postCount}</p>
                     </div>
                     <Button variant="ghost" size="icon" className="h-8 w-8 -mr-2 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
@@ -74,7 +74,9 @@ export function TrendingTopics() {
                   </div>
                 </Link>
               ))}
-              <Button variant="link" className="p-0 text-primary text-sm">Show more</Button>
+              <div className="pt-2">
+                <Button variant="link" className="p-0 text-primary text-sm">Show more</Button>
+              </div>
             </>
           )}
         </div>

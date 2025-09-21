@@ -77,7 +77,7 @@ export function WhoToFollow() {
   return (
     <Card className="bg-secondary">
       <CardHeader className="p-4">
-        <CardTitle className="text-lg font-bold text-primary">Who to follow</CardTitle>
+        <CardTitle className="text-xl font-bold">Who to follow</CardTitle>
       </CardHeader>
       <CardContent className="p-4 pt-0">
         <div className="flex flex-col gap-4">
@@ -90,13 +90,13 @@ export function WhoToFollow() {
           ) : usersToFollow.length > 0 ? (
             usersToFollow.map((userToFollow) => (
                 <div key={userToFollow.uid} className="flex items-center justify-between gap-2">
-                <Link href={`/profile/${userToFollow.uid}`} className="flex items-center gap-3">
+                <Link href={`/profile/${userToFollow.uid}`} className="flex items-center gap-3 group">
                     <Avatar className="h-10 w-10">
                     <AvatarImage src={userToFollow.photoURL} data-ai-hint="user avatar" />
                     <AvatarFallback>{userToFollow.displayName.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div className="grid">
-                    <p className="font-semibold leading-none hover:underline">{userToFollow.displayName}</p>
+                    <p className="font-semibold leading-none group-hover:underline">{userToFollow.displayName}</p>
                     <p className="text-sm text-muted-foreground">@{userToFollow.handle}</p>
                     </div>
                 </Link>
@@ -112,7 +112,9 @@ export function WhoToFollow() {
           )}
 
           {usersToFollow.length > 0 && (
-            <Button variant="link" className="p-0 text-primary w-fit text-sm">Show more</Button>
+             <div className="pt-2">
+                <Button variant="link" className="p-0 text-primary text-sm">Show more</Button>
+            </div>
           )}
         </div>
       </CardContent>
