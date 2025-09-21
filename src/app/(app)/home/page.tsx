@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
@@ -157,25 +156,32 @@ export default function HomePage() {
     // This effect runs only when the component mounts and the posts are loaded.
     // It's responsible for restoring the scroll position.
     if (!loadingForYou && forYouPosts.length > 0) {
-      const postId = sessionStorage.getItem('scrollPostId');
-      const scrollY = sessionStorage.getItem('scrollY');
-
-      if (postId) {
-        setTimeout(() => {
-          const postElement = document.querySelector(`[data-post-id="${postId}"]`);
-          if (postElement) {
-            postElement.scrollIntoView({ behavior: 'auto', block: 'center' });
-          } else if (scrollY) {
-            // Fallback to scrollY if post not found (e.g., it's on a page that hasn't been loaded yet)
+      try {
+        const scrollY = sessionStorage.getItem('homeScrollY');
+        if (scrollY) {
             window.scrollTo(0, parseInt(scrollY, 10));
-          }
-          // Clean up session storage after use
-          sessionStorage.removeItem('scrollPostId');
-          sessionStorage.removeItem('scrollY');
-        }, 50); // A small delay helps ensure the content is rendered before scrolling.
+        }
+      } catch (e) {
+        console.error("Could not restore scroll position:", e);
       }
     }
-  }, [loadingForYou, forYouPosts]);
+  }, [loadingForYou, forYouPosts.length]);
+
+  useEffect(() => {
+    // This effect is for saving the scroll position when the user leaves the page.
+    const handleBeforeUnload = () => {
+        try {
+            sessionStorage.setItem('homeScrollY', String(window.scrollY));
+        } catch(e) {
+            console.error("Could not save scroll position:", e);
+        }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
 
 
   const loadMorePosts = useCallback(async () => {
@@ -379,3 +385,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    

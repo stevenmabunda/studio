@@ -63,7 +63,6 @@ import { ProfileHoverCard } from "./profile-hover-card";
 type PostProps = PostType & {
   isStandalone?: boolean;
   isReplyView?: boolean;
-  parentPostId?: string; // For comments
 };
 
 type CommentType = PostType;
@@ -148,9 +147,6 @@ function ReplyDialog({ post, onReply, open, onOpenChange }: { post: PostType, on
                     description: "Your reply was sent.",
                     action: (
                         <Button variant="outline" size="sm" onClick={() => {
-                            // Save scroll position before navigating
-                            sessionStorage.setItem('scrollY', String(window.scrollY));
-                            sessionStorage.setItem('scrollPostId', post.id);
                             router.push(`/post/${post.id}#comments`);
                         }}>
                             View
@@ -335,7 +331,6 @@ export function Post(props: PostProps) {
     poll,
     isStandalone = false,
     isReplyView = false,
-    parentPostId,
   } = props;
   
   const router = useRouter();
@@ -504,8 +499,11 @@ export function Post(props: PostProps) {
   const handlePostClick = () => {
       if (id.startsWith('temp_')) return;
       if (!isStandalone && !isReplyView) {
-          sessionStorage.setItem('scrollY', String(window.scrollY));
-          sessionStorage.setItem('scrollPostId', id);
+          try {
+            sessionStorage.setItem('homeScrollY', String(window.scrollY));
+          } catch(e) {
+            console.error("Could not save scroll position:", e);
+          }
           router.push(`/post/${id}`);
       }
   }
@@ -845,9 +843,9 @@ export function Post(props: PostProps) {
             </div>
         </div>
         
-         {isReplyView && parentPostId && (
+         {isReplyView && (
             <CommentEngagement 
-                parentPostId={parentPostId} 
+                parentPostId={id} 
                 commentId={id} 
                 initialLikes={initialLikes} 
                 onReplyClick={handleCommentClick}
@@ -960,5 +958,7 @@ export function Post(props: PostProps) {
       </div>
   );
 }
+
+    
 
     
