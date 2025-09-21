@@ -74,7 +74,7 @@ export function WhoToFollow() {
   }
 
   return (
-    <div className="border border-border rounded-lg p-4">
+    <>
         <h2 className="text-xl font-bold mb-4 text-primary">Who to follow</h2>
         <div className="flex flex-col gap-4">
           {loading ? (
@@ -113,6 +113,6 @@ export function WhoToFollow() {
             </div>
           )}
         </div>
-    </div>
+    </>
   );
 }
