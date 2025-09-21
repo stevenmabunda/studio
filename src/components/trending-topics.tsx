@@ -2,7 +2,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getTrendingKeywords, type TrendingKeyword } from '@/app/(app)/explore/actions';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from './ui/button';
@@ -44,7 +43,7 @@ export function TrendingTopics() {
 
   return (
      <div>
-        <h2 className="text-xl font-bold text-primary mb-4">What's happening</h2>
+        <h2 className="text-xl font-bold mb-4">What's happening</h2>
         <div className="space-y-4">
           {loading ? (
             Array.from({ length: 5 }).map((_, i) => (

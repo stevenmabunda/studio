@@ -3,7 +3,6 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FollowButton } from "./follow-button";
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -76,7 +75,7 @@ export function WhoToFollow() {
 
   return (
     <div>
-        <h2 className="text-xl font-bold text-primary mb-4">Who to follow</h2>
+        <h2 className="text-xl font-bold mb-4">Who to follow</h2>
         <div className="flex flex-col gap-4">
           {loading ? (
             <>

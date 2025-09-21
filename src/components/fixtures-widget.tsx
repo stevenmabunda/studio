@@ -6,7 +6,6 @@ import { getTodaysFixtures } from '@/app/(app)/home/actions';
 import type { MatchType } from '@/lib/data';
 import Image from 'next/image';
 import { Skeleton } from './ui/skeleton';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import Link from 'next/link';
 
@@ -112,7 +111,7 @@ export function FixturesWidget({ isPage = false, matches: propMatches, loading: 
 
     return (
         <div>
-            <h2 className="text-xl font-bold text-primary mb-4">Today's Fixtures</h2>
+            <h2 className="text-xl font-bold mb-4">Today's Fixtures</h2>
             {content}
         </div>
     );
