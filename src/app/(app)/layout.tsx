@@ -1,4 +1,5 @@
 
+
 'use client';
 import type { ReactNode } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
@@ -49,7 +50,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           </header>
 
           <main className="w-full max-w-[624px] border-x">
-             <ScrollArea className="h-screen">
+             <ScrollArea className="h-screen" id="desktop-scroll-area">
                 {children}
              </ScrollArea>
           </main>

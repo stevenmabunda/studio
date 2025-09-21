@@ -78,6 +78,7 @@ function CommentEngagement({ parentPostId, commentId, initialLikes, onReplyClick
 
     const handleActionClick = (action: () => void) => (e: React.MouseEvent) => {
         e.stopPropagation();
+        e.preventDefault();
         if (!user) {
             setIsLoginDialogOpen(true);
             return;
@@ -100,6 +101,7 @@ function CommentEngagement({ parentPostId, commentId, initialLikes, onReplyClick
     
     const handleReply = (e: React.MouseEvent) => {
       e.stopPropagation();
+      e.preventDefault();
       onReplyClick();
     }
 
@@ -335,7 +337,7 @@ export function Post(props: PostProps) {
   
   const router = useRouter();
   const { user } = useAuth();
-  const { editPost, deletePost, likePost, repostPost, bookmarkPost, bookmarkedPostIds, addComment } = usePosts();
+  const { editPost, deletePost, likePost, repostPost, bookmarkPost, bookmarkedPostIds, addComment, addVote } = usePosts();
   const { toast } = useToast();
 
   const [comments, setComments] = useState<CommentType[]>([]);
@@ -500,7 +502,13 @@ export function Post(props: PostProps) {
       if (id.startsWith('temp_')) return;
       if (!isStandalone && !isReplyView) {
           try {
-            sessionStorage.setItem('homeScrollY', String(window.scrollY));
+            // Check if we are on desktop by looking for the main scroll area
+            const desktopScrollArea = document.querySelector('#desktop-scroll-area > div');
+            if (desktopScrollArea) {
+                sessionStorage.setItem('desktopScrollY', String(desktopScrollArea.scrollTop));
+            } else {
+                sessionStorage.setItem('homeScrollY', String(window.scrollY));
+            }
           } catch(e) {
             console.error("Could not save scroll position:", e);
           }
@@ -845,7 +853,7 @@ export function Post(props: PostProps) {
         
          {isReplyView && (
             <CommentEngagement 
-                parentPostId={id} 
+                parentPostId={props.parentPostId as string} 
                 commentId={id} 
                 initialLikes={initialLikes} 
                 onReplyClick={handleCommentClick}

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
@@ -157,9 +158,18 @@ export default function HomePage() {
     // It's responsible for restoring the scroll position.
     if (!loadingForYou && forYouPosts.length > 0) {
       try {
-        const scrollY = sessionStorage.getItem('homeScrollY');
-        if (scrollY) {
-            window.scrollTo(0, parseInt(scrollY, 10));
+        const desktopScrollY = sessionStorage.getItem('desktopScrollY');
+        const desktopScrollArea = document.querySelector('#desktop-scroll-area > div'); // Radix UI viewport
+        if (desktopScrollY && desktopScrollArea) {
+          desktopScrollArea.scrollTo(0, parseInt(desktopScrollY, 10));
+          sessionStorage.removeItem('desktopScrollY');
+          return;
+        }
+
+        const mobileScrollY = sessionStorage.getItem('homeScrollY');
+        if (mobileScrollY) {
+            window.scrollTo(0, parseInt(mobileScrollY, 10));
+            sessionStorage.removeItem('homeScrollY');
         }
       } catch (e) {
         console.error("Could not restore scroll position:", e);
@@ -171,7 +181,12 @@ export default function HomePage() {
     // This effect is for saving the scroll position when the user leaves the page.
     const handleBeforeUnload = () => {
         try {
-            sessionStorage.setItem('homeScrollY', String(window.scrollY));
+            const desktopScrollArea = document.querySelector('#desktop-scroll-area > div');
+            if (desktopScrollArea) {
+                sessionStorage.setItem('desktopScrollY', String(desktopScrollArea.scrollTop));
+            } else {
+                sessionStorage.setItem('homeScrollY', String(window.scrollY));
+            }
         } catch(e) {
             console.error("Could not save scroll position:", e);
         }
