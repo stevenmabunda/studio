@@ -63,10 +63,53 @@ import { ProfileHoverCard } from "./profile-hover-card";
 type PostProps = PostType & {
   isStandalone?: boolean;
   isReplyView?: boolean;
+  parentPostId?: string; // For comments
 };
 
 type CommentType = PostType;
 
+function CommentEngagement({ parentPostId, commentId, initialLikes }: { parentPostId: string, commentId: string, initialLikes: number }) {
+    const { user } = useAuth();
+    const { likeComment } = usePosts();
+    const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
+    
+    const [likeCount, setLikeCount] = useState(initialLikes);
+    const [isLiked, setIsLiked] = useState(false);
+
+    const handleActionClick = (action: () => void) => (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!user) {
+            setIsLoginDialogOpen(true);
+            return;
+        }
+        action();
+    };
+
+    const handleLike = () => {
+        const newIsLiked = !isLiked;
+        setIsLiked(newIsLiked);
+        setLikeCount(prev => prev + (newIsLiked ? 1 : -1));
+        likeComment(parentPostId, commentId, !isLiked);
+    };
+
+    return (
+         <div className="flex items-center justify-between text-muted-foreground max-w-xs mt-2">
+            <div className="flex items-center -ml-3">
+                <Button variant="ghost" size='icon' className="h-8 w-8 flex items-center gap-2 hover:text-primary" onClick={(e) => e.stopPropagation()}>
+                    <MessageCircle className="h-5 w-5" />
+                </Button>
+                <Button variant="ghost" size='icon' className="h-8 w-8 flex items-center gap-2 hover:text-green-500" onClick={(e) => e.stopPropagation()}>
+                    <Repeat className="h-5 w-5" />
+                </Button>
+                <Button variant="ghost" size='icon' className={cn("h-8 w-8 flex items-center gap-2", isLiked ? 'text-red-500' : 'hover:text-red-500')} onClick={handleActionClick(handleLike)}>
+                    <Heart className={cn("h-5 w-5", isLiked && 'fill-current')} />
+                    {likeCount > 0 && <span className="text-xs">{likeCount}</span>}
+                </Button>
+            </div>
+             <LoginOrSignupDialog isOpen={isLoginDialogOpen} onOpenChange={setIsLoginDialogOpen} />
+        </div>
+    );
+}
 
 // Helper components for social icons
 const TwitterIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -124,7 +167,6 @@ function ReplyDialog({ post, onReply, open, onOpenChange }: { post: PostType, on
                                 <AvatarImage src={post.authorAvatar} alt={post.authorName} />
                                 <AvatarFallback>{post.authorName.charAt(0)}</AvatarFallback>
                             </Avatar>
-                            <div className="w-0.5 grow bg-border my-2" />
                         </div>
                         <div className="flex-1">
                             <div className="flex items-center gap-2">
@@ -196,7 +238,7 @@ function Poll({ poll, postId }: { poll: NonNullable<PostType['poll']>, postId: s
   );
 }
 
-function Comment({ comment }: { comment: CommentType }) {
+function Comment({ comment, parentPostId }: { comment: CommentType, parentPostId: string }) {
   const hasMedia = comment.media && comment.media.length > 0;
   const isVideo = hasMedia && comment.media![0].type === 'video';
   
@@ -237,6 +279,7 @@ function Comment({ comment }: { comment: CommentType }) {
                   )}
                 </div>
               )}
+               <CommentEngagement parentPostId={parentPostId} commentId={comment.id} initialLikes={comment.likes} />
           </div>
       </div>
     </div>
@@ -274,6 +317,7 @@ export function Post(props: PostProps) {
     poll,
     isStandalone = false,
     isReplyView = false,
+    parentPostId,
   } = props;
   
   const router = useRouter();
@@ -723,7 +767,7 @@ export function Post(props: PostProps) {
             </div>
         )}
         
-        <div className={cn("flex items-center justify-between text-muted-foreground", isStandalone && !isReplyView ? "py-2 my-2" : "mt-4", isReplyView && "max-w-xs")}>
+        <div className={cn("flex items-center justify-between text-muted-foreground", isStandalone && !isReplyView ? "py-2 my-2" : "mt-4", isReplyView && "hidden")}>
             <div className="flex items-center -ml-3">
                 <Button variant="ghost" size={isReplyView ? 'icon' : 'sm'} className={cn("flex items-center gap-2 hover:text-primary", isReplyView && "h-8 w-8")} onClick={handleCommentClick}>
                     <MessageCircle className="h-5 w-5" />
@@ -782,6 +826,10 @@ export function Post(props: PostProps) {
                 </Sheet>
             </div>
         </div>
+        
+         {isReplyView && parentPostId && (
+            <CommentEngagement parentPostId={parentPostId} commentId={id} initialLikes={initialLikes} />
+        )}
       </div>
     </div>
   );
@@ -872,7 +920,7 @@ export function Post(props: PostProps) {
                                     {loadingComments ? (
                                         Array.from({length: 3}).map((_, i) => <CommentSkeleton key={i} />)
                                     ) : comments.length > 0 ? (
-                                        comments.map((comment) => <Comment key={`comment-${comment.id}`} comment={comment} />)
+                                        comments.map((comment) => <Comment key={`comment-${comment.id}`} comment={comment} parentPostId={id} />)
                                     ) : (
                                         <p className="p-8 text-center text-muted-foreground text-sm">No comments yet.</p>
                                     )}
@@ -889,3 +937,5 @@ export function Post(props: PostProps) {
       </div>
   );
 }
+
+    

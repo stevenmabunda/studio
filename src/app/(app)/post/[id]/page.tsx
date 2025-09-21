@@ -193,7 +193,7 @@ export default function PostPage() {
                         "border-b",
                         index % 2 !== 0 && "border-b-transparent"
                     )}>
-                        <Post {...comment} isReplyView={true} />
+                        <Post {...comment} isReplyView={true} parentPostId={postId} />
                     </div>
                  ))
             ) : (
@@ -207,3 +207,5 @@ export default function PostPage() {
     </div>
   );
 }
+
+    

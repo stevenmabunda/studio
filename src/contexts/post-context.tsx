@@ -25,6 +25,7 @@ type PostContextType = {
   addVote: (postId: string, choiceIndex: number) => Promise<void>;
   addComment: (postId: string, data: { text: string; media: ReplyMedia[] }) => Promise<boolean | null>;
   likePost: (postId: string, isLiked: boolean) => Promise<void>;
+  likeComment: (postId: string, commentId: string, isLiked: boolean) => Promise<void>;
   repostPost: (postId: string, isReposted: boolean) => Promise<void>;
   bookmarkPost: (postId: string, isBookmarked: boolean) => Promise<void>;
   bookmarkedPostIds: Set<string>;
@@ -370,6 +371,9 @@ export function PostProvider({ children }: { children: ReactNode }) {
             content: text,
             media: mediaUploads,
             createdAt: serverTimestamp(),
+            likes: 0,
+            reposts: 0,
+            comments: 0
         };
 
         const postDocBeforeUpdate = await getDoc(postRef);
@@ -440,6 +444,24 @@ export function PostProvider({ children }: { children: ReactNode }) {
     }
   };
   
+  const likeComment = async (postId: string, commentId: string, isLiked: boolean) => {
+    if (!db || !user) return;
+    const commentRef = doc(db, "posts", postId, "comments", commentId);
+    // Note: We don't track user 'likes' on comments to keep it simple.
+
+    try {
+        await runTransaction(db, async (transaction) => {
+            const commentDoc = await transaction.get(commentRef);
+            if (!commentDoc.exists()) throw "Comment does not exist!";
+            
+            const newLikeCount = (commentDoc.data().likes || 0) + (isLiked ? -1 : 1);
+            transaction.update(commentRef, { likes: Math.max(0, newLikeCount) });
+        });
+    } catch (error) {
+        console.error("Error updating comment likes:", error);
+    }
+  };
+
   const repostPost = async (postId: string, isReposted: boolean) => {
     if (!db) return;
     const postRef = doc(db, "posts", postId);
@@ -481,6 +503,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
       addVote,
       addComment,
       likePost,
+      likeComment,
       repostPost,
       bookmarkPost,
       bookmarkedPostIds,
@@ -503,3 +526,5 @@ export function usePosts() {
   }
   return context;
 }
+
+    
