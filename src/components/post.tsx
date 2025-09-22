@@ -739,7 +739,7 @@ export function Post(props: PostProps) {
         
         {mediaExists && (
           <div className={cn("mt-3 rounded-2xl overflow-hidden border", imageCount > 1 && "aspect-video")}>
-            {isVideo ? (
+            {isVideo && media[0].url ? (
               <video
                 ref={videoRef}
                 src={media[0].url}
@@ -751,7 +751,7 @@ export function Post(props: PostProps) {
                 className="w-full h-auto max-h-96 object-contain bg-black"
                 onClick={(e) => e.stopPropagation()}
               />
-            ) : singleImage ? (
+            ) : singleImage && media[0].url ? (
               <div 
                   className="relative w-full max-h-[500px] bg-black cursor-pointer"
                   onClick={(e) => openImageViewer(e, 0)}
@@ -765,10 +765,10 @@ export function Post(props: PostProps) {
                       data-ai-hint={media[0].hint}
                   />
               </div>
-            ) : (
+            ) : imageCount > 1 ? (
               <div className={cn("grid h-full gap-0.5", gridClasses)}>
                 {media.map((item, index) => (
-                   <div 
+                   item.url && <div 
                       key={index} 
                       className={cn("relative cursor-pointer", imageCount === 3 && index === 0 && "row-span-2")}
                       onClick={(e) => openImageViewer(e, index)}
@@ -783,7 +783,7 @@ export function Post(props: PostProps) {
                   </div>
                 ))}
               </div>
-            )}
+            ) : null}
           </div>
         )}
 
