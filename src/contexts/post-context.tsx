@@ -24,11 +24,12 @@ type PostContextType = {
   deletePost: (postId: string) => Promise<void>;
   addVote: (postId: string, choiceIndex: number) => Promise<void>;
   addComment: (postId: string, data: { text: string; media: ReplyMedia[] }) => Promise<boolean | null>;
-  likePost: (postId: string, isLiked: boolean) => Promise<void>;
-  likeComment: (postId: string, commentId: string, isLiked: boolean) => Promise<void>;
+  likePost: (postId: string, isUnlike: boolean) => Promise<void>;
+  likeComment: (postId: string, commentId: string, isUnlike: boolean) => Promise<void>;
   repostPost: (postId: string, isReposted: boolean) => Promise<void>;
   bookmarkPost: (postId: string, isBookmarked: boolean) => Promise<void>;
   bookmarkedPostIds: Set<string>;
+  likedPostIds: Set<string>;
   loadingForYou: boolean;
   setLoadingForYou: React.Dispatch<React.SetStateAction<boolean>>;
   fetchForYouPosts: (options?: { limit?: number; lastPostId?: string }) => Promise<PostType[]>;
@@ -94,6 +95,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
 
   const { user } = useAuth();
   const [bookmarkedPostIds, setBookmarkedPostIds] = useState<Set<string>>(new Set());
+  const [likedPostIds, setLikedPostIds] = useState<Set<string>>(new Set());
   
   const [hasFetchedInitialForYou, setHasFetchedInitialForYou] = useState(false);
 
@@ -128,26 +130,39 @@ export function PostProvider({ children }: { children: ReactNode }) {
     setNewForYouPosts([]);
   };
 
-  const fetchBookmarks = useCallback(async () => {
+  const fetchUserEngagements = useCallback(async () => {
     if (!db || !user) {
         setBookmarkedPostIds(new Set());
-        return;
-    };
+        setLikedPostIds(new Set());
+        return () => {};
+    }
     
     const bookmarksRef = collection(db, 'users', user.uid, 'bookmarks');
-    const unsubscribe = onSnapshot(bookmarksRef, (snapshot) => {
+    const likesRef = collection(db, 'users', user.uid, 'likes');
+
+    const unsubBookmarks = onSnapshot(bookmarksRef, (snapshot) => {
         const bookmarkIds = new Set(snapshot.docs.map(doc => doc.id));
         setBookmarkedPostIds(bookmarkIds);
     });
-    return unsubscribe;
+
+    const unsubLikes = onSnapshot(likesRef, (snapshot) => {
+        const likeIds = new Set(snapshot.docs.map(doc => doc.id));
+        setLikedPostIds(likeIds);
+    });
+
+    return () => {
+        unsubBookmarks();
+        unsubLikes();
+    };
   }, [user]);
 
   useEffect(() => {
-    const unsubPromise = fetchBookmarks();
-    return () => {
-      unsubPromise.then(unsub => unsub && unsub());
-    }
-  }, [fetchBookmarks]);
+    let unsubscribe = () => {};
+    fetchUserEngagements().then(unsub => {
+        unsubscribe = unsub;
+    });
+    return () => unsubscribe();
+  }, [fetchUserEngagements]);
 
 
   useEffect(() => {
@@ -407,7 +422,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const likePost = async (postId: string, isLiked: boolean) => {
+  const likePost = async (postId: string, isUnlike: boolean) => {
     if (!db || !user) return;
     const postRef = doc(db, "posts", postId);
     const likeRef = doc(db, 'users', user.uid, 'likes', postId);
@@ -417,17 +432,17 @@ export function PostProvider({ children }: { children: ReactNode }) {
             const postDoc = await transaction.get(postRef);
             if (!postDoc.exists()) throw "Post does not exist!";
             
-            const newLikeCount = postDoc.data().likes + (isLiked ? -1 : 1);
+            const newLikeCount = postDoc.data().likes + (isUnlike ? -1 : 1);
             transaction.update(postRef, { likes: Math.max(0, newLikeCount) });
             
-            if (isLiked) {
+            if (isUnlike) {
                 transaction.delete(likeRef);
             } else {
                 transaction.set(likeRef, { createdAt: serverTimestamp() });
             }
         });
 
-        if (!isLiked) {
+        if (!isUnlike) {
             const postDoc = await getDoc(postRef);
             if (postDoc.exists()) {
                 const postData = postDoc.data();
@@ -447,17 +462,16 @@ export function PostProvider({ children }: { children: ReactNode }) {
     }
   };
   
-  const likeComment = async (postId: string, commentId: string, isLiked: boolean) => {
+  const likeComment = async (postId: string, commentId: string, isUnlike: boolean) => {
     if (!db || !user) return;
     const commentRef = doc(db, "posts", postId, "comments", commentId);
-    // Note: We don't track user 'likes' on comments to keep it simple.
 
     try {
         await runTransaction(db, async (transaction) => {
             const commentDoc = await transaction.get(commentRef);
             if (!commentDoc.exists()) throw "Comment does not exist!";
             
-            const newLikeCount = (commentDoc.data().likes || 0) + (isLiked ? -1 : 1);
+            const newLikeCount = (commentDoc.data().likes || 0) + (isUnlike ? -1 : 1);
             transaction.update(commentRef, { likes: Math.max(0, newLikeCount) });
         });
     } catch (error) {
@@ -510,6 +524,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
       repostPost,
       bookmarkPost,
       bookmarkedPostIds,
+      likedPostIds,
       loadingForYou,
       setLoadingForYou,
       fetchForYouPosts,

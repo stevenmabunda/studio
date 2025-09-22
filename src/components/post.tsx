@@ -90,7 +90,7 @@ function CommentEngagement({ parentPostId, commentId, initialLikes, onReplyClick
         const newIsLiked = !isLiked;
         setIsLiked(newIsLiked);
         setLikeCount(prev => prev + (newIsLiked ? 1 : -1));
-        likeComment(parentPostId, commentId, !newIsLiked);
+        likeComment(parentPostId, commentId, newIsLiked);
     };
     
     const handleRepost = () => {
@@ -337,7 +337,7 @@ export function Post(props: PostProps) {
   
   const router = useRouter();
   const { user } = useAuth();
-  const { editPost, deletePost, likePost, repostPost, bookmarkPost, bookmarkedPostIds, addComment, addVote } = usePosts();
+  const { editPost, deletePost, likePost, repostPost, bookmarkPost, bookmarkedPostIds, addComment, addVote, likedPostIds } = usePosts();
   const { toast } = useToast();
 
   const [comments, setComments] = useState<CommentType[]>([]);
@@ -468,13 +468,20 @@ export function Post(props: PostProps) {
     }
     return () => unsubscribe();
   }, [isImageViewerOpen, id]);
+  
+  // Set initial like state
+  useEffect(() => {
+      setIsLiked(likedPostIds.has(id));
+  }, [id, likedPostIds]);
 
   const handleCreateComment = async (data: { text: string; media: ReplyMedia[] }) => {
     if (!user || !id) return null;
     try {
-      await addComment(id, data);
-      setCommentCount(prev => prev + 1);
-      return true; // Indicate success
+      const success = await addComment(id, data);
+      if (success) {
+        setCommentCount(prev => prev + 1);
+      }
+      return success; // Indicate success
     } catch (error) {
         toast({ variant: 'destructive', description: "Failed to post reply." });
         console.error("Failed to add comment:", error);
@@ -535,9 +542,10 @@ export function Post(props: PostProps) {
   };
 
   const handleLike = () => {
-    setIsLiked(!isLiked);
-    setLikeCount(isLiked ? likeCount - 1 : likeCount + 1);
-    likePost(id, !isLiked);
+    const newIsLiked = !isLiked;
+    setIsLiked(newIsLiked);
+    setLikeCount(prev => prev + (newIsLiked ? 1 : -1));
+    likePost(id, newIsLiked);
   };
 
   const handleRepost = () => {
@@ -791,7 +799,7 @@ export function Post(props: PostProps) {
             </div>
         )}
         
-        <div className={cn("flex items-center justify-between text-muted-foreground", isStandalone && !isReplyView ? "py-2 my-2" : "mt-4", isReplyView && "hidden")}>
+        <div className={cn("flex items-center justify-between text-muted-foreground", isStandalone && !isReplyView ? "mt-2" : "mt-4", isReplyView && "hidden")}>
             <div className="flex items-center -ml-3">
                 <Button variant="ghost" size={isReplyView ? 'icon' : 'sm'} className={cn("flex items-center gap-2 hover:text-primary", isReplyView && "h-8 w-8")} onClick={handleCommentClick}>
                     <MessageCircle className="h-5 w-5" />
