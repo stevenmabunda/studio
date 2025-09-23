@@ -3,19 +3,22 @@
 
 import Image from 'next/image';
 import { Card } from './ui/card';
+import Link from 'next/link';
 
 export function BettingOddsWidget() {
     return (
         <div className="p-4 flex flex-col items-center gap-4">
-            <div className="w-full relative h-40 rounded-lg overflow-hidden shadow-lg">
-                <Image
-                    src="/betting_ad.jpg"
-                    alt="Advertisement"
-                    fill
-                    className="object-cover"
-                    data-ai-hint="sports betting"
-                />
-            </div>
+            <Link href="https://sports.betway.co.za/sport/soccer" target="_blank" rel="noopener noreferrer" className="w-full">
+                <div className="w-full relative h-40 rounded-lg overflow-hidden shadow-lg cursor-pointer">
+                    <Image
+                        src="/betting_ad.jpg"
+                        alt="Advertisement"
+                        fill
+                        className="object-cover"
+                        data-ai-hint="sports betting"
+                    />
+                </div>
+            </Link>
             <Card className="w-full overflow-hidden">
                 <iframe
                     title="Sports Odds Widget"
