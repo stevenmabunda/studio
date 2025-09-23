@@ -7,7 +7,7 @@ import Link from 'next/link';
 
 export function BettingOddsWidget() {
     return (
-        <div className="p-4 flex flex-col items-center gap-4">
+        <Card className="p-4 flex flex-col items-center gap-4 border-0">
             <Link href="https://sports.betway.co.za/sport/soccer" target="_blank" rel="noopener noreferrer" className="w-full">
                 <div className="w-full relative h-40 rounded-lg overflow-hidden shadow-lg cursor-pointer">
                     <Image
@@ -31,6 +31,6 @@ export function BettingOddsWidget() {
                     src="https://widget.the-odds-api.com/v1/sports/soccer_epl/events/?accessKey=wk_947c555b685fa995dc8cb809120b15fc&bookmakerKeys=draftkings&oddsFormat=decimal&markets=h2h%2Cspreads%2Ctotals&marketNames=h2h%3AMoneyline%2Cspreads%3ASpreads%2Ctotals%3AOver%2FUnder&theme=dark"
                 ></iframe>
             </Card>
-        </div>
+        </Card>
     );
 }
