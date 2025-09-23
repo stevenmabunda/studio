@@ -2,6 +2,7 @@
 'use client';
 
 import Image from 'next/image';
+import { Card } from './ui/card';
 
 export function BettingOddsWidget() {
     return (
@@ -15,11 +16,18 @@ export function BettingOddsWidget() {
                     data-ai-hint="sports betting"
                 />
             </div>
-            <iframe
-                title="Sports Odds Widget"
-                style={{ width: '100%', height: '45rem', border: '1px solid hsl(var(--border))', borderRadius: 'var(--radius)' }}
-                src="https://widget.the-odds-api.com/v1/sports/soccer_epl/events/?accessKey=wk_947c555b685fa995dc8cb809120b15fc&bookmakerKeys=draftkings&oddsFormat=decimal&markets=h2h%2Cspreads%2Ctotals&marketNames=h2h%3AMoneyline%2Cspreads%3ASpreads%2Ctotals%3AOver%2FUnder&theme=dark"
-            ></iframe>
+            <Card className="w-full overflow-hidden">
+                <iframe
+                    title="Sports Odds Widget"
+                    style={{ 
+                        width: '100%', 
+                        height: '45rem', 
+                        border: 'none', 
+                        filter: 'invert(1)' 
+                    }}
+                    src="https://widget.the-odds-api.com/v1/sports/soccer_epl/events/?accessKey=wk_947c555b685fa995dc8cb809120b15fc&bookmakerKeys=draftkings&oddsFormat=decimal&markets=h2h%2Cspreads%2Ctotals&marketNames=h2h%3AMoneyline%2Cspreads%3ASpreads%2Ctotals%3AOver%2FUnder&theme=dark"
+                ></iframe>
+            </Card>
         </div>
     );
 }
