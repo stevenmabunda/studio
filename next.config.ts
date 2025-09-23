@@ -33,6 +33,12 @@ const nextConfig: NextConfig = {
         hostname: 'media.api-sports.io',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'picsum.photos',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
