@@ -9,7 +9,7 @@ export function BettingOddsWidget() {
         <div className="p-4 flex flex-col items-center gap-4">
             <div className="w-full relative h-40 rounded-lg overflow-hidden shadow-lg">
                 <Image
-                    src="https://picsum.photos/seed/bet-ad/600/160"
+                    src="/betting_ad.jpg"
                     alt="Advertisement"
                     fill
                     className="object-cover"
