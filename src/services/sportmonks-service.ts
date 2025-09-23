@@ -1,3 +1,4 @@
+
 // IMPORTANT: This file should not be marked with 'use server'
 // as it is a pure data-fetching utility and doesn't need to be
 // directly callable from the client. It will be used by server actions.
@@ -77,6 +78,57 @@ export interface SportMonksStanding {
     }[];
 }
 
+// Betting Odds Types
+interface Odd {
+    value: string;
+    label: string;
+}
+
+interface BookmakerOdds {
+    data: Odd[];
+}
+
+interface Bookmaker {
+    id: number;
+    name: string;
+    odds: BookmakerOdds;
+}
+
+interface Market {
+    id: number;
+    name: string;
+}
+
+interface FixtureOdd {
+    id: number;
+    market: Market;
+    bookmaker: Bookmaker;
+}
+
+export interface OddsFixture {
+    id: number;
+    name: string;
+    league: {
+        id: number;
+        name: string;
+        country: {
+            id: number;
+            name: string;
+        }
+    }
+    participants: [
+        { id: number; name: string; image_path: string; meta: { location: 'home' | 'away' } },
+        { id: number; name: string; image_path: string; meta: { location: 'home' | 'away' } }
+    ];
+    odds: FixtureOdd[];
+}
+
+interface RoundWithOdds {
+    id: number;
+    name: string;
+    fixtures: OddsFixture[];
+}
+
 
 // Helper function to get today's date in YYYY-MM-DD format
 function getTodayDateString(): string {
@@ -148,8 +200,8 @@ async function fetchFromSportMonksApi<T>(endpoint: string, params?: URLSearchPar
   try {
     const response = await fetch(url, {
       method: 'GET',
-      // Cache results for 60 seconds to balance between real-time data and API usage
-      next: { revalidate: 60 } 
+      // Cache results for 5 minutes for odds, which change less frequently than live scores
+      next: { revalidate: 300 } 
     });
 
     if (!response.ok) {
@@ -214,6 +266,18 @@ export async function getStandingsBySeasonId(seasonId: number = PREMIER_LEAGUE_S
     }
     
     return apiData.data;
+}
+
+export async function getRoundWithOdds(roundId: number): Promise<RoundWithOdds | null> {
+    const params = new URLSearchParams({
+        include: 'fixtures.odds.market;fixtures.odds.bookmaker;fixtures.participants;league.country',
+    });
+    // Hardcoding market and bookmaker IDs as requested
+    params.append('filters', 'markets:1;bookmakers:2');
+
+    const apiData = await fetchFromSportMonksApi<RoundWithOdds>(`rounds/${roundId}`, params);
+
+    return apiData ? apiData.data : null;
 }
 
 

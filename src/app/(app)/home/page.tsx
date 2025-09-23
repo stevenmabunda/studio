@@ -22,95 +22,10 @@ import Image from "next/image";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TrendingTopics } from '@/components/trending-topics';
-import { getVideoPosts } from './actions';
 import { db } from '@/lib/firebase/config';
 import { onSnapshot, collection, query, where } from 'firebase/firestore';
+import { BettingOddsWidget } from '@/components/betting-odds-widget';
 
-
-function VideoFeed() {
-  const [videoPosts, setVideoPosts] = useState<PostType[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const observer = useRef<IntersectionObserver | null>(null);
-
-  const loadMoreVideos = useCallback(async () => {
-    if (loadingMore || !hasMore) return;
-    setLoadingMore(true);
-    try {
-      const lastPostId = videoPosts.length > 0 ? videoPosts[videoPosts.length - 1].id : undefined;
-      const newVideos = await getVideoPosts({ limit: 10, lastPostId });
-      if (newVideos.length === 0) {
-        setHasMore(false);
-      } else {
-        setVideoPosts(prev => [...prev, ...newVideos]);
-      }
-    } catch (err) {
-      console.error("Failed to load more video posts:", err);
-    } finally {
-      setLoadingMore(false);
-    }
-  }, [loadingMore, hasMore, videoPosts]);
-
-  const lastVideoElementRef = useCallback((node: any) => {
-    if (loadingMore) return;
-    if (observer.current) observer.current.disconnect();
-    observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMore) {
-        loadMoreVideos();
-      }
-    });
-    if (node) observer.current.observe(node);
-  }, [loadingMore, hasMore, loadMoreVideos]);
-
-
-  useEffect(() => {
-    setLoading(true);
-    getVideoPosts({ limit: 10 })
-      .then((initialVideos) => {
-        setVideoPosts(initialVideos);
-        if (initialVideos.length < 10) {
-            setHasMore(false);
-        }
-      })
-      .catch(err => console.error("Failed to fetch video posts:", err))
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (loading && videoPosts.length === 0) {
-    return (
-      <>
-        <PostSkeleton />
-        <PostSkeleton />
-        <PostSkeleton />
-      </>
-    );
-  }
-
-  if (videoPosts.length === 0) {
-    return (
-      <div className="p-8 text-center text-muted-foreground">
-        <h2 className="text-xl font-bold">No videos yet</h2>
-        <p>When users post videos, they'll appear here.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="divide-y divide-border">
-      {videoPosts.map((post, index) => {
-        if (videoPosts.length === index + 1) {
-          return <div ref={lastVideoElementRef} key={post.id}><Post {...post} /></div>;
-        }
-        return <Post key={post.id} {...post} />;
-      })}
-      {loadingMore && <PostSkeleton />}
-      {!hasMore && (
-        <p className="py-8 text-center text-muted-foreground">You've reached the end!</p>
-      )}
-    </div>
-  );
-}
 
 export default function HomePage() {
   const { 
@@ -340,7 +255,7 @@ export default function HomePage() {
                     <TabsTrigger value="foryou" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">For You</TabsTrigger>
                     <TabsTrigger value="discover" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Discover</TabsTrigger>
                     <TabsTrigger value="trending" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Trending</TabsTrigger>
-                    <TabsTrigger value="video" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Video</TabsTrigger>
+                    <TabsTrigger value="betting" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Betting</TabsTrigger>
                 </TabsList>
             </div>
             {/* Desktop Header */}
@@ -349,7 +264,7 @@ export default function HomePage() {
                     <TabsTrigger value="foryou" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">For You</TabsTrigger>
                     <TabsTrigger value="discover" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Discover</TabsTrigger>
                     <TabsTrigger value="trending" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Trending</TabsTrigger>
-                    <TabsTrigger value="video" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Video</TabsTrigger>
+                    <TabsTrigger value="betting" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Betting</TabsTrigger>
                 </TabsList>
             </div>
         </header>
@@ -369,7 +284,10 @@ export default function HomePage() {
                   <PostSkeleton />
                 </>
               ) : forYouPosts.length > 0 ? (
-                forYouPosts.map((post) => <Post key={post.id} {...post} />)
+                forYouPosts.map((post) => {
+                    if (!post) return null;
+                    return <Post key={post.id} {...post} />
+                })
               ) : (
                 <div className="p-8 text-center text-muted-foreground">
                   <h2 className="text-xl font-bold">Your feed is empty</h2>
@@ -392,8 +310,8 @@ export default function HomePage() {
            <TabsContent value="trending" className="h-full p-4">
              <TrendingTopics />
           </TabsContent>
-          <TabsContent value="video" className="h-full">
-            <VideoFeed />
+          <TabsContent value="betting" className="h-full">
+            <BettingOddsWidget />
           </TabsContent>
         </main>
       </Tabs>
