@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { Post } from '@/components/post';
@@ -16,6 +15,47 @@ import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { PostSkeleton } from '@/components/post-skeleton';
 import { Button } from '@/components/ui/button';
+import { getPost } from './actions';
+import type { Metadata, ResolvingMetadata } from 'next';
+
+type Props = {
+  params: { id: string }
+}
+
+export async function generateMetadata(
+  { params }: Props,
+  parent: ResolvingMetadata
+): Promise<Metadata> {
+  const id = params.id;
+  const post = await getPost(id);
+
+  if (!post) {
+    return {
+      title: 'Post not found | BHOLO',
+    };
+  }
+
+  const description = post.content.substring(0, 155);
+  const previousImages = (await parent).openGraph?.images || [];
+  const postImage = post.media?.find(m => m.type === 'image')?.url;
+
+  return {
+    title: `Post by @${post.authorHandle} | BHOLO`,
+    description: description,
+    openGraph: {
+      title: `${post.authorName} (@${post.authorHandle}) on BHOLO`,
+      description: description,
+      url: `/post/${id}`,
+      images: postImage ? [postImage, ...previousImages] : previousImages,
+    },
+     twitter: {
+      card: postImage ? 'summary_large_image' : 'summary',
+      title: `${post.authorName} (@${post.authorHandle}) on BHOLO`,
+      description: description,
+      images: postImage ? [postImage] : [],
+    },
+  };
+}
 
 
 type Comment = PostType;
@@ -49,36 +89,16 @@ export default function PostPage() {
         return;
     };
     
-    const fetchPost = async () => {
+    const fetchPostData = async () => {
         setLoadingPost(true);
-        const postRef = doc(db, 'posts', postId);
-        const docSnap = await getDoc(postRef);
-        if (docSnap.exists()) {
-            const data = docSnap.data();
-            const createdAt = (data.createdAt as Timestamp)?.toDate();
-            const fetchedPost = {
-                id: docSnap.id,
-                authorId: data.authorId,
-                authorName: data.authorName,
-                authorHandle: data.authorHandle,
-                authorAvatar: data.authorAvatar,
-                content: data.content,
-                comments: data.comments,
-                reposts: data.reposts,
-                likes: data.likes,
-                views: data.views,
-                media: data.media,
-                poll: data.poll,
-                timestamp: createdAt ? formatTimestamp(createdAt) : 'now',
-                createdAt: createdAt ? createdAt.toISOString() : undefined,
-            } as PostType;
+        const fetchedPost = await getPost(postId);
+        if (fetchedPost) {
             setPost(fetchedPost);
-            document.title = `Post by @${fetchedPost.authorHandle} | BHOLO`;
         }
         setLoadingPost(false);
     };
 
-    fetchPost();
+    fetchPostData();
 
     const commentsRef = collection(db, 'posts', postId, 'comments');
     const q = query(commentsRef, orderBy('createdAt', 'desc'));
@@ -118,7 +138,6 @@ export default function PostPage() {
 
      return () => {
       unsubscribe();
-      document.title = 'BHOLO'; // Reset title on unmount
     };
   }, [postId]);
 
@@ -207,7 +226,3 @@ export default function PostPage() {
     </div>
   );
 }
-
-    
-
-    
