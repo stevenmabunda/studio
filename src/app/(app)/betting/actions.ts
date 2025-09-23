@@ -1,13 +1,19 @@
 
 'use server';
 
-import { getRoundWithOdds, type OddsFixture } from "@/services/sportmonks-service";
+import { getRoundWithOdds, type OddsFixture, getCurrentRoundForLeague } from "@/services/sportmonks-service";
 
-const PREMIER_LEAGUE_CURRENT_ROUND_ID = 372199; // This should be dynamically updated
+const SCOTTISH_PREMIERSHIP_LEAGUE_ID = 501;
 
 export async function getBettingOdds(): Promise<OddsFixture[]> {
     try {
-        const round = await getRoundWithOdds(PREMIER_LEAGUE_CURRENT_ROUND_ID);
+        const currentRoundId = await getCurrentRoundForLeague(SCOTTISH_PREMIERSHIP_LEAGUE_ID);
+        if (!currentRoundId) {
+            console.warn(`Could not find a current round for league ID ${SCOTTISH_PREMIERSHIP_LEAGUE_ID}.`);
+            return [];
+        }
+
+        const round = await getRoundWithOdds(currentRoundId);
         if (!round) {
             return [];
         }

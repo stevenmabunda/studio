@@ -29,6 +29,10 @@ interface SportMonksFixture {
         id: number;
         name: string;
         image_path: string;
+        country?: {
+            id: number;
+            name: string;
+        }
     };
     participants: [
         { id: number; name: string; image_path: string; meta: { location: 'home' | 'away' } },
@@ -121,6 +125,19 @@ export interface OddsFixture {
         { id: number; name: string; image_path: string; meta: { location: 'home' | 'away' } }
     ];
     odds: FixtureOdd[];
+}
+
+interface Round {
+    id: number;
+    name: string;
+    is_current: boolean;
+}
+
+interface Season {
+    id: number;
+    name: string;
+    is_active: boolean;
+    rounds: Round[];
 }
 
 interface RoundWithOdds {
@@ -266,6 +283,22 @@ export async function getStandingsBySeasonId(seasonId: number = PREMIER_LEAGUE_S
     }
     
     return apiData.data;
+}
+
+export async function getCurrentRoundForLeague(leagueId: number): Promise<number | null> {
+    const params = new URLSearchParams({
+        include: 'rounds'
+    });
+    const apiData = await fetchFromSportMonksApi<Season[]>(`seasons/current/leagues/${leagueId}`, params);
+
+    if (!apiData || !apiData.data || apiData.data.length === 0) {
+        return null;
+    }
+
+    const currentSeason = apiData.data[0];
+    const currentRound = currentSeason.rounds.find(round => round.is_current);
+
+    return currentRound ? currentRound.id : null;
 }
 
 export async function getRoundWithOdds(roundId: number): Promise<RoundWithOdds | null> {
