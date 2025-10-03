@@ -12,14 +12,12 @@ import { collection, addDoc, serverTimestamp, getDocs, query, type Timestamp, do
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { formatTimestamp } from '@/lib/utils';
 import type { ReplyMedia } from '@/components/create-comment';
-import { getRecentPosts, getVideoPosts } from '@/app/(app)/home/actions';
+import { getRecentPosts } from '@/app/(app)/home/actions';
 
 type PostContextType = {
   forYouPosts: PostType[];
   newForYouPosts: PostType[];
-  videoPosts: PostType[];
   loadingForYou: boolean;
-  loadingVideo: boolean;
   showNewForYouPosts: () => void;
   addPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }) => Promise<PostType | null>;
   editPost: (postId: string, data: { text:string }) => Promise<void>;
@@ -33,7 +31,6 @@ type PostContextType = {
   bookmarkedPostIds: Set<string>;
   likedPostIds: Set<string>;
   fetchForYouPosts: (options?: { limit?: number; lastPostId?: string }) => Promise<PostType[]>;
-  fetchVideoPosts: (options?: { limit?: number; lastPostId?: string }) => Promise<PostType[]>;
 };
 
 const PostContext = createContext<PostContextType | undefined>(undefined);
@@ -85,10 +82,8 @@ const getImageDimensions = (file: File): Promise<{ width: number; height: number
 export function PostProvider({ children }: { children: ReactNode }) {
   const [forYouPosts, setForYouPosts] = useState<PostType[]>([]);
   const [newForYouPosts, setNewForYouPosts] = useState<PostType[]>([]);
-  const [videoPosts, setVideoPosts] = useState<PostType[]>([]);
   
   const [loadingForYou, setLoadingForYou] = useState(true);
-  const [loadingVideo, setLoadingVideo] = useState(true);
 
   const { user } = useAuth();
   const [bookmarkedPostIds, setBookmarkedPostIds] = useState<Set<string>>(new Set());
@@ -114,31 +109,12 @@ export function PostProvider({ children }: { children: ReactNode }) {
       }
   }, []);
 
-  const fetchVideoPosts = useCallback(async (options: { limit?: number; lastPostId?: string } = {}) => {
-      if (!options.lastPostId) setLoadingVideo(true);
-      try {
-          const posts = await getVideoPosts(options);
-          if (options.lastPostId) {
-              setVideoPosts(prev => [...prev, ...posts]);
-          } else {
-              setVideoPosts(posts);
-          }
-          return posts;
-      } catch (error) {
-          console.error("Failed to fetch video posts:", error);
-          return [];
-      } finally {
-          setLoadingVideo(false);
-      }
-  }, []);
-
   useEffect(() => {
     if (!hasFetchedInitial) {
         fetchForYouPosts({ limit: 20 });
-        fetchVideoPosts({ limit: 5 });
         setHasFetchedInitial(true);
     }
-  }, [hasFetchedInitial, fetchForYouPosts, fetchVideoPosts]);
+  }, [hasFetchedInitial, fetchForYouPosts]);
 
 
   const showNewForYouPosts = () => {
@@ -244,12 +220,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
       ...(communityId && { communityId }),
     };
     
-    if (media.some(m => m.type === 'video')) {
-      setVideoPosts(prev => [optimisticPost, ...prev]);
-    } else {
-      setForYouPosts(prev => [optimisticPost, ...prev]);
-    }
-
+    setForYouPosts(prev => [optimisticPost, ...prev]);
 
     try {
         const mediaUploads = await Promise.all(media.map(async (m) => {
@@ -288,11 +259,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
         const finalPost = { ...optimisticPost, id: docRef.id, media: mediaUploads };
 
         const updater = (posts: PostType[]) => posts.map(p => p.id === tempId ? finalPost : p);
-        if (media.some(m => m.type === 'video')) {
-            setVideoPosts(updater);
-        } else {
-            setForYouPosts(updater);
-        }
+        setForYouPosts(updater);
 
         if (text) {
           const topics = extractKeywords(text);
@@ -307,7 +274,6 @@ export function PostProvider({ children }: { children: ReactNode }) {
     } catch (error) {
         console.error("Failed to create post:", error);
         setForYouPosts(prev => prev.filter(p => p.id !== tempId));
-        setVideoPosts(prev => prev.filter(p => p.id !== tempId));
         throw error;
     }
   };
@@ -319,7 +285,6 @@ export function PostProvider({ children }: { children: ReactNode }) {
     
     const updater = (posts: PostType[]) => posts.map(p => p.id === postId ? { ...p, content: data.text } : p)
     setForYouPosts(updater);
-    setVideoPosts(updater);
   };
 
   const deletePost = async (postId: string) => {
@@ -328,7 +293,6 @@ export function PostProvider({ children }: { children: ReactNode }) {
 
     const updater = (posts: PostType[]) => posts.filter(p => p.id !== postId)
     setForYouPosts(updater);
-    setVideoPosts(updater);
   };
 
   const addVote = async (postId: string, choiceIndex: number) => {
@@ -348,7 +312,6 @@ export function PostProvider({ children }: { children: ReactNode }) {
       });
 
     setForYouPosts(updater);
-    setVideoPosts(updater);
 
     try {
       await runTransaction(db, async (transaction) => {
@@ -403,7 +366,6 @@ export function PostProvider({ children }: { children: ReactNode }) {
         
         const updater = (posts: PostType[]) => posts.map(p => p.id === postId ? { ...p, comments: p.comments + 1 } : p);
         setForYouPosts(updater);
-        setVideoPosts(updater);
         
         const postAuthorId = postDoc.data()?.authorId;
         if (user.uid !== postAuthorId) {
@@ -502,12 +464,12 @@ export function PostProvider({ children }: { children: ReactNode }) {
   };
 
   const value = {
-      forYouPosts, newForYouPosts, videoPosts,
-      loadingForYou, loadingVideo,
+      forYouPosts, newForYouPosts,
+      loadingForYou,
       showNewForYouPosts, addPost, editPost, deletePost, addVote,
       addComment, likePost, likeComment, repostPost, bookmarkPost,
       bookmarkedPostIds, likedPostIds,
-      fetchForYouPosts, fetchVideoPosts
+      fetchForYouPosts
   };
 
   return (

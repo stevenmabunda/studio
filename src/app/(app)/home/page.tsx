@@ -25,7 +25,7 @@ import { TrendingTopics } from '@/components/trending-topics';
 import { db } from '@/lib/firebase/config';
 import { onSnapshot, collection, query, where } from 'firebase/firestore';
 import { BettingOddsWidget } from '@/components/betting-odds-widget';
-import { VideoPost } from '@/components/video-post';
+import LivePage from '../live/page';
 
 
 export default function HomePage() {
@@ -34,11 +34,8 @@ export default function HomePage() {
     newForYouPosts,
     showNewForYouPosts,
     loadingForYou,
-    videoPosts,
-    loadingVideo,
     addPost,
     fetchForYouPosts,
-    fetchVideoPosts
   } = usePosts();
 
   const { toast } = useToast();
@@ -51,27 +48,10 @@ export default function HomePage() {
   const [loadingMoreForYou, setLoadingMoreForYou] = useState(false);
   const [hasMoreForYou, setHasMoreForYou] = useState(true);
   
-  const [loadingMoreVideo, setLoadingMoreVideo] = useState(false);
-  const [hasMoreVideo, setHasMoreVideo] = useState(true);
-
   const [isHeaderHidden, setIsHeaderHidden] = useState(false);
   const lastScrollY = useRef(0);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   
-  // States for Video Feed
-  const [isMuted, setIsMuted] = useState(true);
-  const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
-
-  const handleVideoVisibilityChange = useCallback((id: string, isVisible: boolean) => {
-    if (isVisible) {
-      setPlayingVideoId(id);
-    } else {
-      if (playingVideoId === id) {
-        setPlayingVideoId(null);
-      }
-    }
-  }, [playingVideoId]);
-
   useEffect(() => {
     if (user && db) {
       const notificationsRef = collection(db, 'users', user.uid, 'notifications');
@@ -150,23 +130,6 @@ export default function HomePage() {
     }
   }, [loadingMoreForYou, hasMoreForYou, fetchForYouPosts, toast, forYouPosts]);
 
-  const loadMoreVideoPosts = useCallback(async () => {
-    if (loadingMoreVideo || !hasMoreVideo) return;
-    setLoadingMoreVideo(true);
-    const lastPost = videoPosts[videoPosts.length - 1];
-    try {
-      const morePosts = await fetchVideoPosts({ limit: 10, lastPostId: lastPost?.id });
-      if (morePosts.length < 10) {
-        setHasMoreVideo(false);
-      }
-    } catch (error) {
-      console.error("Failed to load more video posts:", error);
-    } finally {
-      setLoadingMoreVideo(false);
-    }
-  }, [loadingMoreVideo, hasMoreVideo, videoPosts, fetchVideoPosts]);
-
-
   const createObserver = (callback: () => void) => (node: HTMLDivElement) => {
     const observer = new IntersectionObserver(entries => {
       if (entries[0].isIntersecting) {
@@ -178,8 +141,6 @@ export default function HomePage() {
   };
 
   const forYouTriggerRef = useCallback(createObserver(loadMoreForYouPosts), [loadMoreForYouPosts]);
-  const videoTriggerRef = useCallback(createObserver(loadMoreVideoPosts), [loadMoreVideoPosts]);
-
 
   useEffect(() => {
     const handleScroll = () => {
@@ -285,7 +246,7 @@ export default function HomePage() {
                  <TabsList className="flex w-full justify-evenly border-b bg-transparent p-0 overflow-x-auto no-scrollbar">
                     <TabsTrigger value="foryou" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">For You</TabsTrigger>
                     <TabsTrigger value="discover" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Discover</TabsTrigger>
-                    <TabsTrigger value="video" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Video</TabsTrigger>
+                    <TabsTrigger value="live" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Match Centre</TabsTrigger>
                     <TabsTrigger value="betting" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Betting</TabsTrigger>
                 </TabsList>
             </div>
@@ -294,7 +255,7 @@ export default function HomePage() {
                  <TabsList className="flex w-full justify-evenly border-b bg-transparent p-0 overflow-x-auto no-scrollbar">
                     <TabsTrigger value="foryou" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">For You</TabsTrigger>
                     <TabsTrigger value="discover" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Discover</TabsTrigger>
-                    <TabsTrigger value="video" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Video</TabsTrigger>
+                    <TabsTrigger value="live" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Match Centre</TabsTrigger>
                     <TabsTrigger value="betting" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Betting</TabsTrigger>
                 </TabsList>
             </div>
@@ -339,47 +300,16 @@ export default function HomePage() {
            <TabsContent value="trending" className="h-full p-4">
              <TrendingTopics />
           </TabsContent>
-          <TabsContent value="video" className="h-full bg-black md:rounded-lg md:m-2">
-            <div className="h-[calc(100vh-160px)] md:h-full md:max-h-[calc(100vh-10rem)] w-full mx-auto md:rounded-lg overflow-y-auto snap-y snap-mandatory no-scrollbar">
-              {loadingVideo ? (
-                <div className="flex items-center justify-center h-full">
-                  <PostSkeleton />
-                </div>
-              ) : videoPosts.length > 0 ? (
-                <div className="h-full w-full">
-                  {videoPosts.map((post) => (
-                    <div key={post.id} className="h-full w-full snap-start flex items-center justify-center relative">
-                       <VideoPost
-                        post={post}
-                        isMuted={isMuted}
-                        onToggleMute={() => setIsMuted(prev => !prev)}
-                        isPlaying={playingVideoId === post.id}
-                        onVisibilityChange={handleVideoVisibilityChange}
-                        activeVideoId={playingVideoId}
-                      />
-                    </div>
-                  ))}
-                  {hasMoreVideo && (
-                    <div ref={videoTriggerRef} className="h-24 flex items-center justify-center">
-                      {loadingMoreVideo && <Loader2 className="h-6 w-6 animate-spin text-white" />}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="p-8 text-center text-muted-foreground h-full flex flex-col justify-center items-center">
-                  <h2 className="text-xl font-bold text-white">No videos yet</h2>
-                  <p>When users post videos, they'll appear here.</p>
-                </div>
-              )}
-            </div>
+          <TabsContent value="live" className="h-full">
+            <LivePage />
           </TabsContent>
           <TabsContent value="betting" className="h-full">
-            <BettingOddsWidget />
+            <Card className="border-0 m-0 shadow-none rounded-none">
+              <BettingOddsWidget />
+            </Card>
           </TabsContent>
         </main>
       </Tabs>
     </div>
   );
 }
-
-    
