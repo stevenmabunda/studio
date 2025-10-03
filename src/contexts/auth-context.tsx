@@ -2,9 +2,20 @@
 'use client';
 
 import { createContext, useState, useEffect, type ReactNode } from 'react';
-import { onAuthStateChanged, type User } from 'firebase/auth';
-import { auth } from '@/lib/firebase/config';
+import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
+import { getAuth, onAuthStateChanged, type Auth, type User } from 'firebase/auth';
+import { firebaseConfig } from '@/lib/firebase/clientConfig';
 import Image from 'next/image';
+
+// Initialize Firebase
+let app: FirebaseApp;
+if (!getApps().length) {
+  app = initializeApp(firebaseConfig);
+} else {
+  app = getApp();
+}
+export const auth: Auth = getAuth(app);
+
 
 type AuthContextType = {
   user: User | null;
@@ -21,10 +32,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!auth) {
-      setLoading(false); // If no auth, not loading and no user.
-      return;
-    }
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);
