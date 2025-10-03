@@ -4,7 +4,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Plus, Search, User, Futbol } from 'lucide-react';
+import { Home, Plus, Search, User, SoccerBall } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import React, { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -20,7 +20,7 @@ const navItems = [
   { href: '/home', icon: Home, label: 'Home' },
   { href: '/explore', icon: Search, label: 'Explore' },
   { href: 'POST_ACTION', icon: Plus, label: 'Post' },
-  { href: '/live', label: 'Match Centre', icon: Futbol },
+  { href: '/live', label: 'Match Centre', icon: SoccerBall },
   { href: '/profile', icon: User, label: 'Profile' },
 ];
 
