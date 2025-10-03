@@ -424,7 +424,29 @@ export function Post(props: PostProps) {
   }, [isVideo, media]);
   
 
-  // Effect for Intersection Observer to play/pause video - REMOVED, handled in video-post.tsx now.
+  useEffect(() => {
+    if (!isVideo || !videoRef.current) return;
+
+    const observer = new IntersectionObserver(
+        ([entry]) => {
+            if (entry.isIntersecting) {
+                videoRef.current?.play().catch(e => console.error("Autoplay failed", e));
+            } else {
+                videoRef.current?.pause();
+            }
+        },
+        { threshold: 0.5 } // Play when 50% of the video is visible
+    );
+
+    const currentVideoRef = videoRef.current;
+    observer.observe(currentVideoRef);
+
+    return () => {
+        if (currentVideoRef) {
+            observer.unobserve(currentVideoRef);
+        }
+    };
+  }, [isVideo]);
 
 
   // Effect to fetch comments when the image viewer is opened
@@ -608,9 +630,11 @@ export function Post(props: PostProps) {
         if (videoRef.current.paused) {
             videoRef.current.play();
             setIsFeedVideoPlaying(true);
+        } else if (isFeedVideoPlaying) {
+             setActiveTab('video');
         } else {
-            // If the video is playing, a click should take us to the video feed.
-            setActiveTab('video');
+             videoRef.current.pause();
+             setIsFeedVideoPlaying(false);
         }
       }
   }
@@ -747,6 +771,9 @@ export function Post(props: PostProps) {
                     src={media[0].url}
                     poster={videoThumbnail || ''}
                     className="w-full h-full object-contain"
+                    playsInline
+                    muted
+                    loop
                     onClick={(e) => e.stopPropagation()}
                     onPlay={() => setIsFeedVideoPlaying(true)}
                     onPause={() => setIsFeedVideoPlaying(false)}
@@ -984,4 +1011,5 @@ export function Post(props: PostProps) {
     
 
     
+
 
