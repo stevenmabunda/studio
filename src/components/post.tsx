@@ -27,7 +27,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from '@/components/ui/alert-dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -522,6 +522,16 @@ export function Post(props: PostProps) {
 
   const handlePostClick = () => {
       if (id.startsWith('temp_')) return;
+
+      if (isVideo) {
+        if(isFeedVideoPlaying) {
+          setActiveTab('video');
+        } else {
+          videoRef.current?.play().catch(e => console.error("Play failed", e));
+        }
+        return;
+      }
+      
       if (!isStandalone && !isReplyView) {
           try {
             const desktopScrollArea = document.querySelector('#desktop-scroll-area > div');
@@ -630,7 +640,9 @@ export function Post(props: PostProps) {
 
   const handleVideoPlayClick = (e: React.MouseEvent) => {
       e.stopPropagation();
-      if (videoRef.current) {
+      if(isFeedVideoPlaying) {
+        setActiveTab('video');
+      } else if (videoRef.current) {
           if (videoRef.current.paused) {
               videoRef.current.play().catch(e => console.error("Play failed", e));
           } else {
@@ -657,12 +669,14 @@ export function Post(props: PostProps) {
     const handlePause = () => setIsFeedVideoPlaying(false);
     video.addEventListener('play', handlePlay);
     video.addEventListener('pause', handlePause);
+    
+    // Cleanup
     return () => {
-      if (video && document.body.contains(video)) {
-        video.removeEventListener('play', handlePlay);
-        video.removeEventListener('pause', handlePause);
-      }
-    }
+        if (video && document.body.contains(video)) {
+            video.removeEventListener('play', handlePlay);
+            video.removeEventListener('pause', handlePause);
+        }
+    };
   }, []);
 
   const imageCount = mediaExists && !isVideo ? media.length : 0;
@@ -789,24 +803,41 @@ export function Post(props: PostProps) {
         {poll && <Poll poll={poll} postId={id} />}
         
         {mediaExists && (
-          <div className={cn("mt-3 rounded-2xl overflow-hidden border", (imageCount > 1 && "aspect-video"))}>
+          <div className={cn("mt-3 rounded-2xl overflow-hidden border", isVideo && 'aspect-video')}>
             {isVideo && media[0].url ? (
-                <div className="relative w-full h-auto bg-black cursor-pointer group/video" onClick={handleVideoPlayClick}>
+                <div className="relative w-full h-full bg-black cursor-pointer group/video" onClick={handleVideoPlayClick}>
                   <video
                     ref={videoRef}
                     src={media[0].url}
                     poster={videoThumbnail || ''}
-                    className="w-full h-auto object-contain max-h-[70vh]"
+                    className="w-full h-full object-cover"
                     playsInline
                     loop
                   />
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-black/10 opacity-0 group-hover/video:opacity-100 transition-opacity">
                       {isFeedVideoPlaying ? <Pause className="h-12 w-12 text-white/70" fill="currentColor" /> : <Play className="h-12 w-12 text-white/70" fill="currentColor" />}
                   </div>
-                   <div className="absolute bottom-2 right-2">
+                   <div className="absolute top-2 right-2 flex flex-col gap-2 z-10">
                         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full bg-black/50 hover:bg-black/75 text-white hover:text-white" onClick={handleMuteToggle}>
                            {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
                         </Button>
+                        <div className="flex flex-col items-center gap-1 text-white">
+                           <Button variant="ghost" size="icon" className={cn("h-8 w-8 rounded-full bg-black/50 hover:bg-black/75 text-white hover:text-white", isLiked ? 'text-red-500' : 'hover:text-red-500')} onClick={handleActionClick(handleLike)}>
+                                <Heart className={cn("h-5 w-5", isLiked && 'fill-current')} />
+                           </Button>
+                            <span className="text-xs font-bold">{likeCount > 0 ? likeCount : ''}</span>
+                        </div>
+                         <div className="flex flex-col items-center gap-1 text-white">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full bg-black/50 hover:bg-black/75 text-white hover:text-white" onClick={handleCommentClick}>
+                                <MessageCircle className="h-5 w-5" />
+                            </Button>
+                            <span className="text-xs font-bold">{commentCount > 0 ? commentCount : ''}</span>
+                        </div>
+                        <div className="flex flex-col items-center gap-1 text-white">
+                             <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full bg-black/50 hover:bg-black/75 text-white hover:text-white" onClick={(e) => { e.stopPropagation(); setShareSheetOpen(true); }}>
+                                <Share2 className="h-5 w-5" />
+                            </Button>
+                        </div>
                     </div>
               </div>
             ) : singleImage && media[0].url ? (
@@ -857,7 +888,7 @@ export function Post(props: PostProps) {
             </div>
         )}
         
-        <div className={cn("flex items-center justify-between text-muted-foreground", isStandalone && !isReplyView ? "mt-2" : "mt-4", isReplyView && "hidden")}>
+        <div className={cn("flex items-center justify-between text-muted-foreground", isStandalone && !isReplyView ? "mt-2" : "mt-4", isReplyView && "hidden", isVideo && 'hidden')}>
             <div className="flex items-center -ml-3">
                 <Button variant="ghost" size={isReplyView ? 'icon' : 'sm'} className={cn("flex items-center gap-2 hover:text-primary", isReplyView && "h-8 w-8")} onClick={handleCommentClick}>
                     <MessageCircle className="h-5 w-5" />
