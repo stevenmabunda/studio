@@ -244,11 +244,11 @@ export default function HomePage() {
                         </Link>
                     </div>
                 </div>
-                 <TabsList className="flex w-full justify-evenly border-b bg-transparent p-0 overflow-x-auto no-scrollbar">
-                    <TabsTrigger value="foryou" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">For You</TabsTrigger>
-                    <TabsTrigger value="discover" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Discover</TabsTrigger>
-                    <TabsTrigger value="live" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Match Centre</TabsTrigger>
-                    <TabsTrigger value="betting" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Betting</TabsTrigger>
+                 <TabsList className="flex w-full justify-around border-b bg-transparent p-0 overflow-x-auto no-scrollbar">
+                    <TabsTrigger value="foryou" className="flex-auto shrink-0 rounded-none border-b-2 border-transparent py-3 text-sm font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-2">For You</TabsTrigger>
+                    <TabsTrigger value="discover" className="flex-auto shrink-0 rounded-none border-b-2 border-transparent py-3 text-sm font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-2">Discover</TabsTrigger>
+                    <TabsTrigger value="live" className="flex-auto shrink-0 rounded-none border-b-2 border-transparent py-3 text-sm font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-2">Match Centre</TabsTrigger>
+                    <TabsTrigger value="betting" className="flex-auto shrink-0 rounded-none border-b-2 border-transparent py-3 text-sm font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-2">Betting</TabsTrigger>
                 </TabsList>
             </div>
             {/* Desktop Header */}
