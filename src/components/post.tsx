@@ -4,7 +4,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { MessageCircle, Repeat, Heart, Share2, MoreHorizontal, Edit, Trash2, Bookmark, Copy, X, ChevronLeft, ChevronRight, Check, Play } from "lucide-react";
+import { MessageCircle, Repeat, Heart, Share2, MoreHorizontal, Edit, Trash2, Bookmark, Copy, X, ChevronLeft, ChevronRight, Check, Play, Pause } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
@@ -366,6 +366,7 @@ export function Post(props: PostProps) {
   const [followLoading, setFollowLoading] = useState(true);
 
   const [videoThumbnail, setVideoThumbnail] = useState<string | null>(null);
+  const [isFeedVideoPlaying, setIsFeedVideoPlaying] = useState(false);
 
   const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
 
@@ -603,7 +604,15 @@ export function Post(props: PostProps) {
 
   const handleVideoPlayClick = (e: React.MouseEvent) => {
       e.stopPropagation();
-      setActiveTab('video');
+      if (videoRef.current) {
+        if (videoRef.current.paused) {
+            videoRef.current.play();
+            setIsFeedVideoPlaying(true);
+        } else {
+            // If the video is playing, a click should take us to the video feed.
+            setActiveTab('video');
+        }
+      }
   }
 
   const imageCount = mediaExists && !isVideo ? media.length : 0;
@@ -739,10 +748,14 @@ export function Post(props: PostProps) {
                     poster={videoThumbnail || ''}
                     className="w-full h-full object-contain"
                     onClick={(e) => e.stopPropagation()}
+                    onPlay={() => setIsFeedVideoPlaying(true)}
+                    onPause={() => setIsFeedVideoPlaying(false)}
                   />
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <Play className="h-16 w-16 text-white/70" fill="currentColor" />
-                  </div>
+                  {!isFeedVideoPlaying && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <Play className="h-16 w-16 text-white/70" fill="currentColor" />
+                    </div>
+                  )}
               </div>
             ) : singleImage && media[0].url ? (
               <div 
@@ -971,3 +984,4 @@ export function Post(props: PostProps) {
     
 
     
+
