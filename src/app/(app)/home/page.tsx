@@ -26,6 +26,7 @@ import { db } from '@/lib/firebase/config';
 import { onSnapshot, collection, query, where } from 'firebase/firestore';
 import { BettingOddsWidget } from '@/components/betting-odds-widget';
 import LivePage from '../live/page';
+import { Card } from '@/components/ui/card';
 
 
 export default function HomePage() {
