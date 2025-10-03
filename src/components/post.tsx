@@ -1,10 +1,9 @@
 
-
 'use client';
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { MessageCircle, Repeat, Heart, Share2, MoreHorizontal, Edit, Trash2, Bookmark, Copy, X, ChevronLeft, ChevronRight, Check, Play, Pause } from "lucide-react";
+import { MessageCircle, Repeat, Heart, Share2, MoreHorizontal, Edit, Trash2, Bookmark, Copy, X, ChevronLeft, ChevronRight, Check, Play, Pause, Volume2, VolumeX } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
@@ -367,6 +366,8 @@ export function Post(props: PostProps) {
 
   const [videoThumbnail, setVideoThumbnail] = useState<string | null>(null);
   const [isFeedVideoPlaying, setIsFeedVideoPlaying] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+
 
   const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
 
@@ -426,34 +427,30 @@ export function Post(props: PostProps) {
 
   useEffect(() => {
     if (!isVideo || !videoRef.current) return;
-
+    
     const observer = new IntersectionObserver(
         ([entry]) => {
             if (entry.isIntersecting) {
                 videoRef.current?.play().catch(e => {
-                    // Ignore errors from the play promise being interrupted by unmount.
-                    if (e.name !== 'AbortError') {
-                        console.error("Autoplay failed", e);
-                    }
+                    if (e.name !== 'AbortError') console.error("Autoplay failed", e);
                 });
             } else {
                 videoRef.current?.pause();
             }
         },
-        { threshold: 0.5 } // Play when 50% of the video is visible
+        { threshold: 0.5 }
     );
 
     const currentVideoRef = videoRef.current;
-    observer.observe(currentVideoRef);
+    if (currentVideoRef) observer.observe(currentVideoRef);
 
     return () => {
-        // Check if the ref is still mounted before interacting with it
         if (currentVideoRef && document.body.contains(currentVideoRef)) {
             currentVideoRef.pause();
             observer.unobserve(currentVideoRef);
         }
     };
-  }, [isVideo]);
+}, [isVideo]);
 
 
   // Effect to fetch comments when the image viewer is opened
@@ -526,7 +523,6 @@ export function Post(props: PostProps) {
       if (id.startsWith('temp_')) return;
       if (!isStandalone && !isReplyView) {
           try {
-            // Check if we are on desktop by looking for the main scroll area
             const desktopScrollArea = document.querySelector('#desktop-scroll-area > div');
             if (desktopScrollArea) {
                 sessionStorage.setItem('desktopScrollY', String(desktopScrollArea.scrollTop));
@@ -634,18 +630,37 @@ export function Post(props: PostProps) {
   const handleVideoPlayClick = (e: React.MouseEvent) => {
       e.stopPropagation();
       if (videoRef.current) {
-        if (videoRef.current.paused) {
-            videoRef.current.play().catch(e => console.error("Play failed", e));
-            setIsFeedVideoPlaying(true);
-        } else if (isFeedVideoPlaying) { // If already playing, tapping again could go to detail view or similar
-            // For now, let's just make it switch to the video tab
-            setActiveTab('live');
-        } else {
-             videoRef.current.pause();
-             setIsFeedVideoPlaying(false);
-        }
+          if (videoRef.current.paused) {
+              videoRef.current.play().catch(e => console.error("Play failed", e));
+          } else {
+              videoRef.current.pause();
+          }
       }
   }
+
+  const handleMuteToggle = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setIsMuted(prev => !prev);
+  }
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.muted = isMuted;
+    }
+  }, [isMuted]);
+
+  useEffect(() => {
+    if (!videoRef.current) return;
+    const video = videoRef.current;
+    const handlePlay = () => setIsFeedVideoPlaying(true);
+    const handlePause = () => setIsFeedVideoPlaying(false);
+    video.addEventListener('play', handlePlay);
+    video.addEventListener('pause', handlePause);
+    return () => {
+      video.removeEventListener('play', handlePlay);
+      video.removeEventListener('pause', handlePause);
+    }
+  }, []);
 
   const imageCount = mediaExists && !isVideo ? media.length : 0;
   
@@ -771,26 +786,25 @@ export function Post(props: PostProps) {
         {poll && <Poll poll={poll} postId={id} />}
         
         {mediaExists && (
-          <div className={cn("mt-3 rounded-2xl overflow-hidden border", imageCount > 1 && "aspect-video")}>
+          <div className={cn("mt-3 rounded-2xl overflow-hidden border", isVideo ? "aspect-video" : (imageCount > 1 && "aspect-video"))}>
             {isVideo && media[0].url ? (
-                <div className="relative w-full h-auto max-h-96 bg-black cursor-pointer" onClick={handleVideoPlayClick}>
+                <div className="relative w-full h-full bg-black cursor-pointer group/video" onClick={handleVideoPlayClick}>
                   <video
                     ref={videoRef}
                     src={media[0].url}
                     poster={videoThumbnail || ''}
                     className="w-full h-full object-contain"
                     playsInline
-                    muted
                     loop
-                    onClick={(e) => { e.stopPropagation(); if (videoRef.current) { videoRef.current.paused ? videoRef.current.play() : videoRef.current.pause()}}}
-                    onPlay={() => setIsFeedVideoPlaying(true)}
-                    onPause={() => setIsFeedVideoPlaying(false)}
                   />
-                   {!isFeedVideoPlaying && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <Play className="h-16 w-16 text-white/70" fill="currentColor" />
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-black/10 opacity-0 group-hover/video:opacity-100 transition-opacity">
+                      {isFeedVideoPlaying ? <Pause className="h-12 w-12 text-white/70" fill="currentColor" /> : <Play className="h-12 w-12 text-white/70" fill="currentColor" />}
+                  </div>
+                   <div className="absolute bottom-2 right-2">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full bg-black/50 hover:bg-black/75 text-white hover:text-white" onClick={handleMuteToggle}>
+                           {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                        </Button>
                     </div>
-                  )}
               </div>
             ) : singleImage && media[0].url ? (
               <div 
@@ -1015,12 +1029,5 @@ export function Post(props: PostProps) {
       </div>
   );
 }
-
-    
-
-    
-
-
-
 
     
