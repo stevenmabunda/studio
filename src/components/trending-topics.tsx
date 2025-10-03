@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from './ui/button';
 import { MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export function TrendingTopics() {
   const [topics, setTopics] = useState<TrendingKeyword[]>([]);

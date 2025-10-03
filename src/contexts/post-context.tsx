@@ -89,15 +89,38 @@ export function PostProvider({ children }: { children: ReactNode }) {
   const [likedPostIds, setLikedPostIds] = useState<Set<string>>(new Set());
   
   const [hasFetchedInitial, setHasFetchedInitial] = useState(false);
+  const [prefetchedPosts, setPrefetchedPosts] = useState<PostType[]>([]);
 
   const fetchForYouPosts = useCallback(async (options: { limit?: number; lastPostId?: string } = {}) => {
       if (!options.lastPostId) setLoadingForYou(true);
       try {
+          // If we have prefetched posts and we're fetching the next page, use them.
+          if (options.lastPostId && prefetchedPosts.length > 0) {
+              const postsToAppend = [...prefetchedPosts];
+              setForYouPosts(prev => [...prev, ...postsToAppend]);
+              setPrefetchedPosts([]); // Clear prefetched posts
+              
+              // Trigger a new prefetch for the *next* page
+              if (postsToAppend.length > 0) {
+                  getRecentPosts({ limit: 20, lastPostId: postsToAppend[postsToAppend.length - 1].id }).then(newPrefetchedPosts => {
+                      setPrefetchedPosts(newPrefetchedPosts);
+                  });
+              }
+              return postsToAppend;
+          }
+
+          // Standard fetch if no prefetched posts are available or it's the initial load
           const posts = await getRecentPosts(options);
           if (options.lastPostId) {
               setForYouPosts(prev => [...prev, ...posts]);
           } else {
               setForYouPosts(posts);
+              // After the initial load, prefetch the next page.
+              if (posts.length > 0) {
+                   getRecentPosts({ limit: 20, lastPostId: posts[posts.length - 1].id }).then(newPrefetchedPosts => {
+                      setPrefetchedPosts(newPrefetchedPosts);
+                  });
+              }
           }
           return posts;
       } catch (error) {
@@ -106,7 +129,8 @@ export function PostProvider({ children }: { children: ReactNode }) {
       } finally {
           setLoadingForYou(false);
       }
-  }, []);
+  }, [prefetchedPosts]);
+
 
   useEffect(() => {
     if (!hasFetchedInitial) {

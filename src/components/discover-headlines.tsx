@@ -83,7 +83,7 @@ export function DiscoverHeadlines() {
             <Image
             src="https://placehold.co/600x300.png"
             alt={heroHeadline.topic}
-            layout="fill"
+            fill
             objectFit="cover"
             className="group-hover:opacity-90 transition-opacity"
             data-ai-hint={heroHeadline.imageHint || 'stadium lights'}

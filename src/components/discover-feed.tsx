@@ -93,6 +93,7 @@ export function DiscoverFeed() {
                 fill
                 className="object-cover object-center group-hover:opacity-90 transition-opacity"
                 data-ai-hint={heroPost.media?.[0]?.hint || 'stadium lights'}
+                priority
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
             <div className="absolute bottom-0 left-0 p-4 text-white">
