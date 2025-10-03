@@ -4,7 +4,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { MessageCircle, Repeat, Heart, Share2, MoreHorizontal, Edit, Trash2, Bookmark, Copy, X, ChevronLeft, ChevronRight, Check } from "lucide-react";
+import { MessageCircle, Repeat, Heart, Share2, MoreHorizontal, Edit, Trash2, Bookmark, Copy, X, ChevronLeft, ChevronRight, Check, Play } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
@@ -58,6 +58,7 @@ import { Skeleton } from "./ui/skeleton";
 import useEmblaCarousel from 'embla-carousel-react';
 import { LoginOrSignupDialog } from "./login-or-signup-dialog";
 import { ProfileHoverCard } from "./profile-hover-card";
+import { useTabContext } from "@/contexts/tab-context";
 
 
 type PostProps = PostType & {
@@ -339,6 +340,7 @@ export function Post(props: PostProps) {
   const { user } = useAuth();
   const { editPost, deletePost, likePost, repostPost, bookmarkPost, bookmarkedPostIds, addComment, addVote, likedPostIds } = usePosts();
   const { toast } = useToast();
+  const { setActiveTab } = useTabContext();
 
   const [comments, setComments] = useState<CommentType[]>([]);
   const [loadingComments, setLoadingComments] = useState(false);
@@ -388,55 +390,40 @@ export function Post(props: PostProps) {
 
   // Effect to generate video thumbnail
   useEffect(() => {
-    if (isVideo && media[0].url) {
+    if (isVideo && media[0].url && !media[0].url.startsWith('blob:')) {
         const video = document.createElement('video');
         video.crossOrigin = "anonymous";
         video.src = media[0].url;
         
         const onLoadedData = () => {
-            const canvas = document.createElement('canvas');
+            video.currentTime = 1; // Seek to 1s to get a good frame
+        };
+
+        const onSeeked = () => {
+             const canvas = document.createElement('canvas');
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             const ctx = canvas.getContext('2d');
             if (ctx) {
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                setVideoThumbnail(canvas.toDataURL());
+                setVideoThumbnail(canvas.toDataURL('image/jpeg'));
             }
-            // Cleanup
             video.removeEventListener('loadeddata', onLoadedData);
-        };
+            video.removeEventListener('seeked', onSeeked);
+        }
         
         video.addEventListener('loadeddata', onLoadedData);
+        video.addEventListener('seeked', onSeeked);
 
         return () => {
             video.removeEventListener('loadeddata', onLoadedData);
+            video.removeEventListener('seeked', onSeeked);
         }
     }
   }, [isVideo, media]);
   
-    // Effect for Intersection Observer to play/pause video
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video || !isVideo) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        if (entry.isIntersecting) {
-          video.play().catch(() => {});
-        } else {
-          video.pause();
-        }
-      },
-      { threshold: 0.5 } // Trigger when 50% of the video is visible
-    );
-
-    observer.observe(video);
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [isVideo]);
+  // Effect for Intersection Observer to play/pause video - REMOVED, handled in video-post.tsx now.
 
 
   // Effect to fetch comments when the image viewer is opened
@@ -614,6 +601,11 @@ export function Post(props: PostProps) {
     setIsImageViewerOpen(true);
   };
 
+  const handleVideoPlayClick = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setActiveTab('video');
+  }
+
   const imageCount = mediaExists && !isVideo ? media.length : 0;
   
   const singleImage = imageCount === 1;
@@ -740,17 +732,18 @@ export function Post(props: PostProps) {
         {mediaExists && (
           <div className={cn("mt-3 rounded-2xl overflow-hidden border", imageCount > 1 && "aspect-video")}>
             {isVideo && media[0].url ? (
-              <video
-                ref={videoRef}
-                src={media[0].url}
-                loop
-                muted
-                playsInline
-                controls
-                poster={videoThumbnail || ''}
-                className="w-full h-auto max-h-96 object-contain bg-black"
-                onClick={(e) => e.stopPropagation()}
-              />
+              <div className="relative w-full h-auto max-h-96 bg-black" onClick={handleVideoPlayClick}>
+                  <video
+                    ref={videoRef}
+                    src={media[0].url}
+                    poster={videoThumbnail || ''}
+                    className="w-full h-full object-contain"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <Play className="h-16 w-16 text-white/70" fill="currentColor" />
+                  </div>
+              </div>
             ) : singleImage && media[0].url ? (
               <div 
                   className="relative w-full max-h-[500px] bg-black cursor-pointer"
@@ -978,4 +971,3 @@ export function Post(props: PostProps) {
     
 
     
-

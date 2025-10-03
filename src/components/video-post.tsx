@@ -90,50 +90,44 @@ export function VideoPost({ post, isMuted, onToggleMute, isPlaying, onVisibility
             )}
             
             <div className="absolute bottom-0 left-0 right-0 p-4 text-white bg-gradient-to-t from-black/50 to-transparent">
-                <div className='flex justify-between items-end'>
-                    <div className='flex-1 min-w-0'>
-                        <div className="flex items-center gap-2">
-                             <Link href={`/profile/${post.authorId}`} onClick={e => e.stopPropagation()}>
-                                <Avatar className="h-10 w-10 border-2 border-white">
-                                    <AvatarImage src={post.authorAvatar} />
-                                    <AvatarFallback>{post.authorName.charAt(0)}</AvatarFallback>
-                                </Avatar>
-                            </Link>
-                            <Link href={`/profile/${post.authorId}`} onClick={e => e.stopPropagation()}>
-                                <p className="font-bold text-lg">@{post.authorHandle}</p>
-                            </Link>
-                        </div>
-                        <p className="mt-2 text-sm line-clamp-2">{post.content}</p>
-                        <div className="flex items-center gap-2 mt-2 text-sm">
-                            <Music className="h-4 w-4" />
-                            <div className="w-40 overflow-hidden whitespace-nowrap">
-                                <span className="animate-marquee inline-block pr-4">Original sound - {post.authorName}</span>
-                                <span className="animate-marquee-2 inline-block pr-4">Original sound - {post.authorName}</span>
-                            </div>
-                        </div>
-                    </div>
-                     <div className="flex flex-col items-center gap-4">
-                        <Button variant="ghost" size="icon" className="text-white h-12 w-12 flex-col gap-1">
-                            <Heart className="h-7 w-7" />
-                            <span className="text-xs font-bold">{post.likes}</span>
-                        </Button>
-                        <Button variant="ghost" size="icon" className="text-white h-12 w-12 flex-col gap-1">
-                            <MessageCircle className="h-7 w-7" />
-                            <span className="text-xs font-bold">{post.comments}</span>
-                        </Button>
-                        <Button variant="ghost" size="icon" className="text-white h-12 w-12 flex-col gap-1">
-                            <Repeat className="h-7 w-7" />
-                             <span className="text-xs font-bold">{post.reposts}</span>
-                        </Button>
-                         <Button variant="ghost" size="icon" className="text-white h-12 w-12">
-                            <Share2 className="h-7 w-7" />
-                        </Button>
+                 <div className="flex items-center gap-2">
+                     <Link href={`/profile/${post.authorId}`} onClick={e => e.stopPropagation()}>
+                        <Avatar className="h-10 w-10 border-2 border-white">
+                            <AvatarImage src={post.authorAvatar} />
+                            <AvatarFallback>{post.authorName.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                    </Link>
+                    <Link href={`/profile/${post.authorId}`} onClick={e => e.stopPropagation()}>
+                        <p className="font-bold text-lg">@{post.authorHandle}</p>
+                    </Link>
+                </div>
+                <p className="mt-2 text-sm line-clamp-2">{post.content}</p>
+                <div className="flex items-center gap-2 mt-2 text-sm">
+                    <Music className="h-4 w-4" />
+                    <div className="w-40 overflow-hidden whitespace-nowrap">
+                        <span className="animate-marquee inline-block pr-4">Original sound - {post.authorName}</span>
+                        <span className="animate-marquee-2 inline-block pr-4">Original sound - {post.authorName}</span>
                     </div>
                 </div>
             </div>
-             <div className="absolute top-4 right-4">
-                <Button variant="ghost" size="icon" className="text-white bg-black/30" onClick={(e) => { e.stopPropagation(); onToggleMute();}}>
+            <div className="absolute top-4 right-4 flex flex-col items-center gap-4">
+                 <Button variant="ghost" size="icon" className="text-white bg-black/30 h-10 w-10" onClick={(e) => { e.stopPropagation(); onToggleMute();}}>
                     {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+                </Button>
+                <Button variant="ghost" size="icon" className="text-white h-12 w-12 flex-col gap-1">
+                    <Heart className="h-7 w-7" />
+                    <span className="text-xs font-bold">{post.likes}</span>
+                </Button>
+                <Button variant="ghost" size="icon" className="text-white h-12 w-12 flex-col gap-1">
+                    <MessageCircle className="h-7 w-7" />
+                    <span className="text-xs font-bold">{post.comments}</span>
+                </Button>
+                <Button variant="ghost" size="icon" className="text-white h-12 w-12 flex-col gap-1">
+                    <Repeat className="h-7 w-7" />
+                        <span className="text-xs font-bold">{post.reposts}</span>
+                </Button>
+                    <Button variant="ghost" size="icon" className="text-white h-12 w-12">
+                    <Share2 className="h-7 w-7" />
                 </Button>
             </div>
         </div>
