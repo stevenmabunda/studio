@@ -25,6 +25,7 @@ import { TrendingTopics } from '@/components/trending-topics';
 import { db } from '@/lib/firebase/config';
 import { onSnapshot, collection, query, where } from 'firebase/firestore';
 import { BettingOddsWidget } from '@/components/betting-odds-widget';
+import { VideoPost } from '@/components/video-post';
 
 
 export default function HomePage() {
@@ -33,8 +34,11 @@ export default function HomePage() {
     newForYouPosts,
     showNewForYouPosts,
     loadingForYou,
+    videoPosts,
+    loadingVideo,
     addPost,
-    fetchForYouPosts
+    fetchForYouPosts,
+    fetchVideoPosts
   } = usePosts();
 
   const { toast } = useToast();
@@ -44,12 +48,29 @@ export default function HomePage() {
   const [showNotification, setShowNotification] = useState(false);
   const [hasScrolledFromTop, setHasScrolledFromTop] = useState(false);
   
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMorePosts, setHasMorePosts] = useState(true);
+  const [loadingMoreForYou, setLoadingMoreForYou] = useState(false);
+  const [hasMoreForYou, setHasMoreForYou] = useState(true);
+  
+  const [loadingMoreVideo, setLoadingMoreVideo] = useState(false);
+  const [hasMoreVideo, setHasMoreVideo] = useState(true);
 
   const [isHeaderHidden, setIsHeaderHidden] = useState(false);
   const lastScrollY = useRef(0);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  
+  // States for Video Feed
+  const [isMuted, setIsMuted] = useState(true);
+  const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
+
+  const handleVideoVisibilityChange = useCallback((id: string, isVisible: boolean) => {
+    if (isVisible) {
+      setPlayingVideoId(id);
+    } else {
+      if (playingVideoId === id) {
+        setPlayingVideoId(null);
+      }
+    }
+  }, [playingVideoId]);
 
   useEffect(() => {
     if (user && db) {
@@ -69,12 +90,10 @@ export default function HomePage() {
   }, []);
   
   useEffect(() => {
-    // This effect runs only when the component mounts and the posts are loaded.
-    // It's responsible for restoring the scroll position.
     if (!loadingForYou && forYouPosts.length > 0) {
       try {
         const desktopScrollY = sessionStorage.getItem('desktopScrollY');
-        const desktopScrollArea = document.querySelector('#desktop-scroll-area > div'); // Radix UI viewport
+        const desktopScrollArea = document.querySelector('#desktop-scroll-area > div');
         if (desktopScrollY && desktopScrollArea) {
           desktopScrollArea.scrollTo(0, parseInt(desktopScrollY, 10));
           sessionStorage.removeItem('desktopScrollY');
@@ -93,7 +112,6 @@ export default function HomePage() {
   }, [loadingForYou, forYouPosts.length]);
 
   useEffect(() => {
-    // This effect is for saving the scroll position when the user leaves the page.
     const handleBeforeUnload = () => {
         try {
             const desktopScrollArea = document.querySelector('#desktop-scroll-area > div');
@@ -114,51 +132,66 @@ export default function HomePage() {
   }, []);
 
 
-  const loadMorePosts = useCallback(async () => {
-    if (loadingMore || !hasMorePosts) return;
+  const loadMoreForYouPosts = useCallback(async () => {
+    if (loadingMoreForYou || !hasMoreForYou) return;
 
-    setLoadingMore(true);
-    const currentLastPostId = forYouPosts[forYouPosts.length - 1]?.id;
+    setLoadingMoreForYou(true);
+    const lastPost = forYouPosts[forYouPosts.length - 1];
     try {
-        const morePosts = await fetchForYouPosts({ limit: 20, lastPostId: currentLastPostId });
+        const morePosts = await fetchForYouPosts({ limit: 20, lastPostId: lastPost?.id });
         if (morePosts.length === 0) {
-            setHasMorePosts(false);
+            setHasMoreForYou(false);
         }
     } catch (error) {
         console.error("Failed to load more posts:", error);
         toast({ variant: 'destructive', description: "Could not load more posts." });
     } finally {
-        setLoadingMore(false);
+        setLoadingMoreForYou(false);
     }
-  }, [loadingMore, hasMorePosts, fetchForYouPosts, toast, forYouPosts]);
+  }, [loadingMoreForYou, hasMoreForYou, fetchForYouPosts, toast, forYouPosts]);
 
-  const observerRef = useRef<IntersectionObserver | null>(null);
-  const loadMoreTriggerRef = useCallback((node: HTMLDivElement) => {
-    if (loadingMore) return;
-    if (observerRef.current) observerRef.current.disconnect();
+  const loadMoreVideoPosts = useCallback(async () => {
+    if (loadingMoreVideo || !hasMoreVideo) return;
+    setLoadingMoreVideo(true);
+    const lastPost = videoPosts[videoPosts.length - 1];
+    try {
+      const morePosts = await fetchVideoPosts({ limit: 10, lastPostId: lastPost?.id });
+      if (morePosts.length < 10) {
+        setHasMoreVideo(false);
+      }
+    } catch (error) {
+      console.error("Failed to load more video posts:", error);
+    } finally {
+      setLoadingMoreVideo(false);
+    }
+  }, [loadingMoreVideo, hasMoreVideo, videoPosts, fetchVideoPosts]);
 
-    observerRef.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMorePosts) {
-        loadMorePosts();
+
+  const createObserver = (callback: () => void) => (node: HTMLDivElement) => {
+    const observer = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting) {
+        callback();
       }
     });
+    if (node) observer.observe(node);
+    return () => { if (node) observer.unobserve(node); };
+  };
 
-    if (node) observerRef.current.observe(node);
-  }, [loadingMore, hasMorePosts, loadMorePosts]);
+  const forYouTriggerRef = useCallback(createObserver(loadMoreForYouPosts), [loadMoreForYouPosts]);
+  const videoTriggerRef = useCallback(createObserver(loadMoreVideoPosts), [loadMoreVideoPosts]);
+
 
   useEffect(() => {
     const handleScroll = () => {
         const currentScrollY = window.scrollY;
 
-        // Header hide/show logic
         if (currentScrollY > lastScrollY.current && currentScrollY > 50) {
-            setIsHeaderHidden(true); // Scrolling down
+            setIsHeaderHidden(true);
         } else {
-            setIsHeaderHidden(false); // Scrolling up
+            setIsHeaderHidden(false);
         }
         lastScrollY.current = currentScrollY;
 
-        // New posts notification logic
         if (activeTab !== 'foryou') {
             setShowNotification(false);
             return;
@@ -195,7 +228,6 @@ export default function HomePage() {
     try {
         await addPost(data);
         toast({ description: "Your post has been published!" });
-        // Scroll to top only if the user is already near the top
         if (window.scrollY < 200) {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -217,7 +249,6 @@ export default function HomePage() {
             "fixed md:sticky top-0 z-40 w-full bg-background/95 backdrop-blur-sm transition-transform duration-300 ease-in-out md:translate-y-0",
             isHeaderHidden && 'hide-header'
         )}>
-            {/* Mobile Header */}
             <div className="md:hidden">
                 <div className="flex h-14 items-center justify-between px-4">
                      <SidebarTrigger asChild>
@@ -254,7 +285,7 @@ export default function HomePage() {
                  <TabsList className="flex w-full justify-evenly border-b bg-transparent p-0 overflow-x-auto no-scrollbar">
                     <TabsTrigger value="foryou" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">For You</TabsTrigger>
                     <TabsTrigger value="discover" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Discover</TabsTrigger>
-                    <TabsTrigger value="trending" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Trending</TabsTrigger>
+                    <TabsTrigger value="video" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Video</TabsTrigger>
                     <TabsTrigger value="betting" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-3 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Betting</TabsTrigger>
                 </TabsList>
             </div>
@@ -263,7 +294,7 @@ export default function HomePage() {
                  <TabsList className="flex w-full justify-evenly border-b bg-transparent p-0 overflow-x-auto no-scrollbar">
                     <TabsTrigger value="foryou" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">For You</TabsTrigger>
                     <TabsTrigger value="discover" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Discover</TabsTrigger>
-                    <TabsTrigger value="trending" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Trending</TabsTrigger>
+                    <TabsTrigger value="video" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Video</TabsTrigger>
                     <TabsTrigger value="betting" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Betting</TabsTrigger>
                 </TabsList>
             </div>
@@ -280,8 +311,6 @@ export default function HomePage() {
                   <PostSkeleton />
                   <PostSkeleton />
                   <PostSkeleton />
-                  <PostSkeleton />
-                  <PostSkeleton />
                 </>
               ) : forYouPosts.length > 0 ? (
                 forYouPosts.map((post) => {
@@ -295,12 +324,12 @@ export default function HomePage() {
                 </div>
               )}
             </div>
-             {hasMorePosts && !loadingForYou && (
-                <div ref={loadMoreTriggerRef} className="py-8 text-center">
-                    {loadingMore && <Loader2 className="h-6 w-6 animate-spin mx-auto" />}
+             {hasMoreForYou && !loadingForYou && (
+                <div ref={forYouTriggerRef} className="py-8 text-center">
+                    {loadingMoreForYou && <Loader2 className="h-6 w-6 animate-spin mx-auto" />}
                 </div>
             )}
-             {!hasMorePosts && !loadingForYou && forYouPosts.length > 0 && (
+             {!hasMoreForYou && !loadingForYou && forYouPosts.length > 0 && (
                 <p className="py-8 text-center text-muted-foreground">You've reached the end!</p>
             )}
           </TabsContent>
@@ -309,6 +338,40 @@ export default function HomePage() {
           </TabsContent>
            <TabsContent value="trending" className="h-full p-4">
              <TrendingTopics />
+          </TabsContent>
+          <TabsContent value="video" className="h-full bg-black md:rounded-lg md:m-2">
+            <div className="h-[calc(100vh-160px)] md:h-full md:max-h-[calc(100vh-10rem)] w-full mx-auto md:rounded-lg overflow-y-auto snap-y snap-mandatory no-scrollbar">
+              {loadingVideo ? (
+                <div className="flex items-center justify-center h-full">
+                  <PostSkeleton />
+                </div>
+              ) : videoPosts.length > 0 ? (
+                <div className="h-full w-full">
+                  {videoPosts.map((post) => (
+                    <div key={post.id} className="h-full w-full snap-start flex items-center justify-center relative">
+                       <VideoPost
+                        post={post}
+                        isMuted={isMuted}
+                        onToggleMute={() => setIsMuted(prev => !prev)}
+                        isPlaying={playingVideoId === post.id}
+                        onVisibilityChange={handleVideoVisibilityChange}
+                        activeVideoId={playingVideoId}
+                      />
+                    </div>
+                  ))}
+                  {hasMoreVideo && (
+                    <div ref={videoTriggerRef} className="h-24 flex items-center justify-center">
+                      {loadingMoreVideo && <Loader2 className="h-6 w-6 animate-spin text-white" />}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="p-8 text-center text-muted-foreground h-full flex flex-col justify-center items-center">
+                  <h2 className="text-xl font-bold text-white">No videos yet</h2>
+                  <p>When users post videos, they'll appear here.</p>
+                </div>
+              )}
+            </div>
           </TabsContent>
           <TabsContent value="betting" className="h-full">
             <BettingOddsWidget />
