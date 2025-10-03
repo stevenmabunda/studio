@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import type { ReactNode } from 'react';
@@ -24,7 +23,7 @@ type PostContextType = {
   deletePost: (postId: string) => Promise<void>;
   addVote: (postId: string, choiceIndex: number) => Promise<void>;
   addComment: (postId: string, data: { text: string; media: ReplyMedia[] }) => Promise<boolean | null>;
-  likePost: (postId: string, isUnlike: boolean) => Promise<void>;
+  likePost: (postId: string, currentlyLiked: boolean) => Promise<void>;
   likeComment: (postId: string, commentId: string, isUnlike: boolean) => Promise<void>;
   repostPost: (postId: string, isReposted: boolean) => Promise<void>;
   bookmarkPost: (postId: string, isBookmarked: boolean) => Promise<void>;
@@ -122,24 +121,23 @@ export function PostProvider({ children }: { children: ReactNode }) {
     setNewForYouPosts([]);
   };
 
-  const fetchUserEngagements = useCallback(async () => {
+  useEffect(() => {
     if (!db || !user) {
         setBookmarkedPostIds(new Set());
         setLikedPostIds(new Set());
-        return () => {};
+        return;
     }
     
     const bookmarksRef = collection(db, 'users', user.uid, 'bookmarks');
-    const likesRef = collection(db, 'users', user.uid, 'likes');
-
     const unsubBookmarks = onSnapshot(bookmarksRef, (snapshot) => {
-        const bookmarkIds = new Set(snapshot.docs.map(doc => doc.id));
-        setBookmarkedPostIds(bookmarkIds);
+        const ids = new Set(snapshot.docs.map(doc => doc.id));
+        setBookmarkedPostIds(ids);
     });
 
+    const likesRef = collection(db, 'users', user.uid, 'likes');
     const unsubLikes = onSnapshot(likesRef, (snapshot) => {
-        const likeIds = new Set(snapshot.docs.map(doc => doc.id));
-        setLikedPostIds(likeIds);
+        const ids = new Set(snapshot.docs.map(doc => doc.id));
+        setLikedPostIds(ids);
     });
 
     return () => {
@@ -147,14 +145,6 @@ export function PostProvider({ children }: { children: ReactNode }) {
         unsubLikes();
     };
   }, [user]);
-
-  useEffect(() => {
-    let unsubscribe = () => {};
-    fetchUserEngagements().then(unsub => {
-        unsubscribe = unsub;
-    });
-    return () => unsubscribe();
-  }, [fetchUserEngagements]);
 
 
   useEffect(() => {
@@ -383,24 +373,37 @@ export function PostProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const likePost = async (postId: string, isUnlike: boolean) => {
+  const likePost = async (postId: string, currentlyLiked: boolean) => {
     if (!db || !user) return;
+
     const postRef = doc(db, "posts", postId);
     const likeRef = doc(db, 'users', user.uid, 'likes', postId);
+    const shouldUnlike = currentlyLiked;
+
+    // Optimistic UI update
+    const updater = (posts: PostType[]) => posts.map(p => 
+        p.id === postId 
+        ? { ...p, likes: p.likes + (shouldUnlike ? -1 : 1) } 
+        : p
+    );
+    setForYouPosts(updater);
 
     try {
         await runTransaction(db, async (transaction) => {
             const postDoc = await transaction.get(postRef);
             if (!postDoc.exists()) throw "Post does not exist!";
             
-            const newLikeCount = postDoc.data().likes + (isUnlike ? -1 : 1);
+            const newLikeCount = postDoc.data().likes + (shouldUnlike ? -1 : 1);
             transaction.update(postRef, { likes: Math.max(0, newLikeCount) });
             
-            if (isUnlike) transaction.delete(likeRef);
-            else transaction.set(likeRef, { createdAt: serverTimestamp() });
+            if (shouldUnlike) {
+                transaction.delete(likeRef);
+            } else {
+                transaction.set(likeRef, { createdAt: serverTimestamp() });
+            }
         });
 
-        if (!isUnlike) {
+        if (!shouldUnlike) {
             const postDoc = await getDoc(postRef);
             if (postDoc.exists()) {
                 const postData = postDoc.data();
@@ -416,6 +419,13 @@ export function PostProvider({ children }: { children: ReactNode }) {
         }
     } catch (error) {
         console.error("Error updating likes:", error);
+         // Revert optimistic update on error
+        const revertUpdater = (posts: PostType[]) => posts.map(p => 
+            p.id === postId 
+            ? { ...p, likes: p.likes + (shouldUnlike ? 1 : -1) } 
+            : p
+        );
+        setForYouPosts(revertUpdater);
     }
   };
   

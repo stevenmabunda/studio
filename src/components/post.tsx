@@ -347,7 +347,6 @@ export function Post(props: PostProps) {
   const [commentCount, setCommentCount] = useState(initialComments);
 
   const [likeCount, setLikeCount] = useState(initialLikes);
-  const [isLiked, setIsLiked] = useState(likedPostIds.has(id));
   const [repostCount, setRepostCount] = useState(initialReposts);
   const [isReposted, setIsReposted] = useState(false);
   
@@ -371,7 +370,8 @@ export function Post(props: PostProps) {
 
 
   const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
-
+  
+  const isLiked = useMemo(() => likedPostIds.has(id), [id, likedPostIds]);
   const isBookmarked = useMemo(() => bookmarkedPostIds.has(id), [bookmarkedPostIds, id]);
 
   const mediaExists = media && media.length > 0;
@@ -446,10 +446,11 @@ export function Post(props: PostProps) {
     if (currentVideoRef) observer.observe(currentVideoRef);
 
     return () => {
-        if (currentVideoRef && document.body.contains(currentVideoRef)) {
-            currentVideoRef.pause();
-            observer.unobserve(currentVideoRef);
-        }
+      const videoElement = currentVideoRef;
+      if (videoElement && document.body.contains(videoElement)) {
+          videoElement.pause();
+          observer.unobserve(videoElement);
+      }
     };
 }, [isVideo]);
 
@@ -483,11 +484,6 @@ export function Post(props: PostProps) {
     }
     return () => unsubscribe();
   }, [isImageViewerOpen, id]);
-  
-  // Set initial like state
-  useEffect(() => {
-      setIsLiked(likedPostIds.has(id));
-  }, [id, likedPostIds]);
 
   const handleCreateComment = async (data: { text: string; media: ReplyMedia[] }) => {
     if (!user || !id) return null;
@@ -525,7 +521,7 @@ export function Post(props: PostProps) {
 
       if (isVideo) {
         if(isFeedVideoPlaying) {
-          setActiveTab('match-centre');
+          router.push(`/post/${id}`);
         } else if (videoRef.current) {
             if (videoRef.current.paused) {
                 videoRef.current.play().catch(e => console.error("Play failed", e));
@@ -570,10 +566,8 @@ export function Post(props: PostProps) {
   };
 
   const handleLike = () => {
-    const newIsLiked = !isLiked;
-    setIsLiked(newIsLiked);
-    setLikeCount(prev => prev + (newIsLiked ? 1 : -1));
-    likePost(id, newIsLiked);
+    setLikeCount(prev => prev + (isLiked ? -1 : 1));
+    likePost(id, isLiked);
   };
 
   const handleRepost = () => {
@@ -645,7 +639,7 @@ export function Post(props: PostProps) {
   const handleVideoPlayClick = (e: React.MouseEvent) => {
       e.stopPropagation();
       if(isFeedVideoPlaying) {
-        setActiveTab('match-centre');
+          router.push(`/post/${id}`);
       } else if (videoRef.current) {
           if (videoRef.current.paused) {
               videoRef.current.play().catch(e => console.error("Play failed", e));
@@ -807,7 +801,7 @@ export function Post(props: PostProps) {
         {poll && <Poll poll={poll} postId={id} />}
         
         {mediaExists && (
-          <div className={cn("mt-3 rounded-2xl overflow-hidden border", isVideo && 'relative w-full aspect-[9/16] max-h-[70vh] bg-black')}>
+          <div className={cn("mt-3 rounded-2xl overflow-hidden border", isVideo && 'relative w-full aspect-video max-h-[70vh] bg-black')}>
             {isVideo && media[0].url ? (
                 <div className="relative w-full h-full cursor-pointer group/video" onClick={handleVideoPlayClick}>
                   <video
