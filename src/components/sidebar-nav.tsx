@@ -43,7 +43,6 @@ const navItems = [
   { href: '/live', label: 'Match Centre', icon: ShieldCheck },
   { href: '/bookmarks', label: 'Bookmarks', icon: Bookmark },
   { href: '/profile', label: 'My Profile', icon: User },
-  { href: '/creators', label: 'Become a Creator', icon: Star },
 ];
 
 export function SidebarNav() {
