@@ -347,7 +347,7 @@ export function Post(props: PostProps) {
   const [commentCount, setCommentCount] = useState(initialComments);
 
   const [likeCount, setLikeCount] = useState(initialLikes);
-  const [isLiked, setIsLiked] = useState(false);
+  const [isLiked, setIsLiked] = useState(likedPostIds.has(id));
   const [repostCount, setRepostCount] = useState(initialReposts);
   const [isReposted, setIsReposted] = useState(false);
   
@@ -525,9 +525,13 @@ export function Post(props: PostProps) {
 
       if (isVideo) {
         if(isFeedVideoPlaying) {
-          setActiveTab('video');
-        } else {
-          videoRef.current?.play().catch(e => console.error("Play failed", e));
+          setActiveTab('match-centre');
+        } else if (videoRef.current) {
+            if (videoRef.current.paused) {
+                videoRef.current.play().catch(e => console.error("Play failed", e));
+            } else {
+                videoRef.current.pause();
+            }
         }
         return;
       }
@@ -641,7 +645,7 @@ export function Post(props: PostProps) {
   const handleVideoPlayClick = (e: React.MouseEvent) => {
       e.stopPropagation();
       if(isFeedVideoPlaying) {
-        setActiveTab('video');
+        setActiveTab('match-centre');
       } else if (videoRef.current) {
           if (videoRef.current.paused) {
               videoRef.current.play().catch(e => console.error("Play failed", e));
@@ -803,9 +807,9 @@ export function Post(props: PostProps) {
         {poll && <Poll poll={poll} postId={id} />}
         
         {mediaExists && (
-          <div className={cn("mt-3 rounded-2xl overflow-hidden border", isVideo && 'aspect-video')}>
+          <div className={cn("mt-3 rounded-2xl overflow-hidden border", isVideo && 'relative w-full aspect-[9/16] max-h-[70vh] bg-black')}>
             {isVideo && media[0].url ? (
-                <div className="relative w-full h-full bg-black cursor-pointer group/video" onClick={handleVideoPlayClick}>
+                <div className="relative w-full h-full cursor-pointer group/video" onClick={handleVideoPlayClick}>
                   <video
                     ref={videoRef}
                     src={media[0].url}
@@ -1063,7 +1067,3 @@ export function Post(props: PostProps) {
       </div>
   );
 }
-
-    
-
-    
