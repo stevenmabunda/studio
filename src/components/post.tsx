@@ -430,7 +430,12 @@ export function Post(props: PostProps) {
     const observer = new IntersectionObserver(
         ([entry]) => {
             if (entry.isIntersecting) {
-                videoRef.current?.play().catch(e => console.error("Autoplay failed", e));
+                videoRef.current?.play().catch(e => {
+                    // Ignore errors from the play promise being interrupted by unmount.
+                    if (e.name !== 'AbortError') {
+                        console.error("Autoplay failed", e);
+                    }
+                });
             } else {
                 videoRef.current?.pause();
             }
@@ -442,7 +447,9 @@ export function Post(props: PostProps) {
     observer.observe(currentVideoRef);
 
     return () => {
-        if (currentVideoRef) {
+        // Check if the ref is still mounted before interacting with it
+        if (currentVideoRef && document.body.contains(currentVideoRef)) {
+            currentVideoRef.pause();
             observer.unobserve(currentVideoRef);
         }
     };
@@ -628,10 +635,11 @@ export function Post(props: PostProps) {
       e.stopPropagation();
       if (videoRef.current) {
         if (videoRef.current.paused) {
-            videoRef.current.play();
+            videoRef.current.play().catch(e => console.error("Play failed", e));
             setIsFeedVideoPlaying(true);
-        } else if (isFeedVideoPlaying) {
-             setActiveTab('video');
+        } else if (isFeedVideoPlaying) { // If already playing, tapping again could go to detail view or similar
+            // For now, let's just make it switch to the video tab
+            setActiveTab('live');
         } else {
              videoRef.current.pause();
              setIsFeedVideoPlaying(false);
@@ -765,7 +773,7 @@ export function Post(props: PostProps) {
         {mediaExists && (
           <div className={cn("mt-3 rounded-2xl overflow-hidden border", imageCount > 1 && "aspect-video")}>
             {isVideo && media[0].url ? (
-              <div className="relative w-full h-auto max-h-96 bg-black" onClick={handleVideoPlayClick}>
+                <div className="relative w-full h-auto max-h-96 bg-black cursor-pointer" onClick={handleVideoPlayClick}>
                   <video
                     ref={videoRef}
                     src={media[0].url}
@@ -774,11 +782,11 @@ export function Post(props: PostProps) {
                     playsInline
                     muted
                     loop
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => { e.stopPropagation(); if (videoRef.current) { videoRef.current.paused ? videoRef.current.play() : videoRef.current.pause()}}}
                     onPlay={() => setIsFeedVideoPlaying(true)}
                     onPause={() => setIsFeedVideoPlaying(false)}
                   />
-                  {!isFeedVideoPlaying && (
+                   {!isFeedVideoPlaying && (
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                         <Play className="h-16 w-16 text-white/70" fill="currentColor" />
                     </div>
@@ -1013,3 +1021,6 @@ export function Post(props: PostProps) {
     
 
 
+
+
+    
