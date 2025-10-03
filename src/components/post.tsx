@@ -394,34 +394,37 @@ export function Post(props: PostProps) {
   // Effect to generate video thumbnail
   useEffect(() => {
     if (isVideo && media[0].url && !media[0].url.startsWith('blob:')) {
-        const video = document.createElement('video');
-        video.crossOrigin = "anonymous";
-        video.src = media[0].url;
-        
-        const onLoadedData = () => {
-            video.currentTime = 1; // Seek to 1s to get a good frame
-        };
+      const video = document.createElement('video');
+      video.crossOrigin = "anonymous";
+      video.src = media[0].url;
+      video.muted = true;
+      video.playsInline = true;
 
-        const onSeeked = () => {
-             const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            const ctx = canvas.getContext('2d');
-            if (ctx) {
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                setVideoThumbnail(canvas.toDataURL('image/jpeg'));
-            }
-            video.removeEventListener('loadeddata', onLoadedData);
-            video.removeEventListener('seeked', onSeeked);
-        }
-        
-        video.addEventListener('loadeddata', onLoadedData);
-        video.addEventListener('seeked', onSeeked);
+      const onCanPlay = () => {
+        video.currentTime = 0.1; // Seek to a very early frame
+      };
 
-        return () => {
-            video.removeEventListener('loadeddata', onLoadedData);
-            video.removeEventListener('seeked', onSeeked);
+      const onSeeked = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          setVideoThumbnail(canvas.toDataURL('image/jpeg'));
         }
+        // Cleanup listeners
+        video.removeEventListener('canplay', onCanPlay);
+        video.removeEventListener('seeked', onSeeked);
+      };
+
+      video.addEventListener('canplay', onCanPlay);
+      video.addEventListener('seeked', onSeeked);
+
+      return () => {
+        video.removeEventListener('canplay', onCanPlay);
+        video.removeEventListener('seeked', onSeeked);
+      };
     }
   }, [isVideo, media]);
   
