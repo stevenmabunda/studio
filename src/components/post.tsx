@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -657,8 +658,10 @@ export function Post(props: PostProps) {
     video.addEventListener('play', handlePlay);
     video.addEventListener('pause', handlePause);
     return () => {
-      video.removeEventListener('play', handlePlay);
-      video.removeEventListener('pause', handlePause);
+      if (video && document.body.contains(video)) {
+        video.removeEventListener('play', handlePlay);
+        video.removeEventListener('pause', handlePause);
+      }
     }
   }, []);
 
@@ -786,14 +789,14 @@ export function Post(props: PostProps) {
         {poll && <Poll poll={poll} postId={id} />}
         
         {mediaExists && (
-          <div className={cn("mt-3 rounded-2xl overflow-hidden border", isVideo ? "aspect-video" : (imageCount > 1 && "aspect-video"))}>
+          <div className={cn("mt-3 rounded-2xl overflow-hidden border", (imageCount > 1 && "aspect-video"))}>
             {isVideo && media[0].url ? (
-                <div className="relative w-full h-full bg-black cursor-pointer group/video" onClick={handleVideoPlayClick}>
+                <div className="relative w-full h-auto bg-black cursor-pointer group/video" onClick={handleVideoPlayClick}>
                   <video
                     ref={videoRef}
                     src={media[0].url}
                     poster={videoThumbnail || ''}
-                    className="w-full h-full object-contain"
+                    className="w-full h-auto object-contain max-h-[70vh]"
                     playsInline
                     loop
                   />
@@ -1029,5 +1032,7 @@ export function Post(props: PostProps) {
       </div>
   );
 }
+
+    
 
     
