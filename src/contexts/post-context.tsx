@@ -4,7 +4,7 @@
 import type { ReactNode } from 'react';
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { PostType } from '@/lib/data';
-import type { Media, UploadProgress } from '@/components/create-post';
+import type { Media } from '@/components/create-post';
 import { useAuth } from '@/hooks/use-auth';
 import { db, storage } from '@/lib/firebase/config';
 import { collection, addDoc, serverTimestamp, getDocs, query, type Timestamp, doc, updateDoc, runTransaction, deleteDoc, orderBy, getDoc, setDoc, writeBatch, limit, onSnapshot, where } from 'firebase/firestore';
@@ -18,7 +18,7 @@ type PostContextType = {
   newForYouPosts: PostType[];
   loadingForYou: boolean;
   showNewForYouPosts: () => void;
-  addPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }, onProgress: (progress: UploadProgress) => void) => Promise<PostType | null>;
+  addPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }) => Promise<PostType | null>;
   editPost: (postId: string, data: { text:string }) => Promise<void>;
   deletePost: (postId: string) => Promise<void>;
   addVote: (postId: string, choiceIndex: number) => Promise<void>;
@@ -205,7 +205,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
 
-  const addPost = async ({ text, media, poll, location, tribeId, communityId }: { text: string; media: Media[]; poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }, onProgress: (progress: UploadProgress) => void): Promise<PostType | null> => {
+  const addPost = async ({ text, media, poll, location, tribeId, communityId }: { text: string; media: Media[]; poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }): Promise<PostType | null> => {
     if (!user || !db || !storage) {
         throw new Error("Cannot add post: user not logged in or Firebase not configured.");
     }
@@ -242,16 +242,13 @@ export function PostProvider({ children }: { children: ReactNode }) {
           return new Promise((resolve, reject) => {
               uploadTask.on('state_changed',
                   (snapshot: UploadTaskSnapshot) => {
-                      const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                      onProgress({ fileName: m.file.name, progress, status: 'uploading' });
+                      // Progress logic removed
                   },
                   (error) => {
                       console.error("Upload error:", error);
-                      onProgress({ fileName: m.file.name, progress: 0, status: 'error', error: error.message });
                       reject(error);
                   },
                   async () => {
-                      onProgress({ fileName: m.file.name, progress: 100, status: 'processing' });
                       const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
                       const baseMediaData = { url: downloadURL, type: m.type, hint: 'user uploaded content' };
                       
@@ -261,7 +258,6 @@ export function PostProvider({ children }: { children: ReactNode }) {
                       } else {
                           resolve(baseMediaData);
                       }
-                      onProgress({ fileName: m.file.name, progress: 100, status: 'success' });
                   }
               );
           });

@@ -8,7 +8,7 @@ import { Home, Plus, Search, User, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import React, { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { CreatePost, type Media, type UploadProgress } from '@/components/create-post';
+import { CreatePost, type Media } from '@/components/create-post';
 import { usePosts } from '@/contexts/post-context';
 import { useToast } from '@/hooks/use-toast';
 import type { PostType } from '@/lib/data';
@@ -32,9 +32,9 @@ export function MobileBottomNav() {
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
-  const handlePost = async (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null }, onProgress: (progress: UploadProgress) => void) => {
+  const handlePost = async (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null }) => {
     try {
-        const newPost = await addPost(data, onProgress);
+        const newPost = await addPost(data);
         setIsDialogOpen(false);
         if (newPost) {
           toast({ 
@@ -75,7 +75,7 @@ export function MobileBottomNav() {
                       <SheetTitle>Create a new post</SheetTitle>
                     </SheetHeader>
                     <ScrollArea className="h-full">
-                        <div className="p-3 md:p-4 pt-0">
+                        <div className="p-3 md-p-4 pt-0">
                             <CreatePost onPost={handlePost} />
                         </div>
                     </ScrollArea>

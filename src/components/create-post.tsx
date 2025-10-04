@@ -4,8 +4,8 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Image as ImageIcon, X, Film, ListOrdered, Smile, MapPin, Loader2, Trash2, CheckCircle, AlertCircle } from "lucide-react";
-import React, { useState, useRef, useEffect } from "react";
+import { Image as ImageIcon, X, Film, ListOrdered, Smile, MapPin, Loader2, Trash2 } from "lucide-react";
+import React, { useState, useRef } from "react";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -13,7 +13,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { Input } from "./ui/input";
 import type { PostType } from "@/lib/data";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import { Progress } from "./ui/progress";
 
 export type Media = {
   file: File;
@@ -21,23 +20,15 @@ export type Media = {
   type: 'image' | 'video';
 };
 
-export type UploadProgress = {
-  fileName: string;
-  progress: number;
-  status: 'uploading' | 'processing' | 'success' | 'error';
-  error?: string;
-};
-
 const EMOJIS = [
     '😀', '😂', '😍', '🤔', '😭', '🙏', '❤️', '🔥', '👍', '⚽️', '🥅', '🏆', '🎉', '👏', '🚀', '💯'
 ];
 
-export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }, onProgress: (progress: UploadProgress) => void) => Promise<any>, tribeId?: string, communityId?: string }) {
+export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }) => Promise<any>, tribeId?: string, communityId?: string }) {
   const { user } = useAuth();
   const [text, setText] = useState("");
   const [media, setMedia] = useState<Media[]>([]);
   const [posting, setPosting] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState<UploadProgress[]>([]);
   
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
@@ -94,7 +85,6 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
   const handlePost = async () => {
     if (!isPostable || posting) return;
     setPosting(true);
-    setUploadProgress([]);
 
     let pollData: PostType['poll'] | undefined = undefined;
     if (showPoll) {
@@ -109,20 +99,9 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
         };
     }
     
-    const progressCallback = (progress: UploadProgress) => {
-      setUploadProgress(prev => {
-          const existingIndex = prev.findIndex(p => p.fileName === progress.fileName);
-          if (existingIndex !== -1) {
-              const updated = [...prev];
-              updated[existingIndex] = progress;
-              return updated;
-          }
-          return [...prev, progress];
-      });
-    };
 
     try {
-        await onPost({ text, media, poll: pollData, location, tribeId, communityId }, progressCallback);
+        await onPost({ text, media, poll: pollData, location, tribeId, communityId });
         
         media.forEach(m => URL.revokeObjectURL(m.previewUrl));
 
@@ -131,7 +110,6 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
         setShowPoll(false);
         setPollChoices(['', '']);
         setLocation(null);
-        setUploadProgress([]);
         if (imageInputRef.current) imageInputRef.current.value = "";
         if (videoInputRef.current) videoInputRef.current.value = "";
     } catch (error) {
@@ -289,29 +267,6 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
                         ))}
                     </div>
                 )}
-            </div>
-          )}
-
-           {uploadProgress.length > 0 && (
-            <div className="space-y-2 pt-2">
-                {uploadProgress.map((item, index) => (
-                    <div key={index} className="space-y-1">
-                        <div className="flex justify-between items-center text-xs">
-                            <span className="truncate max-w-[200px]">{item.fileName}</span>
-                            <span className="text-muted-foreground">{item.status === 'uploading' ? `${Math.round(item.progress)}%` : item.status}</span>
-                        </div>
-                        {item.status === 'error' ? (
-                          <div className="flex items-center gap-2 text-destructive">
-                            <AlertCircle className="h-4 w-4" />
-                            <span className="text-xs">{item.error || 'Upload failed'}</span>
-                          </div>
-                        ) : item.status === 'success' ? (
-                          <Progress value={100} className="h-2 bg-green-500" />
-                        ) : (
-                          <Progress value={item.progress} className="h-2" />
-                        )}
-                    </div>
-                ))}
             </div>
           )}
 
