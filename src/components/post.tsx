@@ -903,12 +903,10 @@ export function Post(props: PostProps) {
                     <Heart className={cn("h-5 w-5", isLiked && 'fill-current')} />
                     {!isReplyView && <span>{likeCount > 0 ? likeCount : ''}</span>}
                 </Button>
-            </div>
-            <div className="flex items-center -mr-3">
                 <Button variant="ghost" size="icon" className={cn("hover:text-primary", isBookmarked && "text-primary", isReplyView && "h-8 w-8")} onClick={handleActionClick(handleBookmark)}>
                     <Bookmark className={cn("h-5 w-5", isBookmarked && 'fill-current')} />
                 </Button>
-                <Sheet open={isShareSheetOpen} onOpenChange={setShareSheetOpen}>
+                 <Sheet open={isShareSheetOpen} onOpenChange={setShareSheetOpen}>
                     <SheetTrigger asChild>
                         <Button variant="ghost" size="icon" className={cn("hover:text-primary", isReplyView && "h-8 w-8")} onClick={(e) => e.stopPropagation()}>
                             <Share2 className="h-5 w-5" />
