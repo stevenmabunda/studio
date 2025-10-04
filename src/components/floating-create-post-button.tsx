@@ -10,7 +10,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { CreatePost, type Media } from '@/components/create-post';
+import { CreatePost, type Media, type UploadProgress } from '@/components/create-post';
 import { usePosts } from '@/contexts/post-context';
 import { useToast } from '@/hooks/use-toast';
 import type { PostType } from '@/lib/data';
@@ -23,9 +23,9 @@ export function FloatingCreatePostButton() {
   const router = useRouter();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const handlePost = async (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null }) => {
+  const handlePost = async (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null }, onProgress: (progress: UploadProgress) => void) => {
     try {
-        const newPost = await addPost(data);
+        const newPost = await addPost(data, onProgress);
         setIsDialogOpen(false);
         if (newPost) {
           toast({ 
