@@ -27,6 +27,7 @@ import { onSnapshot, collection, query, where } from 'firebase/firestore';
 import { BettingOddsWidget } from '@/components/betting-odds-widget';
 import LivePage from '../live/page';
 import { Card } from '@/components/ui/card';
+import { SignupPrompt } from '@/components/signup-prompt';
 
 
 export default function HomePage() {
@@ -198,6 +199,8 @@ export default function HomePage() {
         toast({ variant: 'destructive', description: "Something went wrong. Please try again." });
     }
   };
+  
+  const postsToShow = user ? forYouPosts : forYouPosts.slice(0, 5);
 
   return (
     <div className="flex h-full min-h-screen flex-col">
@@ -264,18 +267,20 @@ export default function HomePage() {
 
         <main className="flex-1 md:pt-0 pt-[112px]">
           <TabsContent value="foryou" className="h-full">
-            <div className="hidden md:block border-b">
-              <CreatePost onPost={handlePost} />
-            </div>
+            {user && (
+              <div className="hidden md:block border-b">
+                <CreatePost onPost={handlePost} />
+              </div>
+            )}
             <div className="divide-y divide-border">
-              {loadingForYou && forYouPosts.length === 0 ? (
+              {loadingForYou && postsToShow.length === 0 ? (
                 <>
                   <PostSkeleton />
                   <PostSkeleton />
                   <PostSkeleton />
                 </>
-              ) : forYouPosts.length > 0 ? (
-                forYouPosts.map((post) => {
+              ) : postsToShow.length > 0 ? (
+                postsToShow.map((post) => {
                     if (!post) return null;
                     return <Post key={post.id} {...post} />
                 })
@@ -286,12 +291,15 @@ export default function HomePage() {
                 </div>
               )}
             </div>
-             {hasMoreForYou && !loadingForYou && (
+            
+            {!user && forYouPosts.length > 5 && <SignupPrompt />}
+            
+            {user && hasMoreForYou && !loadingForYou && (
                 <div ref={forYouTriggerRef} className="py-8 text-center">
                     {loadingMoreForYou && <Loader2 className="h-6 w-6 animate-spin mx-auto" />}
                 </div>
             )}
-             {!hasMoreForYou && !loadingForYou && forYouPosts.length > 0 && (
+            {user && !hasMoreForYou && !loadingForYou && forYouPosts.length > 0 && (
                 <p className="py-8 text-center text-muted-foreground">You've reached the end!</p>
             )}
           </TabsContent>
