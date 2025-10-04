@@ -818,7 +818,7 @@ export function Post(props: PostProps) {
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-black/10 opacity-0 group-hover/video:opacity-100 transition-opacity">
                       {isFeedVideoPlaying ? <Pause className="h-12 w-12 text-white/70" fill="currentColor" /> : <Play className="h-12 w-12 text-white/70" fill="currentColor" />}
                   </div>
-                   <div className="absolute top-2 right-2 flex flex-col gap-2 z-10">
+                   <div className="absolute md:top-2 md:right-2 bottom-2 left-2 right-2 md:left-auto md:bottom-auto flex md:flex-col justify-around md:justify-start gap-2 z-10">
                         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full bg-black/50 hover:bg-black/75 text-white hover:text-white" onClick={handleMuteToggle}>
                            {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
                         </Button>
@@ -889,7 +889,7 @@ export function Post(props: PostProps) {
             </div>
         )}
         
-        <div className={cn("flex items-center justify-between text-muted-foreground", isStandalone && !isReplyView ? "mt-2" : "mt-4", isReplyView && "hidden", isVideo && 'hidden')}>
+        <div className={cn("flex items-center justify-start text-muted-foreground", isStandalone && !isReplyView ? "mt-2" : "mt-4", isReplyView && "hidden", isVideo && 'hidden')}>
             <div className="flex items-center -ml-3">
                 <Button variant="ghost" size={isReplyView ? 'icon' : 'sm'} className={cn("flex items-center gap-2 hover:text-primary", isReplyView && "h-8 w-8")} onClick={handleCommentClick}>
                     <MessageCircle className="h-5 w-5" />
