@@ -52,7 +52,7 @@ import { FollowButton } from "./follow-button";
 import { getIsFollowing } from "@/app/(app)/profile/actions";
 import { ScrollArea } from "./ui/scroll-area";
 import { CreateComment, type ReplyMedia } from "./create-comment";
-import { db } from "@/lib/firebase/config";
+import { db } from '@/lib/firebase/config';
 import { collection, onSnapshot, orderBy, query, type Timestamp } from "firebase/firestore";
 import { Skeleton } from "./ui/skeleton";
 import useEmblaCarousel from 'embla-carousel-react';
@@ -799,7 +799,7 @@ export function Post(props: PostProps) {
         {poll && <Poll poll={poll} postId={id} />}
         
         {mediaExists && (
-          <div className={cn("mt-3 rounded-2xl overflow-hidden border", isVideo && 'relative w-full max-h-[80vh] bg-black flex items-center justify-center')}>
+          <div className={cn("mt-3 rounded-2xl overflow-hidden border", isVideo && 'relative w-full bg-black flex items-center justify-center')}>
             {isVideo && media[0].url ? (
                 <div className="relative w-full h-full cursor-pointer group/video" onClick={handleVideoPlayClick}>
                   <video
@@ -813,7 +813,7 @@ export function Post(props: PostProps) {
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-black/10 opacity-0 group-hover/video:opacity-100 transition-opacity">
                       {isFeedVideoPlaying ? <Pause className="h-12 w-12 text-white/70" fill="currentColor" /> : <Play className="h-12 w-12 text-white/70" fill="currentColor" />}
                   </div>
-                   <div className="absolute bottom-2 left-2 right-2 md:left-auto md:top-2 md:right-2 md:bottom-auto flex md:flex-col justify-around md:justify-start gap-2 z-10">
+                   <div className="absolute top-2 right-2 flex flex-col gap-2 z-10">
                         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full bg-black/50 hover:bg-black/75 text-white hover:text-white" onClick={handleMuteToggle}>
                            {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
                         </Button>
