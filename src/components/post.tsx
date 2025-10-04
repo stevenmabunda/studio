@@ -804,7 +804,7 @@ export function Post(props: PostProps) {
         {poll && <Poll poll={poll} postId={id} />}
         
         {mediaExists && (
-          <div className={cn("mt-3 rounded-2xl overflow-hidden border", isVideo && 'relative w-full aspect-video max-h-[70vh] bg-black')}>
+          <div className={cn("mt-3 rounded-2xl overflow-hidden border", isVideo && 'relative w-full max-h-[80vh] bg-black flex items-center justify-center')}>
             {isVideo && media[0].url ? (
                 <div className="relative w-full h-full cursor-pointer group/video" onClick={handleVideoPlayClick}>
                   <video
@@ -889,7 +889,7 @@ export function Post(props: PostProps) {
             </div>
         )}
         
-        <div className={cn("flex items-center justify-start text-muted-foreground", isStandalone && !isReplyView ? "mt-2" : "mt-4", isReplyView && "hidden", isVideo && 'hidden')}>
+        <div className={cn("flex items-center text-muted-foreground", isStandalone && !isReplyView ? "mt-2" : "mt-4", isReplyView && "hidden", isVideo && 'hidden')}>
             <div className="flex items-center -ml-3">
                 <Button variant="ghost" size={isReplyView ? 'icon' : 'sm'} className={cn("flex items-center gap-2 hover:text-primary", isReplyView && "h-8 w-8")} onClick={handleCommentClick}>
                     <MessageCircle className="h-5 w-5" />
