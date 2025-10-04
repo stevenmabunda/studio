@@ -302,6 +302,7 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
                <input
                 type="file"
                 accept="video/*"
+                capture="user"
                 ref={videoInputRef}
                 onChange={handleFileChange}
                 className="hidden"
@@ -351,5 +352,3 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
     </div>
   );
 }
-
-    
