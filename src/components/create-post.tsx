@@ -357,5 +357,3 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
     </div>
   );
 }
-
-    
