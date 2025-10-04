@@ -380,18 +380,16 @@ export function Post(props: PostProps) {
 
   const isAuthor = user && user.uid === authorId;
 
-  // Embla carousel hooks for the image viewer
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false, startIndex: imageViewerStartIndex });
   const scrollPrev = useCallback(() => emblaApi && emblaApi.scrollPrev(), [emblaApi]);
   const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
   
   useEffect(() => {
     if (emblaApi) {
-        emblaApi.scrollTo(imageViewerStartIndex, true); // Instantly jump to start index
+        emblaApi.scrollTo(imageViewerStartIndex, true); 
     }
   }, [emblaApi, imageViewerStartIndex, isImageViewerOpen]);
 
-  // Effect to generate video thumbnail
   useEffect(() => {
     if (isVideo && media[0].url && !media[0].url.startsWith('blob:')) {
       const video = document.createElement('video');
@@ -401,7 +399,7 @@ export function Post(props: PostProps) {
       video.playsInline = true;
 
       const onCanPlay = () => {
-        video.currentTime = 0.1; // Seek to a very early frame
+        video.currentTime = 0.1;
       };
 
       const onSeeked = () => {
@@ -413,7 +411,6 @@ export function Post(props: PostProps) {
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
           setVideoThumbnail(canvas.toDataURL('image/jpeg'));
         }
-        // Cleanup listeners
         video.removeEventListener('canplay', onCanPlay);
         video.removeEventListener('seeked', onSeeked);
       };
@@ -458,7 +455,6 @@ export function Post(props: PostProps) {
 }, [isVideo]);
 
 
-  // Effect to fetch comments when the image viewer is opened
   useEffect(() => {
     let unsubscribe = () => {};
     if (isImageViewerOpen && db) {
@@ -495,7 +491,7 @@ export function Post(props: PostProps) {
       if (success) {
         setCommentCount(prev => prev + 1);
       }
-      return success; // Indicate success
+      return success;
     } catch (error) {
         toast({ variant: 'destructive', description: "Failed to post reply." });
         console.error("Failed to add comment:", error);
@@ -671,7 +667,6 @@ export function Post(props: PostProps) {
     video.addEventListener('play', handlePlay);
     video.addEventListener('pause', handlePause);
     
-    // Cleanup
     return () => {
         if (video && document.body.contains(video)) {
             video.removeEventListener('play', handlePlay);
@@ -811,14 +806,14 @@ export function Post(props: PostProps) {
                     ref={videoRef}
                     src={media[0].url}
                     poster={videoThumbnail || ''}
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-contain max-h-[80vh]"
                     playsInline
                     loop
                   />
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-black/10 opacity-0 group-hover/video:opacity-100 transition-opacity">
                       {isFeedVideoPlaying ? <Pause className="h-12 w-12 text-white/70" fill="currentColor" /> : <Play className="h-12 w-12 text-white/70" fill="currentColor" />}
                   </div>
-                   <div className="absolute md:top-2 md:right-2 bottom-2 left-2 right-2 md:left-auto md:bottom-auto flex md:flex-col justify-around md:justify-start gap-2 z-10">
+                   <div className="absolute bottom-2 left-2 right-2 md:left-auto md:top-2 md:right-2 md:bottom-auto flex md:flex-col justify-around md:justify-start gap-2 z-10">
                         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full bg-black/50 hover:bg-black/75 text-white hover:text-white" onClick={handleMuteToggle}>
                            {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
                         </Button>
@@ -856,7 +851,7 @@ export function Post(props: PostProps) {
                   />
               </div>
             ) : imageCount > 1 ? (
-              <div className={cn("grid h-full gap-0.5", gridClasses)}>
+              <div className={cn("grid h-full gap-0.5 aspect-video", gridClasses)}>
                 {media.map((item, index) => (
                    item.url && <div 
                       key={index} 
@@ -993,7 +988,6 @@ export function Post(props: PostProps) {
                 >
                     <DialogTitle className="sr-only">Image Viewer</DialogTitle>
                     
-                    {/* Main Image Content */}
                     <div className="flex-1 flex flex-col min-h-0 md:h-full">
                         <div className="relative flex-1 w-full h-full flex items-center justify-center group/viewer">
                             <div className="overflow-hidden w-full h-full" ref={emblaRef}>
@@ -1020,7 +1014,6 @@ export function Post(props: PostProps) {
                         </div>
                     </div>
 
-                    {/* Sidebar with Post and Comments */}
                     <aside className="w-full md:w-[380px] md:h-full bg-background flex flex-col overflow-y-hidden flex-shrink-0 max-h-[40vh] md:max-h-full">
                         <div className="flex-1 flex flex-col min-h-0">
                             <ScrollArea className="flex-1">

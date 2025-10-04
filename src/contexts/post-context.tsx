@@ -4,11 +4,11 @@
 import type { ReactNode } from 'react';
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { PostType } from '@/lib/data';
-import type { Media } from '@/components/create-post';
+import type { Media, UploadProgress } from '@/components/create-post';
 import { useAuth } from '@/hooks/use-auth';
 import { db, storage } from '@/lib/firebase/config';
 import { collection, addDoc, serverTimestamp, getDocs, query, type Timestamp, doc, updateDoc, runTransaction, deleteDoc, orderBy, getDoc, setDoc, writeBatch, limit, onSnapshot, where } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytesResumable, getDownloadURL, type UploadTaskSnapshot } from 'firebase/storage';
 import { formatTimestamp } from '@/lib/utils';
 import type { ReplyMedia } from '@/components/create-comment';
 import { getRecentPosts } from '@/app/(app)/home/actions';
@@ -18,7 +18,7 @@ type PostContextType = {
   newForYouPosts: PostType[];
   loadingForYou: boolean;
   showNewForYouPosts: () => void;
-  addPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }) => Promise<PostType | null>;
+  addPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }, onProgress: (progress: UploadProgress) => void) => Promise<PostType | null>;
   editPost: (postId: string, data: { text:string }) => Promise<void>;
   deletePost: (postId: string) => Promise<void>;
   addVote: (postId: string, choiceIndex: number) => Promise<void>;
@@ -34,7 +34,6 @@ type PostContextType = {
 
 const PostContext = createContext<PostContextType | undefined>(undefined);
 
-// Simple keyword extraction logic
 const commonStopWords = new Set(['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', 'her', 'hers', 'herself', 'it', 'its', 'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that', 'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while', 'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't', 'can', 'will', 'just', 'don', 'should', 'now']);
 
 function extractKeywords(text: string): string[] {
@@ -94,13 +93,11 @@ export function PostProvider({ children }: { children: ReactNode }) {
   const fetchForYouPosts = useCallback(async (options: { limit?: number; lastPostId?: string } = {}) => {
       if (!options.lastPostId) setLoadingForYou(true);
       try {
-          // If we have prefetched posts and we're fetching the next page, use them.
           if (options.lastPostId && prefetchedPosts.length > 0) {
               const postsToAppend = [...prefetchedPosts];
               setForYouPosts(prev => [...prev, ...postsToAppend]);
-              setPrefetchedPosts([]); // Clear prefetched posts
+              setPrefetchedPosts([]); 
               
-              // Trigger a new prefetch for the *next* page
               if (postsToAppend.length > 0) {
                   getRecentPosts({ limit: 20, lastPostId: postsToAppend[postsToAppend.length - 1].id }).then(newPrefetchedPosts => {
                       setPrefetchedPosts(newPrefetchedPosts);
@@ -109,13 +106,11 @@ export function PostProvider({ children }: { children: ReactNode }) {
               return postsToAppend;
           }
 
-          // Standard fetch if no prefetched posts are available or it's the initial load
           const posts = await getRecentPosts(options);
           if (options.lastPostId) {
               setForYouPosts(prev => [...prev, ...posts]);
           } else {
               setForYouPosts(posts);
-              // After the initial load, prefetch the next page.
               if (posts.length > 0) {
                    getRecentPosts({ limit: 20, lastPostId: posts[posts.length - 1].id }).then(newPrefetchedPosts => {
                       setPrefetchedPosts(newPrefetchedPosts);
@@ -210,7 +205,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
 
-  const addPost = async ({ text, media, poll, location, tribeId, communityId }: { text: string; media: Media[]; poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }): Promise<PostType | null> => {
+  const addPost = async ({ text, media, poll, location, tribeId, communityId }: { text: string; media: Media[]; poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }, onProgress: (progress: UploadProgress) => void): Promise<PostType | null> => {
     if (!user || !db || !storage) {
         throw new Error("Cannot add post: user not logged in or Firebase not configured.");
     }
@@ -238,20 +233,38 @@ export function PostProvider({ children }: { children: ReactNode }) {
 
     try {
         const mediaUploads = await Promise.all(media.map(async (m) => {
-            const fileName = `${user.uid}-${Date.now()}-${m.file.name}`;
-            const storagePath = `posts/${user.uid}/${fileName}`;
-            const storageRef = ref(storage, storagePath);
-            await uploadBytes(storageRef, m.file);
-            const downloadURL = await getDownloadURL(storageRef);
+          const fileName = `${user.uid}-${Date.now()}-${m.file.name}`;
+          const storagePath = `posts/${user.uid}/${fileName}`;
+          const storageRef = ref(storage, storagePath);
 
-            const baseMediaData = { url: downloadURL, type: m.type, hint: 'user uploaded content' };
-
-            if (m.type === 'image') {
-              const { width, height } = await getImageDimensions(m.file);
-              return { ...baseMediaData, width, height };
-            }
-
-            return baseMediaData;
+          const uploadTask = uploadBytesResumable(storageRef, m.file);
+          
+          return new Promise((resolve, reject) => {
+              uploadTask.on('state_changed',
+                  (snapshot: UploadTaskSnapshot) => {
+                      const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                      onProgress({ fileName: m.file.name, progress, status: 'uploading' });
+                  },
+                  (error) => {
+                      console.error("Upload error:", error);
+                      onProgress({ fileName: m.file.name, progress: 0, status: 'error', error: error.message });
+                      reject(error);
+                  },
+                  async () => {
+                      onProgress({ fileName: m.file.name, progress: 100, status: 'processing' });
+                      const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                      const baseMediaData = { url: downloadURL, type: m.type, hint: 'user uploaded content' };
+                      
+                      if (m.type === 'image') {
+                          const { width, height } = await getImageDimensions(m.file);
+                          resolve({ ...baseMediaData, width, height });
+                      } else {
+                          resolve(baseMediaData);
+                      }
+                      onProgress({ fileName: m.file.name, progress: 100, status: 'success' });
+                  }
+              );
+          });
         }));
         
         const postDataForDb = {
@@ -343,7 +356,6 @@ export function PostProvider({ children }: { children: ReactNode }) {
       });
     } catch (error) {
       console.error("Failed to update vote in Firestore:", error);
-      // Re-fetch data to correct optimistic update
       fetchForYouPosts();
     }
   };
@@ -361,7 +373,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
             const fileName = `${user.uid}-comment-${Date.now()}-${m.file.name}`;
             const storagePath = `comments/${postId}/${fileName}`;
             const storageRef = ref(storage, storagePath);
-            await uploadBytes(storageRef, m.file);
+            await uploadBytesResumable(storageRef, m.file);
             const downloadURL = await getDownloadURL(storageRef);
             return { url: downloadURL, type: m.type, width, height, hint: 'user uploaded reply' };
         }));
@@ -404,7 +416,6 @@ export function PostProvider({ children }: { children: ReactNode }) {
     const likeRef = doc(db, 'users', user.uid, 'likes', postId);
     const shouldUnlike = currentlyLiked;
 
-    // Optimistic UI update
     const updater = (posts: PostType[]) => posts.map(p => 
         p.id === postId 
         ? { ...p, likes: p.likes + (shouldUnlike ? -1 : 1) } 
@@ -443,7 +454,6 @@ export function PostProvider({ children }: { children: ReactNode }) {
         }
     } catch (error) {
         console.error("Error updating likes:", error);
-         // Revert optimistic update on error
         const revertUpdater = (posts: PostType[]) => posts.map(p => 
             p.id === postId 
             ? { ...p, likes: p.likes + (shouldUnlike ? 1 : -1) } 
