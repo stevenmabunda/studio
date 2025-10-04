@@ -32,7 +32,7 @@ const EMOJIS = [
     '😀', '😂', '😍', '🤔', '😭', '🙏', '❤️', '🔥', '👍', '⚽️', '🥅', '🏆', '🎉', '👏', '🚀', '💯'
 ];
 
-export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }, onProgress: (progress: UploadProgress) => void) => Promise<void>, tribeId?: string, communityId?: string }) {
+export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }, onProgress: (progress: UploadProgress) => void) => Promise<any>, tribeId?: string, communityId?: string }) {
   const { user } = useAuth();
   const [text, setText] = useState("");
   const [media, setMedia] = useState<Media[]>([]);
