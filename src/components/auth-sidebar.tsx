@@ -21,15 +21,15 @@ export function AuthSidebar() {
                 <ul className="space-y-3 text-lg text-foreground">
                     <li className="flex items-center gap-3">
                         <MessageCircle className="h-6 w-6 text-primary" />
-                        <span>Post about your favourite teams & players</span>
+                        <span>Post your football hot-takes</span>
                     </li>
                     <li className="flex items-center gap-3">
                         <Users className="h-6 w-6 text-primary" />
-                        <span>Follow and banter with like-minded or rival fans</span>
+                        <span>Follow your favourite creators and teams</span>
                     </li>
                     <li className="flex items-center gap-3">
                         <BarChart2 className="h-6 w-6 text-primary" />
-                        <span>React to live scores and play-by-play action</span>
+                        <span>Join football conversations as they happen</span>
                     </li>
                 </ul>
 
@@ -44,11 +44,11 @@ export function AuthSidebar() {
                 </div>
             </div>
              <div className="mt-auto text-sm text-muted-foreground">
-                <Link href="#" className="hover:underline">Privacy</Link>
+                <Link href="/privacy" className="hover:underline">Privacy</Link>
                 <span className="mx-1">·</span>
-                <Link href="#" className="hover:underline">Terms</Link>
+                <Link href="/terms" className="hover:underline">Terms</Link>
                  <span className="mx-1">·</span>
-                <Link href="#" className="hover:underline">Help</Link>
+                <Link href="/help" className="hover:underline">Help</Link>
             </div>
         </aside>
     );
