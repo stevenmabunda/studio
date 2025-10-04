@@ -811,7 +811,7 @@ export function Post(props: PostProps) {
                     ref={videoRef}
                     src={media[0].url}
                     poster={videoThumbnail || ''}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain"
                     playsInline
                     loop
                   />
