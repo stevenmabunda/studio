@@ -118,7 +118,7 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background-color: hsl(var(--muted-foreground) / 0.3);
+    background-color: transparent;
     border-radius: 10px;
     border: 2px solid transparent;
     background-clip: content-box;
@@ -131,7 +131,7 @@
   /* Custom Scrollbar for Firefox */
   html {
     scrollbar-width: thin;
-    scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+    scrollbar-color: transparent transparent;
   }
 
 
