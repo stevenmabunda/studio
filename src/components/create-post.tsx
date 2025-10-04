@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -68,6 +67,22 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
         }));
         setMedia(newMedia);
     }
+  };
+  
+  const handleCapture = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const fileType = file.type.startsWith('image/') ? 'image' : 'video';
+    
+    media.forEach(m => URL.revokeObjectURL(m.previewUrl));
+    setShowPoll(false);
+    
+    setMedia([{
+      file,
+      previewUrl: URL.createObjectURL(file),
+      type: fileType,
+    }]);
   };
 
   const removeMedia = (index: number) => {
@@ -306,7 +321,7 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
                 accept="video/*,image/*"
                 capture="user"
                 ref={captureInputRef}
-                onChange={handleFileChange}
+                onChange={handleCapture}
                 className="hidden"
                 disabled={posting}
               />
