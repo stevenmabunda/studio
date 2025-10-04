@@ -8,7 +8,7 @@ import type { Media } from '@/components/create-post';
 import { useAuth } from '@/hooks/use-auth';
 import { db, storage } from '@/lib/firebase/config';
 import { collection, addDoc, serverTimestamp, getDocs, query, type Timestamp, doc, updateDoc, runTransaction, deleteDoc, orderBy, getDoc, setDoc, writeBatch, limit, onSnapshot, where } from 'firebase/firestore';
-import { ref, uploadBytesResumable, getDownloadURL, type UploadTaskSnapshot } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { formatTimestamp } from '@/lib/utils';
 import type { ReplyMedia } from '@/components/create-comment';
 import { getRecentPosts } from '@/app/(app)/home/actions';
@@ -211,9 +211,8 @@ export function PostProvider({ children }: { children: ReactNode }) {
     }
     
     const createdAt = new Date();
-    const tempId = `temp_${Date.now()}`;
     const optimisticPost: PostType = {
-      id: tempId,
+      id: `temp_${Date.now()}`,
       authorId: user.uid,
       authorName: user.displayName || 'Anonymous User',
       authorHandle: user.email?.split('@')[0] || 'user',
@@ -232,38 +231,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
     setForYouPosts(prev => [optimisticPost, ...prev]);
 
     try {
-        const mediaUploads = await Promise.all(media.map(async (m) => {
-          const fileName = `${user.uid}-${Date.now()}-${m.file.name}`;
-          const storagePath = `posts/${user.uid}/${fileName}`;
-          const storageRef = ref(storage, storagePath);
-
-          const uploadTask = uploadBytesResumable(storageRef, m.file);
-          
-          return new Promise((resolve, reject) => {
-              uploadTask.on('state_changed',
-                  (snapshot: UploadTaskSnapshot) => {
-                      // Progress logic removed
-                  },
-                  (error) => {
-                      console.error("Upload error:", error);
-                      reject(error);
-                  },
-                  async () => {
-                      const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                      const baseMediaData = { url: downloadURL, type: m.type, hint: 'user uploaded content' };
-                      
-                      if (m.type === 'image') {
-                          const { width, height } = await getImageDimensions(m.file);
-                          resolve({ ...baseMediaData, width, height });
-                      } else {
-                          resolve(baseMediaData);
-                      }
-                  }
-              );
-          });
-        }));
-        
-        const postDataForDb = {
+        const postDataForDb: any = {
           authorId: user.uid,
           authorName: user.displayName || 'Anonymous User',
           authorHandle: user.email?.split('@')[0] || 'user',
@@ -271,7 +239,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
           content: text,
           createdAt: serverTimestamp(),
           comments: 0, reposts: 0, likes: 0, views: 0,
-          media: mediaUploads,
+          media: [], // Start with empty media
           ...(poll && { poll }),
           ...(location && { location }),
           ...(tribeId && { tribeId }),
@@ -279,9 +247,33 @@ export function PostProvider({ children }: { children: ReactNode }) {
         };
 
         const docRef = await addDoc(collection(db, "posts"), postDataForDb);
-        const finalPost = { ...optimisticPost, id: docRef.id, media: mediaUploads };
+        
+        // Don't wait for uploads to finish, UI updates optimistically
+        const uploadPromises = media.map(async (m) => {
+            const fileName = `${user.uid}-${Date.now()}-${m.file.name}`;
+            const storagePath = `posts/${user.uid}/${fileName}`;
+            const storageRef = ref(storage, storagePath);
+            await uploadBytes(storageRef, m.file);
+            const downloadURL = await getDownloadURL(storageRef);
+            const baseMediaData = { url: downloadURL, type: m.type, hint: 'user uploaded content' };
+            
+            if (m.type === 'image') {
+                const { width, height } = await getImageDimensions(m.file);
+                return { ...baseMediaData, width, height };
+            }
+            return baseMediaData;
+        });
 
-        const updater = (posts: PostType[]) => posts.map(p => p.id === tempId ? finalPost : p);
+        // After all uploads complete, update the document
+        Promise.all(uploadPromises).then(mediaUploads => {
+            updateDoc(docRef, { media: mediaUploads });
+        }).catch(uploadError => {
+            console.error("Error during media upload, post created without media:", uploadError);
+            // Optionally update the post to indicate failed media upload
+        });
+
+        const finalPost = { ...optimisticPost, id: docRef.id };
+        const updater = (posts: PostType[]) => posts.map(p => p.id === optimisticPost.id ? finalPost : p);
         setForYouPosts(updater);
 
         if (text) {
@@ -296,7 +288,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
         return finalPost;
     } catch (error) {
         console.error("Failed to create post:", error);
-        setForYouPosts(prev => prev.filter(p => p.id !== tempId));
+        setForYouPosts(prev => prev.filter(p => p.id !== optimisticPost.id));
         throw error;
     }
   };
@@ -369,7 +361,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
             const fileName = `${user.uid}-comment-${Date.now()}-${m.file.name}`;
             const storagePath = `comments/${postId}/${fileName}`;
             const storageRef = ref(storage, storagePath);
-            await uploadBytesResumable(storageRef, m.file);
+            await uploadBytes(storageRef, m.file);
             const downloadURL = await getDownloadURL(storageRef);
             return { url: downloadURL, type: m.type, width, height, hint: 'user uploaded reply' };
         }));
@@ -526,3 +518,5 @@ export function usePosts() {
   }
   return context;
 }
+
+    

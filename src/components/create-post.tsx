@@ -4,7 +4,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Image as ImageIcon, X, Film, ListOrdered, Smile, MapPin, Loader2, Trash2 } from "lucide-react";
+import { Image as ImageIcon, X, Film, ListOrdered, Smile, MapPin, Loader2, Trash2, Camera } from "lucide-react";
 import React, { useState, useRef } from "react";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
@@ -32,6 +32,7 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
   
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+  const captureInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   const [showPoll, setShowPoll] = useState(false);
@@ -80,6 +81,7 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
     });
     if (imageInputRef.current) imageInputRef.current.value = "";
     if (videoInputRef.current) videoInputRef.current.value = "";
+    if (captureInputRef.current) captureInputRef.current.value = "";
   }
 
   const handlePost = async () => {
@@ -112,6 +114,7 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
         setLocation(null);
         if (imageInputRef.current) imageInputRef.current.value = "";
         if (videoInputRef.current) videoInputRef.current.value = "";
+        if (captureInputRef.current) captureInputRef.current.value = "";
     } catch (error) {
         console.error("Failed to create post:", error);
         toast({ variant: 'destructive', description: "Failed to create post. Please try again." });
@@ -293,8 +296,16 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
                <input
                 type="file"
                 accept="video/*"
-                capture="user"
                 ref={videoInputRef}
+                onChange={handleFileChange}
+                className="hidden"
+                disabled={posting}
+              />
+              <input
+                type="file"
+                accept="video/*,image/*"
+                capture="user"
+                ref={captureInputRef}
                 onChange={handleFileChange}
                 className="hidden"
                 disabled={posting}
@@ -304,6 +315,9 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
               </Button>
                <Button variant="ghost" size="icon" onClick={() => videoInputRef.current?.click()} disabled={!!hasContent || posting}>
                 <Film className="h-5 w-5 text-primary" />
+              </Button>
+              <Button variant="ghost" size="icon" onClick={() => captureInputRef.current?.click()} disabled={!!hasContent || posting}>
+                <Camera className="h-5 w-5 text-primary" />
               </Button>
               <Button variant="ghost" size="icon" onClick={togglePoll} disabled={!!hasContent || posting}>
                 <ListOrdered className="h-5 w-5 text-primary" />
@@ -343,3 +357,5 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
     </div>
   );
 }
+
+    
