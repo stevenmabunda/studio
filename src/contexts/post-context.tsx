@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import type { ReactNode } from 'react';
@@ -211,8 +212,26 @@ export function PostProvider({ children }: { children: ReactNode }) {
     }
     
     const createdAt = new Date();
+    
+    const postDataForDb: any = {
+        authorId: user.uid,
+        authorName: user.displayName || 'Anonymous User',
+        authorHandle: user.email?.split('@')[0] || 'user',
+        authorAvatar: user.photoURL || 'https://placehold.co/40x40.png',
+        content: text,
+        createdAt: serverTimestamp(),
+        comments: 0, reposts: 0, likes: 0, views: 0,
+        media: [], // Start with empty media
+        ...(poll && { poll }),
+        ...(location && { location }),
+        ...(tribeId && { tribeId }),
+        ...(communityId && { communityId }),
+    };
+
+    const docRef = await addDoc(collection(db, "posts"), postDataForDb);
+    
     const optimisticPost: PostType = {
-      id: `temp_${Date.now()}`,
+      id: docRef.id,
       authorId: user.uid,
       authorName: user.displayName || 'Anonymous User',
       authorHandle: user.email?.split('@')[0] || 'user',
@@ -230,67 +249,44 @@ export function PostProvider({ children }: { children: ReactNode }) {
     
     setForYouPosts(prev => [optimisticPost, ...prev]);
 
-    try {
-        const postDataForDb: any = {
-          authorId: user.uid,
-          authorName: user.displayName || 'Anonymous User',
-          authorHandle: user.email?.split('@')[0] || 'user',
-          authorAvatar: user.photoURL || 'https://placehold.co/40x40.png',
-          content: text,
-          createdAt: serverTimestamp(),
-          comments: 0, reposts: 0, likes: 0, views: 0,
-          media: [], // Start with empty media
-          ...(poll && { poll }),
-          ...(location && { location }),
-          ...(tribeId && { tribeId }),
-          ...(communityId && { communityId }),
-        };
-
-        const docRef = await addDoc(collection(db, "posts"), postDataForDb);
+    // Don't wait for uploads to finish, UI updates optimistically
+    const uploadPromises = media.map(async (m) => {
+        const fileName = `${user.uid}-${Date.now()}-${m.file.name}`;
+        const storagePath = `posts/${user.uid}/${fileName}`;
+        const storageRef = ref(storage, storagePath);
+        await uploadBytes(storageRef, m.file);
+        const downloadURL = await getDownloadURL(storageRef);
+        const baseMediaData = { url: downloadURL, type: m.type, hint: 'user uploaded content' };
         
-        // Don't wait for uploads to finish, UI updates optimistically
-        const uploadPromises = media.map(async (m) => {
-            const fileName = `${user.uid}-${Date.now()}-${m.file.name}`;
-            const storagePath = `posts/${user.uid}/${fileName}`;
-            const storageRef = ref(storage, storagePath);
-            await uploadBytes(storageRef, m.file);
-            const downloadURL = await getDownloadURL(storageRef);
-            const baseMediaData = { url: downloadURL, type: m.type, hint: 'user uploaded content' };
-            
-            if (m.type === 'image') {
-                const { width, height } = await getImageDimensions(m.file);
-                return { ...baseMediaData, width, height };
-            }
-            return baseMediaData;
-        });
-
-        // After all uploads complete, update the document
-        Promise.all(uploadPromises).then(mediaUploads => {
-            updateDoc(docRef, { media: mediaUploads });
-        }).catch(uploadError => {
-            console.error("Error during media upload, post created without media:", uploadError);
-            // Optionally update the post to indicate failed media upload
-        });
-
-        const finalPost = { ...optimisticPost, id: docRef.id };
-        const updater = (posts: PostType[]) => posts.map(p => p.id === optimisticPost.id ? finalPost : p);
-        setForYouPosts(updater);
-
-        if (text) {
-          const topics = extractKeywords(text);
-          if (topics.length > 0 && db) {
-            const topicsCollectionRef = collection(db, 'topics');
-            const batch = writeBatch(db);
-            topics.forEach(topic => batch.set(doc(topicsCollectionRef), { topic, createdAt: serverTimestamp() }));
-            await batch.commit();
-          }
+        if (m.type === 'image') {
+            const { width, height } = await getImageDimensions(m.file);
+            return { ...baseMediaData, width, height };
         }
-        return finalPost;
-    } catch (error) {
-        console.error("Failed to create post:", error);
-        setForYouPosts(prev => prev.filter(p => p.id !== optimisticPost.id));
-        throw error;
+        return baseMediaData;
+    });
+
+    // After all uploads complete, update the document
+    Promise.all(uploadPromises).then(mediaUploads => {
+        updateDoc(docRef, { media: mediaUploads });
+        const finalPost = { ...optimisticPost, media: mediaUploads };
+        setForYouPosts(prev => prev.map(p => p.id === optimisticPost.id ? finalPost : p));
+    }).catch(uploadError => {
+        console.error("Error during media upload, post created without media:", uploadError);
+        // Optionally update the post to indicate failed media upload
+    });
+
+    if (text) {
+      const topics = extractKeywords(text);
+      if (topics.length > 0 && db) {
+        const topicsCollectionRef = collection(db, 'topics');
+        const batch = writeBatch(db);
+        topics.forEach(topic => batch.set(doc(topicsCollectionRef), { topic, createdAt: serverTimestamp() }));
+        await batch.commit();
+      }
     }
+    
+    const finalPost = { ...optimisticPost, id: docRef.id };
+    return finalPost;
   };
 
   const editPost = async (postId: string, data: { text: string }) => {

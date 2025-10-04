@@ -53,6 +53,7 @@ export default function HomePage() {
   const [isHeaderHidden, setIsHeaderHidden] = useState(false);
   const lastScrollY = useRef(0);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [hasFetchedInitial, setHasFetchedInitial] = useState(false);
   
   useEffect(() => {
     if (user && db) {
@@ -71,6 +72,13 @@ export default function HomePage() {
     document.title = 'Home | BHOLO';
   }, []);
   
+  useEffect(() => {
+    if (!hasFetchedInitial) {
+        fetchForYouPosts({ limit: 20 });
+        setHasFetchedInitial(true);
+    }
+  }, [hasFetchedInitial, fetchForYouPosts]);
+
   useEffect(() => {
     if (!loadingForYou && forYouPosts.length > 0) {
       try {
