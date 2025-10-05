@@ -191,7 +191,7 @@ function ReplyDialog({ post, onReply, open, onOpenChange }: { post: PostType, on
                         </div>
                     </div>
                 </div>
-                <CreateComment onComment={handleCreateReply} />
+                <CreateComment onComment={handleCreateReply} isDialog={true} />
             </DialogContent>
         </Dialog>
     );
@@ -973,7 +973,7 @@ export function Post(props: PostProps) {
                     
                     <div className="flex-1 flex flex-col min-h-0 md:h-full relative">
                         {/* Mobile Header for Image Viewer */}
-                        <div className="md:hidden absolute top-0 left-0 right-0 z-20 p-2 space-y-2 bg-gradient-to-b from-black/60 to-transparent">
+                         <div className="md:hidden absolute top-0 left-0 right-0 z-20 p-2 space-y-2 bg-gradient-to-b from-black/60 to-transparent">
                              <div className="flex items-center justify-between">
                                 <DialogClose asChild>
                                     <Button variant="ghost" size="icon" className="h-9 w-9 text-white rounded-full bg-black/30 hover:bg-black/50 -ml-1">
@@ -994,7 +994,7 @@ export function Post(props: PostProps) {
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </div>
-                            <div className="flex items-center justify-between pt-1">
+                             <div className="flex items-center justify-between pt-1">
                                 <div className="flex items-center gap-3">
                                     <Avatar className="h-9 w-9">
                                         <AvatarImage src={authorAvatar} alt={authorName} />
@@ -1040,44 +1040,86 @@ export function Post(props: PostProps) {
                                 <ChevronRight className="h-6 w-6"/>
                             </Button>
                         </div>
-                        
-                        {/* Mobile Footer for Image Viewer */}
-                        <div className="md:hidden z-10 p-2 bg-gradient-to-t from-black/60 to-transparent">
-                            <div className="flex justify-around items-center text-white/90 rounded-full bg-black/30 backdrop-blur-sm h-12 px-4">
-                                <Button variant="ghost" className="flex items-center gap-2 hover:bg-white/20" onClick={handleCommentClick}>
-                                    <MessageCircle className="h-5 w-5" />
-                                    {commentCount > 0 && <span className="font-semibold">{commentCount}</span>}
-                                </Button>
-                                 <Button variant="ghost" className={cn("flex items-center gap-2 hover:bg-white/20", isLiked && "text-red-500")} onClick={handleActionClick(handleLike)}>
-                                    <Heart className={cn("h-5 w-5", isLiked && "fill-current")} />
-                                    {likeCount > 0 && <span className="font-semibold">{likeCount}</span>}
-                                </Button>
-                                 <Button variant="ghost" className="flex items-center gap-2 hover:bg-white/20" onClick={(e) => { e.stopPropagation(); setShareSheetOpen(true); }}>
-                                    <Share2 className="h-5 w-5" />
-                                </Button>
-                            </div>
-                        </div>
                     </div>
 
-                    <aside className="w-full md:w-[380px] md:h-full bg-background flex-col overflow-y-hidden flex-shrink-0 max-h-[40vh] md:max-h-full hidden md:flex">
+                    <aside className="w-full md:w-[380px] md:h-full bg-background flex-col overflow-y-hidden flex-shrink-0 max-h-[40vh] md:max-h-full flex">
                         <div className="flex-1 flex flex-col min-h-0">
                             <ScrollArea className="flex-1">
-                                <div className="flex space-x-3 md:space-x-4 p-3 md:p-4">
-                                    <Link href={`/profile/${authorId}`} className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-                                        <Avatar>
-                                        <AvatarImage src={authorAvatar} alt={authorName} data-ai-hint="user avatar" />
-                                        <AvatarFallback>{authorName.charAt(0)}</AvatarFallback>
-                                        </Avatar>
-                                    </Link>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2 flex-wrap">
+                                <div className="p-3 md:p-4">
+                                     <div className="flex items-center gap-3">
+                                        <Link href={`/profile/${authorId}`} className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                                            <Avatar>
+                                                <AvatarImage src={authorAvatar} alt={authorName} data-ai-hint="user avatar" />
+                                                <AvatarFallback>{authorName.charAt(0)}</AvatarFallback>
+                                            </Avatar>
+                                        </Link>
+                                        <div className="flex-1 min-w-0">
                                             <Link href={`/profile/${authorId}`} className="font-bold hover:underline truncate" onClick={(e) => e.stopPropagation()}>
                                                 {authorName}
                                             </Link>
-                                            <span className="text-sm text-muted-foreground truncate">@{authorHandle}</span>
+                                            <span className="text-sm text-muted-foreground ml-2 truncate">@{authorHandle}</span>
                                         </div>
-                                        <p className="mt-2 whitespace-pre-wrap text-sm">{linkify(content)}</p>
                                     </div>
+                                    <p className="mt-2 whitespace-pre-wrap text-sm">{linkify(content)}</p>
+                                </div>
+                                <div className="border-t px-3 md:px-4 py-2 flex items-center justify-around text-muted-foreground">
+                                    <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-primary" onClick={handleCommentClick}>
+                                        <MessageCircle className="h-5 w-5" />
+                                        <span>{commentCount > 0 ? commentCount : ''}</span>
+                                    </Button>
+                                    <Button variant="ghost" size="sm" className={cn("flex items-center gap-2", isReposted ? 'text-green-500' : 'hover:text-green-500')} onClick={handleActionClick(handleRepost)}>
+                                        <Repeat className="h-5 w-5" />
+                                        <span>{repostCount > 0 ? repostCount : ''}</span>
+                                    </Button>
+                                    <Button variant="ghost" size="sm" className={cn("flex items-center gap-2", isLiked ? 'text-red-500' : 'hover:text-red-500')} onClick={handleActionClick(handleLike)}>
+                                        <Heart className={cn("h-5 w-5", isLiked && 'fill-current')} />
+                                        <span>{likeCount > 0 ? likeCount : ''}</span>
+                                    </Button>
+                                    <Button variant="ghost" size="icon" className={cn("hover:text-primary", isBookmarked && "text-primary")} onClick={handleActionClick(handleBookmark)}>
+                                        <Bookmark className={cn("h-5 w-5", isBookmarked && 'fill-current')} />
+                                    </Button>
+                                    <Sheet open={isShareSheetOpen} onOpenChange={setShareSheetOpen}>
+                                        <SheetTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="hover:text-primary" onClick={(e) => e.stopPropagation()}>
+                                                <Share2 className="h-5 w-5" />
+                                            </Button>
+                                        </SheetTrigger>
+                                        <SheetContent side="bottom" className="rounded-t-lg" onClick={(e) => e.stopPropagation()}>
+                                            <SheetHeader>
+                                                <SheetTitle>Share Post</SheetTitle>
+                                            </SheetHeader>
+                                            <div className="grid grid-cols-4 gap-4 py-4">
+                                                <a href={getShareUrl('twitter')} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center group">
+                                                    <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
+                                                        <TwitterIcon className="h-7 w-7" />
+                                                    </div>
+                                                    <span className="text-xs">Twitter</span>
+                                                </a>
+                                                <a href={getShareUrl('facebook')} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center group">
+                                                    <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
+                                                        <FacebookIcon className="h-7 w-7" />
+                                                    </div>
+                                                    <span className="text-xs">Facebook</span>
+                                                </a>
+                                                <a href={getShareUrl('whatsapp')} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center group">
+                                                    <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
+                                                        <WhatsAppIcon className="h-7 w-7" />
+                                                    </div>
+                                                    <span className="text-xs">WhatsApp</span>
+                                                </a>
+                                                <button onClick={handleCopyLink} className="flex flex-col items-center gap-2 text-center group">
+                                                    <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
+                                                        <Copy className="h-7 w-7" />
+                                                    </div>
+                                                    <span className="text-xs">Copy Link</span>
+                                                </button>
+                                            </div>
+                                        </SheetContent>
+                                    </Sheet>
+                                </div>
+
+                                <div className="border-t">
+                                     <CreateComment onComment={handleCreateComment} isDialog={true} />
                                 </div>
                                 <div className="divide-y divide-border border-t">
                                     {loadingComments ? (
@@ -1089,9 +1131,6 @@ export function Post(props: PostProps) {
                                     )}
                                 </div>
                             </ScrollArea>
-                            <div className="border-t">
-                                <CreateComment onComment={handleCreateComment} />
-                            </div>
                         </div>
                     </aside>
                 </DialogContent>

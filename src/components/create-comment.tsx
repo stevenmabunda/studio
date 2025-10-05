@@ -25,7 +25,7 @@ const EMOJIS = [
     '😀', '😂', '😍', '🤔', '😭', '🙏', '❤️', '🔥', '👍', '⚽️', '🥅', '🏆', '🎉', '👏', '🚀', '💯'
 ];
 
-export function CreateComment({ onComment }: { onComment: (data: { text: string; media: ReplyMedia[] }) => Promise<any> }) {
+export function CreateComment({ onComment, isDialog = false }: { onComment: (data: { text: string; media: ReplyMedia[] }) => Promise<any>, isDialog?: boolean }) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [text, setText] = useState("");
@@ -114,7 +114,7 @@ export function CreateComment({ onComment }: { onComment: (data: { text: string;
   const guestAvatarSrc = "https://placehold.co/40x40.png";
 
   return (
-    <div className="p-3 md:p-4 border-t">
+    <div className={cn("p-3 md:p-4", !isDialog && "border-t")}>
       <div className="flex space-x-3 md:space-x-4">
         <Avatar>
           <AvatarImage src={user?.photoURL || guestAvatarSrc} alt={user?.displayName || "User"} data-ai-hint="user avatar" />
