@@ -799,7 +799,7 @@ export function Post(props: PostProps) {
         {poll && <Poll poll={poll} postId={id} />}
         
         {mediaExists && (
-          <div className={cn("mt-3 rounded-2xl overflow-hidden border", isVideo && 'relative w-full bg-black flex items-center justify-center')}>
+          <div className={cn("mt-3 rounded-2xl overflow-hidden border", isVideo && 'relative w-full bg-black flex items-center justify-center max-h-[80vh]')}>
             {isVideo && media[0].url ? (
                 <div className="relative w-full h-full cursor-pointer group/video" onClick={handleVideoPlayClick}>
                   <video
@@ -988,7 +988,51 @@ export function Post(props: PostProps) {
                 >
                     <DialogTitle className="sr-only">Image Viewer</DialogTitle>
                     
-                    <div className="flex-1 flex flex-col min-h-0 md:h-full">
+                    <div className="flex-1 flex flex-col min-h-0 md:h-full relative">
+                        {/* Mobile Header for Image Viewer */}
+                         <div className="md:hidden absolute top-0 left-0 right-0 z-10 p-4 bg-gradient-to-b from-black/50 to-transparent">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <Avatar className="h-9 w-9">
+                                        <AvatarImage src={authorAvatar} alt={authorName} />
+                                        <AvatarFallback>{authorName.charAt(0)}</AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                        <p className="font-bold text-white text-sm">{authorName}</p>
+                                        <p className="text-xs text-neutral-300">@{authorHandle}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                     {!isAuthor && user && (
+                                         <FollowButton
+                                            profileId={authorId}
+                                            isFollowing={isFollowing}
+                                            isLoading={followLoading}
+                                            onToggleFollow={setIsFollowing}
+                                        />
+                                     )}
+                                     <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="h-9 w-9 text-white">
+                                                <MoreHorizontal />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent>
+                                            <DropdownMenuItem onSelect={handleCopyLink}>
+                                                <Copy className="mr-2 h-4 w-4" />
+                                                Copy link
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                    <DialogClose asChild>
+                                        <Button variant="ghost" size="icon" className="h-9 w-9 text-white">
+                                            <X />
+                                        </Button>
+                                    </DialogClose>
+                                </div>
+                            </div>
+                        </div>
+
                         <div className="relative flex-1 w-full h-full flex items-center justify-center group/viewer">
                             <div className="overflow-hidden w-full h-full" ref={emblaRef}>
                                 <div className="flex h-full">
@@ -1014,7 +1058,7 @@ export function Post(props: PostProps) {
                         </div>
                     </div>
 
-                    <aside className="w-full md:w-[380px] md:h-full bg-background flex flex-col overflow-y-hidden flex-shrink-0 max-h-[40vh] md:max-h-full">
+                    <aside className="w-full md:w-[380px] md:h-full bg-background flex-col overflow-y-hidden flex-shrink-0 max-h-[40vh] md:max-h-full hidden md:flex">
                         <div className="flex-1 flex flex-col min-h-0">
                             <ScrollArea className="flex-1">
                                 <div className="flex space-x-3 md:space-x-4 p-3 md:p-4">
