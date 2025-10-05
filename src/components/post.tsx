@@ -51,7 +51,7 @@ import { useToast } from "@/hooks/use-toast";
 import { FollowButton } from "./follow-button";
 import { getIsFollowing } from "@/app/(app)/profile/actions";
 import { ScrollArea } from "./ui/scroll-area";
-import { CreateComment, type ReplyMedia } from "./create-comment";
+import { CreateComment } from "./create-comment";
 import { db } from '@/lib/firebase/config';
 import { collection, onSnapshot, orderBy, query, type Timestamp } from "firebase/firestore";
 import { Skeleton } from "./ui/skeleton";
@@ -137,11 +137,11 @@ const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" /></svg>
 );
 
-function ReplyDialog({ post, onReply, open, onOpenChange }: { post: PostType, onReply: (data: { text: string; media: ReplyMedia[] }) => Promise<boolean | null>, open: boolean, onOpenChange: (open: boolean) => void }) {
+function ReplyDialog({ post, onReply, open, onOpenChange }: { post: PostType, onReply: (data: { text: string; media: any[] }) => Promise<boolean | null>, open: boolean, onOpenChange: (open: boolean) => void }) {
     const { toast } = useToast();
     const router = useRouter();
 
-    const handleCreateReply = async (data: { text: string; media: ReplyMedia[] }) => {
+    const handleCreateReply = async (data: { text: string; media: any[] }) => {
         try {
             const success = await onReply(data);
             if (success) {
@@ -484,7 +484,7 @@ export function Post(props: PostProps) {
     return () => unsubscribe();
   }, [isImageViewerOpen, id]);
 
-  const handleCreateComment = async (data: { text: string; media: ReplyMedia[] }) => {
+  const handleCreateComment = async (data: { text: string; media: any[] }) => {
     if (!user || !id) return null;
     try {
       const success = await addComment(id, data);
@@ -810,25 +810,6 @@ export function Post(props: PostProps) {
                     playsInline
                     loop
                   />
-                  <div className="absolute bottom-4 right-4 flex flex-col items-center gap-4 text-white z-10">
-                      <div className="flex flex-col items-center gap-1">
-                          <Button variant="ghost" size="icon" className={cn("h-10 w-10 rounded-full bg-black/50 hover:bg-black/75 text-white hover:text-white", isLiked ? 'text-red-500' : 'hover:text-red-500')} onClick={handleActionClick(handleLike)}>
-                              <Heart className={cn("h-6 w-6", isLiked && 'fill-current')} />
-                          </Button>
-                          <span className="text-xs font-bold drop-shadow-md">{likeCount > 0 ? likeCount : ''}</span>
-                      </div>
-                      <div className="flex flex-col items-center gap-1">
-                          <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full bg-black/50 hover:bg-black/75 text-white hover:text-white" onClick={handleCommentClick}>
-                              <MessageCircle className="h-6 w-6" />
-                          </Button>
-                          <span className="text-xs font-bold drop-shadow-md">{commentCount > 0 ? commentCount : ''}</span>
-                      </div>
-                      <div className="flex flex-col items-center gap-1">
-                          <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full bg-black/50 hover:bg-black/75 text-white hover:text-white" onClick={(e) => { e.stopPropagation(); setShareSheetOpen(true); }}>
-                              <Share2 className="h-6 w-6" />
-                          </Button>
-                      </div>
-                  </div>
                   <div className="absolute top-2 left-2 z-10">
                         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full bg-black/50 hover:bg-black/75 text-white hover:text-white" onClick={handleMuteToggle}>
                            {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
@@ -992,16 +973,16 @@ export function Post(props: PostProps) {
                     
                     <div className="flex-1 flex flex-col min-h-0 md:h-full relative">
                         {/* Mobile Header for Image Viewer */}
-                        <div className="md:hidden absolute top-0 left-0 right-0 z-10 p-4 space-y-4 bg-gradient-to-b from-black/60 to-transparent">
-                            <div className="flex items-center justify-between">
+                        <div className="md:hidden absolute top-0 left-0 right-0 z-20 p-2 space-y-2 bg-gradient-to-b from-black/60 to-transparent">
+                             <div className="flex items-center justify-between">
                                 <DialogClose asChild>
-                                    <Button variant="ghost" size="icon" className="h-9 w-9 text-white">
+                                    <Button variant="ghost" size="icon" className="h-9 w-9 text-white rounded-full bg-black/30 hover:bg-black/50 -ml-1">
                                         <X />
                                     </Button>
                                 </DialogClose>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="h-9 w-9 text-white">
+                                        <Button variant="ghost" size="icon" className="h-9 w-9 text-white rounded-full bg-black/30 hover:bg-black/50 -mr-1">
                                             <MoreHorizontal />
                                         </Button>
                                     </DropdownMenuTrigger>
@@ -1013,7 +994,7 @@ export function Post(props: PostProps) {
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </div>
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between pt-1">
                                 <div className="flex items-center gap-3">
                                     <Avatar className="h-9 w-9">
                                         <AvatarImage src={authorAvatar} alt={authorName} />
@@ -1058,6 +1039,23 @@ export function Post(props: PostProps) {
                             <Button variant="ghost" size="icon" className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 text-white h-10 w-10 bg-black/30 hover:bg-black/50 hover:text-white rounded-full opacity-50 group-hover/viewer:opacity-100 transition-opacity" onClick={scrollNext}>
                                 <ChevronRight className="h-6 w-6"/>
                             </Button>
+                        </div>
+                        
+                        {/* Mobile Footer for Image Viewer */}
+                        <div className="md:hidden z-10 p-2 bg-gradient-to-t from-black/60 to-transparent">
+                            <div className="flex justify-around items-center text-white/90 rounded-full bg-black/30 backdrop-blur-sm h-12 px-4">
+                                <Button variant="ghost" className="flex items-center gap-2 hover:bg-white/20" onClick={handleCommentClick}>
+                                    <MessageCircle className="h-5 w-5" />
+                                    {commentCount > 0 && <span className="font-semibold">{commentCount}</span>}
+                                </Button>
+                                 <Button variant="ghost" className={cn("flex items-center gap-2 hover:bg-white/20", isLiked && "text-red-500")} onClick={handleActionClick(handleLike)}>
+                                    <Heart className={cn("h-5 w-5", isLiked && "fill-current")} />
+                                    {likeCount > 0 && <span className="font-semibold">{likeCount}</span>}
+                                </Button>
+                                 <Button variant="ghost" className="flex items-center gap-2 hover:bg-white/20" onClick={(e) => { e.stopPropagation(); setShareSheetOpen(true); }}>
+                                    <Share2 className="h-5 w-5" />
+                                </Button>
+                            </div>
                         </div>
                     </div>
 
