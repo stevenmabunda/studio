@@ -810,31 +810,33 @@ export function Post(props: PostProps) {
                     playsInline
                     loop
                   />
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-black/10 opacity-0 group-hover/video:opacity-100 transition-opacity">
-                      {isFeedVideoPlaying ? <Pause className="h-12 w-12 text-white/70" fill="currentColor" /> : <Play className="h-12 w-12 text-white/70" fill="currentColor" />}
+                  <div className="absolute bottom-4 right-4 flex flex-col items-center gap-4 text-white z-10">
+                      <div className="flex flex-col items-center gap-1">
+                          <Button variant="ghost" size="icon" className={cn("h-10 w-10 rounded-full bg-black/50 hover:bg-black/75 text-white hover:text-white", isLiked ? 'text-red-500' : 'hover:text-red-500')} onClick={handleActionClick(handleLike)}>
+                              <Heart className={cn("h-6 w-6", isLiked && 'fill-current')} />
+                          </Button>
+                          <span className="text-xs font-bold drop-shadow-md">{likeCount > 0 ? likeCount : ''}</span>
+                      </div>
+                      <div className="flex flex-col items-center gap-1">
+                          <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full bg-black/50 hover:bg-black/75 text-white hover:text-white" onClick={handleCommentClick}>
+                              <MessageCircle className="h-6 w-6" />
+                          </Button>
+                          <span className="text-xs font-bold drop-shadow-md">{commentCount > 0 ? commentCount : ''}</span>
+                      </div>
+                      <div className="flex flex-col items-center gap-1">
+                          <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full bg-black/50 hover:bg-black/75 text-white hover:text-white" onClick={(e) => { e.stopPropagation(); setShareSheetOpen(true); }}>
+                              <Share2 className="h-6 w-6" />
+                          </Button>
+                      </div>
                   </div>
-                   <div className="absolute top-2 right-2 flex flex-col gap-2 z-10">
+                  <div className="absolute top-2 left-2 z-10">
                         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full bg-black/50 hover:bg-black/75 text-white hover:text-white" onClick={handleMuteToggle}>
                            {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
                         </Button>
-                        <div className="flex flex-col items-center gap-1 text-white">
-                           <Button variant="ghost" size="icon" className={cn("h-8 w-8 rounded-full bg-black/50 hover:bg-black/75 text-white hover:text-white", isLiked ? 'text-red-500' : 'hover:text-red-500')} onClick={handleActionClick(handleLike)}>
-                                <Heart className={cn("h-5 w-5", isLiked && 'fill-current')} />
-                           </Button>
-                            <span className="text-xs font-bold">{likeCount > 0 ? likeCount : ''}</span>
-                        </div>
-                         <div className="flex flex-col items-center gap-1 text-white">
-                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full bg-black/50 hover:bg-black/75 text-white hover:text-white" onClick={handleCommentClick}>
-                                <MessageCircle className="h-5 w-5" />
-                            </Button>
-                            <span className="text-xs font-bold">{commentCount > 0 ? commentCount : ''}</span>
-                        </div>
-                        <div className="flex flex-col items-center gap-1 text-white">
-                             <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full bg-black/50 hover:bg-black/75 text-white hover:text-white" onClick={(e) => { e.stopPropagation(); setShareSheetOpen(true); }}>
-                                <Share2 className="h-5 w-5" />
-                            </Button>
-                        </div>
-                    </div>
+                  </div>
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 group-hover/video:opacity-100 transition-opacity">
+                      {isFeedVideoPlaying ? <Pause className="h-12 w-12 text-white/70 drop-shadow-lg" fill="currentColor" /> : <Play className="h-12 w-12 text-white/70 drop-shadow-lg" fill="currentColor" />}
+                  </div>
               </div>
             ) : singleImage && media[0].url ? (
               <div 
@@ -990,7 +992,27 @@ export function Post(props: PostProps) {
                     
                     <div className="flex-1 flex flex-col min-h-0 md:h-full relative">
                         {/* Mobile Header for Image Viewer */}
-                         <div className="md:hidden absolute top-0 left-0 right-0 z-10 p-4 bg-gradient-to-b from-black/50 to-transparent">
+                        <div className="md:hidden absolute top-0 left-0 right-0 z-10 p-4 space-y-4 bg-gradient-to-b from-black/60 to-transparent">
+                            <div className="flex items-center justify-between">
+                                <DialogClose asChild>
+                                    <Button variant="ghost" size="icon" className="h-9 w-9 text-white">
+                                        <X />
+                                    </Button>
+                                </DialogClose>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-9 w-9 text-white">
+                                            <MoreHorizontal />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent>
+                                        <DropdownMenuItem onSelect={handleCopyLink}>
+                                            <Copy className="mr-2 h-4 w-4" />
+                                            Copy link
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <Avatar className="h-9 w-9">
@@ -1002,36 +1024,17 @@ export function Post(props: PostProps) {
                                         <p className="text-xs text-neutral-300">@{authorHandle}</p>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                     {!isAuthor && user && (
-                                         <FollowButton
-                                            profileId={authorId}
-                                            isFollowing={isFollowing}
-                                            isLoading={followLoading}
-                                            onToggleFollow={setIsFollowing}
-                                        />
-                                     )}
-                                     <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="h-9 w-9 text-white">
-                                                <MoreHorizontal />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent>
-                                            <DropdownMenuItem onSelect={handleCopyLink}>
-                                                <Copy className="mr-2 h-4 w-4" />
-                                                Copy link
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                    <DialogClose asChild>
-                                        <Button variant="ghost" size="icon" className="h-9 w-9 text-white">
-                                            <X />
-                                        </Button>
-                                    </DialogClose>
-                                </div>
+                                {!isAuthor && user && (
+                                    <FollowButton
+                                        profileId={authorId}
+                                        isFollowing={isFollowing}
+                                        isLoading={followLoading}
+                                        onToggleFollow={setIsFollowing}
+                                    />
+                                )}
                             </div>
                         </div>
+
 
                         <div className="relative flex-1 w-full h-full flex items-center justify-center group/viewer">
                             <div className="overflow-hidden w-full h-full" ref={emblaRef}>
