@@ -3,7 +3,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Image as ImageIcon, X, Film, ListOrdered, Smile, MapPin, Loader2, Trash2, Camera } from "lucide-react";
+import { Image as ImageIcon, X, Film, ListOrdered, Smile, MapPin, Loader2, Trash2, Camera, Clapperboard } from "lucide-react";
 import React, { useState, useRef } from "react";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
@@ -12,16 +12,30 @@ import { useAuth } from "@/hooks/use-auth";
 import { Input } from "./ui/input";
 import type { PostType } from "@/lib/data";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { Grid } from '@giphy/react-components';
+import { GiphyFetch } from '@giphy/js-fetch-api';
 
 export type Media = {
   file: File;
   previewUrl: string;
-  type: 'image' | 'video';
+  type: 'image' | 'video' | 'gif';
+  url?: string;
+  width?: number;
+  height?: number;
 };
 
 const EMOJIS = [
     '😀', '😂', '😍', '🤔', '😭', '🙏', '❤️', '🔥', '👍', '⚽️', '🥅', '🏆', '🎉', '👏', '🚀', '💯'
 ];
+
+// Configure GiphyFetch with your API key
+const gf = new GiphyFetch(process.env.NEXT_PUBLIC_GIPHY_API_KEY || '');
+
+function GiphyPicker({ onGifClick }: { onGifClick: (gif: any) => void }) {
+  const fetchGifs = (offset: number) => gf.trending({ offset, limit: 10 });
+  return <Grid width={550} columns={3} fetchGifs={fetchGifs} onGifClick={onGifClick} />;
+}
+
 
 export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }) => Promise<any>, tribeId?: string, communityId?: string }) {
   const { user } = useAuth();
@@ -38,6 +52,22 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
   const [pollChoices, setPollChoices] = useState<string[]>(['', '']);
   const [location, setLocation] = useState<string | null>(null);
 
+  const handleCapture = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const fileType = file.type.startsWith('image/') ? 'image' : 'video';
+    
+    media.forEach(m => URL.revokeObjectURL(m.previewUrl));
+    setShowPoll(false);
+    
+    setMedia([{
+      file,
+      previewUrl: URL.createObjectURL(file),
+      type: fileType,
+    }]);
+  };
+  
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
     if (!files.length) return;
@@ -67,22 +97,6 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
         }));
         setMedia(newMedia);
     }
-  };
-  
-  const handleCapture = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const fileType = file.type.startsWith('image/') ? 'image' : 'video';
-    
-    media.forEach(m => URL.revokeObjectURL(m.previewUrl));
-    setShowPoll(false);
-    
-    setMedia([{
-      file,
-      previewUrl: URL.createObjectURL(file),
-      type: fileType,
-    }]);
   };
 
   const removeMedia = (index: number) => {
@@ -197,11 +211,24 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
   const handleEmojiClick = (emoji: string) => {
     setText(prevText => prevText + emoji);
   };
+  
+  const onGifClick = (gif: any, e: React.SyntheticEvent<HTMLElement, Event>) => {
+    e.preventDefault();
+    setMedia([{
+      file: new File([], ''),
+      previewUrl: gif.images.original.url,
+      type: 'gif',
+      url: gif.images.original.url,
+      width: parseInt(gif.images.original.width),
+      height: parseInt(gif.images.original.height)
+    }]);
+  }
 
   const isPostable = text.trim().length > 0 || media.length > 0 || (showPoll && pollChoices.some(c => c.trim()));
   const hasVideo = media.length > 0 && media[0].type === 'video';
+  const hasGif = media.length > 0 && media[0].type === 'gif';
   const hasImages = media.length > 0 && media[0].type === 'image';
-  const hasContent = showPoll || hasVideo || hasImages;
+  const hasContent = showPoll || hasVideo || hasImages || hasGif;
 
   const singleImage = hasImages && media.length === 1;
 
@@ -266,7 +293,7 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
                             <X className="h-4 w-4" />
                         </Button>
                     </div>
-                ) : singleImage ? (
+                ) : singleImage || hasGif ? (
                     <div className="relative">
                         <Image src={media[0].previewUrl} alt="Preview 1" width={500} height={500} className="w-full h-auto object-contain bg-black" />
                         <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-8 w-8 rounded-full bg-black/50 hover:bg-black/75 text-white hover:text-white" onClick={() => removeMedia(0)}>
@@ -334,6 +361,16 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
               <Button variant="ghost" size="icon" onClick={() => captureInputRef.current?.click()} disabled={!!hasContent || posting}>
                 <Camera className="h-5 w-5 text-primary" />
               </Button>
+               <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="icon" disabled={!!hasContent || posting}>
+                    <Clapperboard className="h-5 w-5 text-primary" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[550px] h-[400px] p-0">
+                  <GiphyPicker onGifClick={onGifClick} />
+                </PopoverContent>
+              </Popover>
               <Button variant="ghost" size="icon" onClick={togglePoll} disabled={!!hasContent || posting}>
                 <ListOrdered className="h-5 w-5 text-primary" />
               </Button>

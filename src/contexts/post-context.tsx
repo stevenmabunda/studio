@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import type { ReactNode } from 'react';
@@ -251,6 +249,9 @@ export function PostProvider({ children }: { children: ReactNode }) {
 
     // Don't wait for uploads to finish, UI updates optimistically
     const uploadPromises = media.map(async (m) => {
+        if (m.type === 'gif') {
+            return { url: m.url, type: 'gif', width: m.width, height: m.height, hint: 'giphy content' };
+        }
         const fileName = `${user.uid}-${Date.now()}-${m.file.name}`;
         const storagePath = `posts/${user.uid}/${fileName}`;
         const storageRef = ref(storage, storagePath);
@@ -514,5 +515,3 @@ export function usePosts() {
   }
   return context;
 }
-
-    
