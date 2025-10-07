@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -13,7 +12,7 @@ export function AuthSidebar() {
                 <Link href="/home" className="w-24" aria-label="BHOLO">
                     <Image src="/officialogo.png" alt="BHOLO Logo" width={100} height={40} />
                 </Link>
-                <p className="text-muted-foreground -mt-1">The Football Social Network</p>
+                <p className="text-muted-foreground -mt-1">The Football Banter App</p>
             </div>
             <div className="space-y-4 mt-4">
                 <h2 className="text-3xl font-bold">Kick It with other fans</h2>
