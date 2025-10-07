@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Image as ImageIcon, X, Film, ListOrdered, Smile, MapPin, Loader2, Trash2, Camera, Clapperboard } from "lucide-react";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useContext } from "react";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -13,7 +13,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Input } from "./ui/input";
 import type { PostType } from "@/lib/data";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import { Grid } from '@giphy/react-components';
+import { Grid, SearchBar, SearchContext, SearchContextManager } from '@giphy/react-components';
 import { GiphyFetch } from '@giphy/js-fetch-api';
 
 export type Media = {
@@ -33,8 +33,13 @@ const EMOJIS = [
 const gf = new GiphyFetch(process.env.NEXT_PUBLIC_GIPHY_API_KEY || '');
 
 function GiphyPicker({ onGifClick }: { onGifClick: (gif: any) => void }) {
-  const fetchGifs = (offset: number) => gf.trending({ offset, limit: 10 });
-  return <Grid width={550} columns={3} fetchGifs={fetchGifs} onGifClick={onGifClick} />;
+  const { fetchGifs, searchKey } = useContext(SearchContext);
+  return (
+    <>
+      <SearchBar />
+      <Grid key={searchKey} width={550} columns={3} fetchGifs={fetchGifs} onGifClick={onGifClick} />
+    </>
+  );
 }
 
 
@@ -368,8 +373,10 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
                     <Clapperboard className="h-5 w-5 text-primary" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[550px] h-[400px] p-0">
-                  <GiphyPicker onGifClick={onGifClick} />
+                <PopoverContent className="w-[550px] h-auto p-0">
+                  <SearchContextManager apiKey={process.env.NEXT_PUBLIC_GIPHY_API_KEY!}>
+                    <GiphyPicker onGifClick={onGifClick} />
+                  </SearchContextManager>
                 </PopoverContent>
               </Popover>
               <Button variant="ghost" size="icon" onClick={togglePoll} disabled={!!hasContent || posting}>
