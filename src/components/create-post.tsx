@@ -4,7 +4,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Image as ImageIcon, X, Film, ListOrdered, Smile, MapPin, Loader2, Trash2, Camera, Clapperboard, StickyNote } from "lucide-react";
+import { Image as ImageIcon, X, Film, ListOrdered, Smile, MapPin, Loader2, Trash2, Clapperboard, StickyNote } from "lucide-react";
 import React, { useState, useRef, useContext } from "react";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
@@ -14,7 +14,7 @@ import { Input } from "./ui/input";
 import type { PostType } from "@/lib/data";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Grid, SearchBar, SearchContext, SearchContextManager } from '@giphy/react-components';
-import { GiphyFetch, GifsResult, StickerPack } from '@giphy/js-fetch-api';
+import { GiphyFetch } from '@giphy/js-fetch-api';
 
 export type Media = {
   file: File;
@@ -43,9 +43,9 @@ function GiphyPicker({ onGifClick }: { onGifClick: (gif: any) => void }) {
 }
 
 const StickerPicker = ({ onStickerClick }: { onStickerClick: (gif: any) => void }) => {
-    // Pack ID 3138 is 'Happy Birthday' as seen in the user's screenshot.
-    const fetchStickers = (offset: number) => gf.stickers.stickerPack(3138);
-    return <Grid width={550} columns={3} fetchGifs={fetchStickers} onGifClick={onStickerClick} />;
+    // This fetches a specific sticker pack. GIPHY has many packs.
+    const fetchStickers = (offset: number) => gf.stickerPacks();
+    return <Grid width={550} columns={3} fetchGifs={fetchStickers} onGifClick={onStickerClick} noResultsMessage="Stickers are loading..." />;
 };
 
 
@@ -57,28 +57,12 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
   
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
-  const captureInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   const [showPoll, setShowPoll] = useState(false);
   const [pollChoices, setPollChoices] = useState<string[]>(['', '']);
   const [location, setLocation] = useState<string | null>(null);
 
-  const handleCapture = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const fileType = file.type.startsWith('image/') ? 'image' : 'video';
-    
-    media.forEach(m => URL.revokeObjectURL(m.previewUrl));
-    setShowPoll(false);
-    
-    setMedia([{
-      file,
-      previewUrl: URL.createObjectURL(file),
-      type: fileType,
-    }]);
-  };
   
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
@@ -122,7 +106,6 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
     });
     if (imageInputRef.current) imageInputRef.current.value = "";
     if (videoInputRef.current) videoInputRef.current.value = "";
-    if (captureInputRef.current) captureInputRef.current.value = "";
   }
 
   const handlePost = async () => {
@@ -155,7 +138,6 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
         setLocation(null);
         if (imageInputRef.current) imageInputRef.current.value = "";
         if (videoInputRef.current) videoInputRef.current.value = "";
-        if (captureInputRef.current) captureInputRef.current.value = "";
     } catch (error) {
         console.error("Failed to create post:", error);
         toast({ variant: 'destructive', description: "Failed to create post. Please try again." });
@@ -368,23 +350,11 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
                 className="hidden"
                 disabled={posting}
               />
-              <input
-                type="file"
-                accept="video/*,image/*"
-                capture="user"
-                ref={captureInputRef}
-                onChange={handleCapture}
-                className="hidden"
-                disabled={posting}
-              />
               <Button variant="ghost" size="icon" onClick={() => imageInputRef.current?.click()} disabled={!!hasContent || posting}>
                 <ImageIcon className="h-5 w-5 text-primary" />
               </Button>
                <Button variant="ghost" size="icon" onClick={() => videoInputRef.current?.click()} disabled={!!hasContent || posting}>
                 <Film className="h-5 w-5 text-primary" />
-              </Button>
-              <Button variant="ghost" size="icon" onClick={() => captureInputRef.current?.click()} disabled={!!hasContent || posting}>
-                <Camera className="h-5 w-5 text-primary" />
               </Button>
                <Popover>
                 <PopoverTrigger asChild>
@@ -446,3 +416,5 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
     </div>
   );
 }
+
+    
