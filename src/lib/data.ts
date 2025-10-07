@@ -18,7 +18,7 @@ export type PostType = {
   createdAt?: string; // Changed to string to be serializable
   media?: Array<{
     url: string;
-    type: 'image' | 'video' | 'gif';
+    type: 'image' | 'video' | 'gif' | 'sticker';
     width?: number;
     height?: number;
     hint?: string;

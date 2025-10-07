@@ -4,7 +4,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Image as ImageIcon, X, Film, ListOrdered, Smile, MapPin, Loader2, Trash2, Camera, Clapperboard } from "lucide-react";
+import { Image as ImageIcon, X, Film, ListOrdered, Smile, MapPin, Loader2, Trash2, Camera, Clapperboard, StickyNote } from "lucide-react";
 import React, { useState, useRef, useContext } from "react";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
@@ -14,12 +14,12 @@ import { Input } from "./ui/input";
 import type { PostType } from "@/lib/data";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Grid, SearchBar, SearchContext, SearchContextManager } from '@giphy/react-components';
-import { GiphyFetch } from '@giphy/js-fetch-api';
+import { GiphyFetch, GifsResult, StickerPack } from '@giphy/js-fetch-api';
 
 export type Media = {
   file: File;
   previewUrl: string;
-  type: 'image' | 'video' | 'gif';
+  type: 'image' | 'video' | 'gif' | 'sticker';
   url?: string;
   width?: number;
   height?: number;
@@ -41,6 +41,12 @@ function GiphyPicker({ onGifClick }: { onGifClick: (gif: any) => void }) {
     </>
   );
 }
+
+const StickerPicker = ({ onStickerClick }: { onStickerClick: (gif: any) => void }) => {
+    // Pack ID 3138 is 'Happy Birthday' as seen in the user's screenshot.
+    const fetchStickers = (offset: number) => gf.stickers.stickerPack(3138);
+    return <Grid width={550} columns={3} fetchGifs={fetchStickers} onGifClick={onStickerClick} />;
+};
 
 
 export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }) => Promise<any>, tribeId?: string, communityId?: string }) {
@@ -230,11 +236,24 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
     }]);
   }
 
+  const onStickerClick = (sticker: any, e: React.SyntheticEvent<HTMLElement, Event>) => {
+    e.preventDefault();
+    setMedia([{
+      file: new File([], ''),
+      previewUrl: sticker.images.original.url,
+      type: 'sticker',
+      url: sticker.images.original.url,
+      width: parseInt(sticker.images.original.width),
+      height: parseInt(sticker.images.original.height)
+    }]);
+  };
+
   const isPostable = text.trim().length > 0 || media.length > 0 || (showPoll && pollChoices.some(c => c.trim()));
   const hasVideo = media.length > 0 && media[0].type === 'video';
   const hasGif = media.length > 0 && media[0].type === 'gif';
+  const hasSticker = media.length > 0 && media[0].type === 'sticker';
   const hasImages = media.length > 0 && media[0].type === 'image';
-  const hasContent = showPoll || hasVideo || hasImages || hasGif;
+  const hasContent = showPoll || hasVideo || hasImages || hasGif || hasSticker;
 
   const singleImage = hasImages && media.length === 1;
 
@@ -299,7 +318,7 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
                             <X className="h-4 w-4" />
                         </Button>
                     </div>
-                ) : singleImage || hasGif ? (
+                ) : singleImage || hasGif || hasSticker ? (
                     <div className="relative">
                         <Image src={media[0].previewUrl} alt="Preview 1" width={500} height={500} className="w-full h-auto object-contain bg-black" />
                         <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-8 w-8 rounded-full bg-black/50 hover:bg-black/75 text-white hover:text-white" onClick={() => removeMedia(0)}>
@@ -377,6 +396,16 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
                   <SearchContextManager apiKey={process.env.NEXT_PUBLIC_GIPHY_API_KEY!}>
                     <GiphyPicker onGifClick={onGifClick} />
                   </SearchContextManager>
+                </PopoverContent>
+              </Popover>
+               <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="icon" disabled={!!hasContent || posting}>
+                    <StickyNote className="h-5 w-5 text-primary" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[550px] h-auto p-0">
+                    <StickerPicker onStickerClick={onStickerClick} />
                 </PopoverContent>
               </Popover>
               <Button variant="ghost" size="icon" onClick={togglePoll} disabled={!!hasContent || posting}>
