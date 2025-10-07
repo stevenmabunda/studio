@@ -1,10 +1,9 @@
-
 'use client';
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Image as ImageIcon, X, Film, ListOrdered, Smile, MapPin, Loader2, Trash2, Clapperboard, StickyNote, Video } from "lucide-react";
+import { Image as ImageIcon, X, Film, ListOrdered, Smile, MapPin, Loader2, Trash2, Clapperboard, StickyNote } from "lucide-react";
 import React, { useState, useRef, useContext } from "react";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
@@ -32,7 +31,7 @@ const EMOJIS = [
 // Configure GiphyFetch with your API key
 const gf = new GiphyFetch(process.env.NEXT_PUBLIC_GIPHY_API_KEY || '');
 
-function GiphyPicker({ onGifClick }: { onGifClick: (gif: any) => void }) {
+function GiphyPicker({ onGifClick }: { onGifClick: (gif: any, e: React.SyntheticEvent<HTMLElement, Event>) => void }) {
   const { fetchGifs, searchKey } = useContext(SearchContext);
   return (
     <>
@@ -42,15 +41,16 @@ function GiphyPicker({ onGifClick }: { onGifClick: (gif: any) => void }) {
   );
 }
 
-const StickerPicker = ({ onStickerClick }: { onStickerClick: (gif: any) => void }) => {
-    const fetchStickers = (offset: number) => gf.trending({ type: 'stickers', offset, limit: 10 });
-    return <Grid width={550} columns={3} fetchGifs={fetchStickers} onStickerClick={onStickerClick} noResultsMessage="Stickers are loading..." />;
+function StickerPicker({ onStickerClick }: { onStickerClick: (sticker: any, e: React.SyntheticEvent<HTMLElement, Event>) => void }) {
+    const { fetchGifs, searchKey } = useContext(SearchContext);
+    return (
+        <>
+            <SearchBar />
+            <Grid key={searchKey} width={550} columns={3} fetchGifs={fetchGifs} onGifClick={onStickerClick} noResultsMessage="Stickers are loading..." />
+        </>
+    );
 };
 
-const ClipsPicker = ({ onClipClick }: { onClipClick: (gif: any) => void }) => {
-    const fetchClips = (offset: number) => gf.trending({ type: 'videos', offset, limit: 10 });
-    return <Grid width={550} columns={3} fetchGifs={fetchClips} onGifClick={onClipClick} noResultsMessage="Request GIPHY Clips API access." />;
-};
 
 export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { text: string; media: Media[], poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }) => Promise<any>, tribeId?: string, communityId?: string }) {
   const { user } = useAuth();
@@ -233,20 +233,6 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
     }]);
   };
 
-   const onClipClick = (clip: any, e: React.SyntheticEvent<HTMLElement, Event>) => {
-    e.preventDefault();
-    toast({ description: "GIPHY Clips API access is pending approval." });
-    // This part will attach the clip to the post once approved
-    // setMedia([{
-    //   file: new File([], ''),
-    //   previewUrl: clip.images.original.url, // or a specific video rendition
-    //   type: 'video', 
-    //   url: clip.images.original.url,
-    //   width: parseInt(clip.images.original.width),
-    //   height: parseInt(clip.images.original.height)
-    // }]);
-  };
-
   const isPostable = text.trim().length > 0 || media.length > 0 || (showPoll && pollChoices.some(c => c.trim()));
   const hasVideo = media.length > 0 && media[0].type === 'video';
   const hasGif = media.length > 0 && media[0].type === 'gif';
@@ -392,17 +378,9 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-[550px] h-auto p-0">
-                    <StickerPicker onStickerClick={onStickerClick} />
-                </PopoverContent>
-              </Popover>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon" disabled={!!hasContent || posting}>
-                    <Video className="h-5 w-5 text-primary" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[550px] h-auto p-0">
-                    <ClipsPicker onClipClick={onClipClick} />
+                    <SearchContextManager apiKey={process.env.NEXT_PUBLIC_GIPHY_API_KEY!} options={{type: 'stickers'}}>
+                        <StickerPicker onStickerClick={onStickerClick} />
+                    </SearchContextManager>
                 </PopoverContent>
               </Popover>
               <Button variant="ghost" size="icon" onClick={togglePoll} disabled={!!hasContent || posting}>
