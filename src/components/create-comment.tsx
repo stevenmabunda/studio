@@ -31,23 +31,17 @@ const EMOJIS = [
 // Configure GiphyFetch with your API key
 const gf = new GiphyFetch(process.env.NEXT_PUBLIC_GIPHY_API_KEY || '');
 
-function GiphyPicker({ onGifClick }: { onGifClick: (gif: any, e: React.SyntheticEvent<HTMLElement, Event>) => void }) {
+function GiphyPickerContents({ onGifClick }: { onGifClick: (gif: any, e: React.SyntheticEvent<HTMLElement, Event>) => void }) {
   const { fetchGifs, searchKey } = useContext(SearchContext);
   return (
-    <>
-      <SearchBar />
       <Grid key={searchKey} width={300} columns={3} fetchGifs={fetchGifs} onGifClick={onGifClick} noResultsMessage="No GIFs found." />
-    </>
   );
 }
 
-function StickerPicker({ onStickerClick }: { onStickerClick: (sticker: any, e: React.SyntheticEvent<HTMLElement, Event>) => void }) {
+function StickerPickerContents({ onStickerClick }: { onStickerClick: (sticker: any, e: React.SyntheticEvent<HTMLElement, Event>) => void }) {
     const { fetchGifs, searchKey } = useContext(SearchContext);
     return (
-        <>
-            <SearchBar />
-            <Grid key={searchKey} width={300} columns={3} fetchGifs={fetchGifs} onGifClick={onStickerClick} noResultsMessage="No stickers found." />
-        </>
+        <Grid key={searchKey} width={300} columns={3} fetchGifs={fetchGifs} onGifClick={onStickerClick} noResultsMessage="No stickers found." />
     );
 };
 
@@ -239,7 +233,10 @@ export function CreateComment({ onComment, isDialog = false }: { onComment: (dat
                     </PopoverTrigger>
                     <PopoverContent className="w-[300px] h-auto p-0">
                       <SearchContextManager apiKey={process.env.NEXT_PUBLIC_GIPHY_API_KEY!}>
-                        <GiphyPicker onGifClick={onGifClick} />
+                        <div className="flex flex-col">
+                            <SearchBar />
+                            <GiphyPickerContents onGifClick={onGifClick} />
+                        </div>
                       </SearchContextManager>
                     </PopoverContent>
                   </Popover>
@@ -251,7 +248,10 @@ export function CreateComment({ onComment, isDialog = false }: { onComment: (dat
                     </PopoverTrigger>
                     <PopoverContent className="w-[300px] h-auto p-0">
                         <SearchContextManager apiKey={process.env.NEXT_PUBLIC_GIPHY_API_KEY!} options={{type: 'stickers'}}>
-                            <StickerPicker onStickerClick={onStickerClick} />
+                           <div className="flex flex-col">
+                              <SearchBar />
+                              <StickerPickerContents onStickerClick={onStickerClick} />
+                           </div>
                         </SearchContextManager>
                     </PopoverContent>
                   </Popover>
