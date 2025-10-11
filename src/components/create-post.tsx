@@ -211,6 +211,10 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
   
   const onGifClick = (gif: any, e: React.SyntheticEvent<HTMLElement, Event>) => {
     e.preventDefault();
+    if (media.length > 0) {
+      toast({ variant: 'destructive', description: "You can only attach one media item to a post." });
+      return;
+    }
     setMedia([{
       file: new File([], ''),
       previewUrl: gif.images.original.url,
@@ -219,10 +223,15 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
       width: parseInt(gif.images.original.width),
       height: parseInt(gif.images.original.height)
     }]);
+    setShowPoll(false);
   }
 
   const onStickerClick = (sticker: any, e: React.SyntheticEvent<HTMLElement, Event>) => {
     e.preventDefault();
+     if (media.length > 0) {
+      toast({ variant: 'destructive', description: "You can only attach one media item to a post." });
+      return;
+    }
     setMedia([{
       file: new File([], ''),
       previewUrl: sticker.images.original.url,
@@ -231,6 +240,7 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
       width: parseInt(sticker.images.original.width),
       height: parseInt(sticker.images.original.height)
     }]);
+    setShowPoll(false);
   };
 
   const isPostable = text.trim().length > 0 || media.length > 0 || (showPoll && pollChoices.some(c => c.trim()));
