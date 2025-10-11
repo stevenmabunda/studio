@@ -867,7 +867,7 @@ export function Post(props: PostProps) {
             </div>
         )}
         
-        <div className={cn("flex items-center text-muted-foreground", isStandalone && !isReplyView ? "mt-2" : "mt-4", isReplyView && "hidden", isVideo && 'hidden')}>
+        <div className={cn("flex items-center text-muted-foreground", isStandalone && !isReplyView ? "mt-2" : "mt-4", isReplyView && "hidden")}>
             <div className="flex items-center -ml-3">
                 <Button variant="ghost" size={isReplyView ? 'icon' : 'sm'} className={cn("flex items-center gap-2 hover:text-primary", isReplyView && "h-8 w-8")} onClick={handleCommentClick}>
                     <MessageCircle className="h-5 w-5" />
