@@ -137,6 +137,10 @@ export function CreateComment({ onComment, isDialog = false }: { onComment: (dat
 
   const onGifClick = (gif: any, e: React.SyntheticEvent<HTMLElement, Event>) => {
     e.preventDefault();
+    if (media.length > 0) {
+        toast({ variant: 'destructive', description: "You can only attach one media item to a reply." });
+        return;
+    }
     setMedia([{
       file: new File([], ''),
       previewUrl: gif.images.original.url,
@@ -149,6 +153,10 @@ export function CreateComment({ onComment, isDialog = false }: { onComment: (dat
 
   const onStickerClick = (sticker: any, e: React.SyntheticEvent<HTMLElement, Event>) => {
     e.preventDefault();
+    if (media.length > 0) {
+        toast({ variant: 'destructive', description: "You can only attach one media item to a reply." });
+        return;
+    }
     setMedia([{
       file: new File([], ''),
       previewUrl: sticker.images.original.url,
