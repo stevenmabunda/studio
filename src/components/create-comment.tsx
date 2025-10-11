@@ -4,26 +4,54 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useContext } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { Image as ImageIcon, Film, X, Loader2, Smile } from "lucide-react";
+import { Image as ImageIcon, Film, X, Loader2, Smile, Clapperboard, StickyNote } from "lucide-react";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { LoginOrSignupDialog } from "./login-or-signup-dialog";
-import type { PostType } from "@/lib/data";
+import { Grid, SearchBar, SearchContext, SearchContextManager } from '@giphy/react-components';
+import { GiphyFetch } from '@giphy/js-fetch-api';
 
 
 export type ReplyMedia = {
   file: File;
   previewUrl: string;
-  type: 'image' | 'video';
+  type: 'image' | 'video' | 'gif' | 'sticker';
+  url?: string;
+  width?: number;
+  height?: number;
 };
 
 const EMOJIS = [
     '😀', '😂', '😍', '🤔', '😭', '🙏', '❤️', '🔥', '👍', '⚽️', '🥅', '🏆', '🎉', '👏', '🚀', '💯'
 ];
+
+// Configure GiphyFetch with your API key
+const gf = new GiphyFetch(process.env.NEXT_PUBLIC_GIPHY_API_KEY || '');
+
+function GiphyPicker({ onGifClick }: { onGifClick: (gif: any, e: React.SyntheticEvent<HTMLElement, Event>) => void }) {
+  const { fetchGifs, searchKey } = useContext(SearchContext);
+  return (
+    <>
+      <SearchBar />
+      <Grid key={searchKey} width={300} columns={3} fetchGifs={fetchGifs} onGifClick={onGifClick} noResultsMessage="No GIFs found." />
+    </>
+  );
+}
+
+function StickerPicker({ onStickerClick }: { onStickerClick: (sticker: any, e: React.SyntheticEvent<HTMLElement, Event>) => void }) {
+    const { fetchGifs, searchKey } = useContext(SearchContext);
+    return (
+        <>
+            <SearchBar />
+            <Grid key={searchKey} width={300} columns={3} fetchGifs={fetchGifs} onGifClick={onStickerClick} noResultsMessage="No stickers found." />
+        </>
+    );
+};
+
 
 export function CreateComment({ onComment, isDialog = false }: { onComment: (data: { text: string; media: ReplyMedia[] }) => Promise<any>, isDialog?: boolean }) {
   const { user } = useAuth();
@@ -107,9 +135,36 @@ export function CreateComment({ onComment, isDialog = false }: { onComment: (dat
     setText(prevText => prevText + emoji);
   };
 
+  const onGifClick = (gif: any, e: React.SyntheticEvent<HTMLElement, Event>) => {
+    e.preventDefault();
+    setMedia([{
+      file: new File([], ''),
+      previewUrl: gif.images.original.url,
+      type: 'gif',
+      url: gif.images.original.url,
+      width: parseInt(gif.images.original.width),
+      height: parseInt(gif.images.original.height)
+    }]);
+  }
+
+  const onStickerClick = (sticker: any, e: React.SyntheticEvent<HTMLElement, Event>) => {
+    e.preventDefault();
+    setMedia([{
+      file: new File([], ''),
+      previewUrl: sticker.images.original.url,
+      type: 'sticker',
+      url: sticker.images.original.url,
+      width: parseInt(sticker.images.original.width),
+      height: parseInt(sticker.images.original.height)
+    }]);
+  };
+
   const isPostable = text.trim().length > 0 || media.length > 0;
   const hasMedia = media.length > 0;
   const hasVideo = hasMedia && media[0].type === 'video';
+  const hasGif = hasMedia && media[0].type === 'gif';
+  const hasSticker = hasMedia && media[0].type === 'sticker';
+  const hasImage = hasMedia && media[0].type === 'image';
   
   const guestAvatarSrc = "https://placehold.co/40x40.png";
 
@@ -135,9 +190,9 @@ export function CreateComment({ onComment, isDialog = false }: { onComment: (dat
                 <div className="relative">
                     {hasVideo ? (
                         <video src={media[0].previewUrl} controls className="w-full h-auto max-h-96 object-contain" />
-                    ) : (
+                    ) : (hasImage || hasGif || hasSticker) ? (
                          <Image src={media[0].previewUrl} alt="Preview 1" width={500} height={500} className="w-full h-auto object-contain bg-black" />
-                    )}
+                    ) : null}
                     <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-8 w-8 rounded-full bg-black/50 hover:bg-black/75 text-white hover:text-white" onClick={() => removeMedia(0)}>
                         <X className="h-4 w-4" />
                     </Button>
@@ -171,6 +226,30 @@ export function CreateComment({ onComment, isDialog = false }: { onComment: (dat
                 </Button>
                  <Popover>
                     <PopoverTrigger asChild>
+                      <Button variant="ghost" size="icon" disabled={hasMedia || posting}>
+                        <Clapperboard className="h-5 w-5 text-primary" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[300px] h-auto p-0">
+                      <SearchContextManager apiKey={process.env.NEXT_PUBLIC_GIPHY_API_KEY!}>
+                        <GiphyPicker onGifClick={onGifClick} />
+                      </SearchContextManager>
+                    </PopoverContent>
+                  </Popover>
+                   <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="ghost" size="icon" disabled={hasMedia || posting}>
+                        <StickyNote className="h-5 w-5 text-primary" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[300px] h-auto p-0">
+                        <SearchContextManager apiKey={process.env.NEXT_PUBLIC_GIPHY_API_KEY!} options={{type: 'stickers'}}>
+                            <StickerPicker onStickerClick={onStickerClick} />
+                        </SearchContextManager>
+                    </PopoverContent>
+                  </Popover>
+                 <Popover>
+                    <PopoverTrigger asChild>
                         <Button variant="ghost" size="icon" onClick={handleActionClick(() => {})} disabled={posting}>
                             <Smile className="h-5 w-5 text-primary" />
                         </Button>
@@ -202,5 +281,3 @@ export function CreateComment({ onComment, isDialog = false }: { onComment: (dat
     </div>
   );
 }
-
-    

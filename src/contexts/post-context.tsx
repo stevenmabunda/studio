@@ -354,6 +354,9 @@ export function PostProvider({ children }: { children: ReactNode }) {
         const commentsCollectionRef = collection(postRef, 'comments');
 
         const mediaUploads = await Promise.all(media.map(async (m) => {
+            if (m.type === 'gif' || m.type === 'sticker') {
+                return { url: m.url, type: m.type, width: m.width, height: m.height, hint: 'giphy content' };
+            }
             const { width, height } = m.type === 'image' ? await getImageDimensions(m.file) : { width: undefined, height: undefined };
             const fileName = `${user.uid}-comment-${Date.now()}-${m.file.name}`;
             const storagePath = `comments/${postId}/${fileName}`;
