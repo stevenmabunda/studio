@@ -106,7 +106,7 @@ export default function CreatorsPage() {
       <main className="flex-1 flex items-center justify-center p-4">
         <div className="max-w-5xl mx-auto w-full">
           <div className="text-center mb-12 space-y-4">
-             <Image src="/officialogo.png" alt="BHOLO Logo" width={150} height={60} priority className="mx-auto" />
+             <Image src="/bholo_logo.png" alt="BHOLO Logo" width={150} height={60} priority className="mx-auto" />
             <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
               BHOLO Creator Program
             </h1>

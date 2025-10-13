@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
@@ -233,7 +232,7 @@ export default function HomePage() {
                         </button>
                     </SidebarTrigger>
                      <Link href="/home" aria-label="Home" className="flex items-center justify-center h-10">
-                         <Image src="/logo_64x64.png" alt="BHOLO Logo" width="64" height="64" className="h-full w-auto" />
+                         <Image src="/bholo_logo.png" alt="BHOLO Logo" width="100" height="40" className="h-auto w-auto max-h-full" />
                     </Link>
                      <div className="flex items-center gap-1">
                         <Link href="/notifications" passHref>

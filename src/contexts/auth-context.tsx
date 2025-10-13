@@ -47,7 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         <div className="flex items-center justify-center h-screen bg-background">
             <div className="flex flex-col items-center gap-4">
                 <div className="w-48 animate-pulse">
-                   <Image src="/officialogo.png" alt="BHOLO Logo" width={200} height={80} priority />
+                   <Image src="/bholo_logo.png" alt="BHOLO Logo" width={200} height={80} priority />
                 </div>
                 <p className="text-muted-foreground animate-pulse">Loading BHOLO...</p>
             </div>

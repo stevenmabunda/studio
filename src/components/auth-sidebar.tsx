@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -10,7 +11,7 @@ export function AuthSidebar() {
         <aside className="sticky top-0 h-screen w-full flex-shrink-0 p-4 flex flex-col gap-6">
             <div className="flex flex-col h-14 justify-center">
                 <Link href="/home" className="w-24" aria-label="BHOLO">
-                    <Image src="/officialogo.png" alt="BHOLO Logo" width={100} height={40} />
+                    <Image src="/bholo_logo.png" alt="BHOLO Logo" width={100} height={40} />
                 </Link>
                 <p className="text-muted-foreground -mt-1">The Football Banter App</p>
             </div>
