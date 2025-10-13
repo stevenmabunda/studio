@@ -34,20 +34,20 @@ const gf = new GiphyFetch(process.env.NEXT_PUBLIC_GIPHY_API_KEY || '');
 function GiphyPicker({ onGifClick }: { onGifClick: (gif: any, e: React.SyntheticEvent<HTMLElement, Event>) => void }) {
   const { fetchGifs, searchKey } = useContext(SearchContext);
   return (
-    <>
-      <SearchBar />
-      <Grid key={searchKey} width={550} columns={3} fetchGifs={fetchGifs} onGifClick={onGifClick} />
-    </>
+    <div className="flex flex-col">
+        <SearchBar />
+        <Grid key={searchKey} width={550} columns={3} fetchGifs={fetchGifs} onGifClick={onGifClick} noResultsMessage="No GIFs found." />
+    </div>
   );
 }
 
 function StickerPicker({ onStickerClick }: { onStickerClick: (sticker: any, e: React.SyntheticEvent<HTMLElement, Event>) => void }) {
     const { fetchGifs, searchKey } = useContext(SearchContext);
     return (
-        <>
+        <div className="flex flex-col">
             <SearchBar />
-            <Grid key={searchKey} width={550} columns={3} fetchGifs={fetchGifs} onGifClick={onStickerClick} noResultsMessage="Stickers are loading..." />
-        </>
+            <Grid key={searchKey} width={550} columns={3} fetchGifs={fetchGifs} onGifClick={onStickerClick} noResultsMessage="No stickers found." />
+        </div>
     );
 };
 

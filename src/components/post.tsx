@@ -700,15 +700,15 @@ export function Post(props: PostProps) {
       <div className="flex-1 min-w-0">
         <div className="flex justify-between items-start gap-2">
             <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-2 flex-wrap text-sm">
                     <ProfileHoverCard userId={authorId}>
                       <Link href={`/profile/${authorId}`} className="font-bold hover:underline truncate" onClick={(e) => e.stopPropagation()}>
                           {authorName}
                       </Link>
                     </ProfileHoverCard>
-                    <span className="text-sm text-muted-foreground truncate">@{authorHandle}</span>
+                    <span className="text-muted-foreground truncate">@{authorHandle}</span>
                     <span className="text-muted-foreground">·</span>
-                    <span className="text-sm text-muted-foreground flex-shrink-0">{timestamp}</span>
+                    <span className="text-muted-foreground flex-shrink-0">{timestamp}</span>
                 </div>
             </div>
            {isAuthor ? (
@@ -780,7 +780,7 @@ export function Post(props: PostProps) {
                 </div>
             </div>
         ) : (
-            <p className={cn("whitespace-pre-wrap", "mt-2", isStandalone && "text-lg")}>
+            <p className={cn("whitespace-pre-wrap text-sm", "mt-2", isStandalone && "text-base")}>
                 {linkify(isReplyView ? content : displayText)}
                 {needsTruncation && (
                     <button
@@ -867,63 +867,65 @@ export function Post(props: PostProps) {
             </div>
         )}
         
-        <div className={cn("flex items-center text-muted-foreground", isStandalone && !isReplyView ? "mt-2" : "mt-4", isReplyView && "hidden")}>
-            <div className="flex items-center -ml-3">
-                <Button variant="ghost" size={isReplyView ? 'icon' : 'sm'} className={cn("flex items-center gap-2 hover:text-primary", isReplyView && "h-8 w-8")} onClick={handleCommentClick}>
-                    <MessageCircle className="h-5 w-5" />
-                    {!isReplyView && <span>{commentCount > 0 ? commentCount : ''}</span>}
-                </Button>
-                <Button variant="ghost" size={isReplyView ? 'icon' : 'sm'} className={cn("flex items-center gap-2", isReposted ? 'text-green-500' : 'hover:text-green-500', isReplyView && "h-8 w-8")} onClick={handleActionClick(handleRepost)}>
-                    <Repeat className="h-5 w-5" />
-                    {!isReplyView && <span>{repostCount > 0 ? repostCount : ''}</span>}
-                </Button>
-                <Button variant="ghost" size={isReplyView ? 'icon' : 'sm'} className={cn("flex items-center gap-2", isLiked ? 'text-red-500' : 'hover:text-red-500', isReplyView && "h-8 w-8")} onClick={handleActionClick(handleLike)}>
-                    <Heart className={cn("h-5 w-5", isLiked && 'fill-current')} />
-                    {!isReplyView && <span>{likeCount > 0 ? likeCount : ''}</span>}
-                </Button>
-                <Button variant="ghost" size="icon" className={cn("hover:text-primary", isBookmarked && "text-primary", isReplyView && "h-8 w-8")} onClick={handleActionClick(handleBookmark)}>
-                    <Bookmark className={cn("h-5 w-5", isBookmarked && 'fill-current')} />
-                </Button>
-                 <Sheet open={isShareSheetOpen} onOpenChange={setShareSheetOpen}>
-                    <SheetTrigger asChild>
-                        <Button variant="ghost" size="icon" className={cn("hover:text-primary", isReplyView && "h-8 w-8")} onClick={(e) => e.stopPropagation()}>
-                            <Share2 className="h-5 w-5" />
-                        </Button>
-                    </SheetTrigger>
-                    <SheetContent side="bottom" className="rounded-t-lg" onClick={(e) => e.stopPropagation()}>
-                        <SheetHeader>
-                            <SheetTitle>Share Post</SheetTitle>
-                        </SheetHeader>
-                        <div className="grid grid-cols-4 gap-4 py-4">
-                            <a href={getShareUrl('twitter')} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center group">
-                                <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
-                                    <TwitterIcon className="h-7 w-7" />
-                                </div>
-                                <span className="text-xs">Twitter</span>
-                            </a>
-                            <a href={getShareUrl('facebook')} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center group">
-                                <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
-                                    <FacebookIcon className="h-7 w-7" />
-                                </div>
-                                <span className="text-xs">Facebook</span>
-                            </a>
-                            <a href={getShareUrl('whatsapp')} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center group">
-                                <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
-                                    <WhatsAppIcon className="h-7 w-7" />
-                                </div>
-                                <span className="text-xs">WhatsApp</span>
-                            </a>
-                            <button onClick={handleCopyLink} className="flex flex-col items-center gap-2 text-center group">
-                                <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
-                                    <Copy className="h-7 w-7" />
-                                </div>
-                                <span className="text-xs">Copy Link</span>
-                            </button>
-                        </div>
-                    </SheetContent>
-                </Sheet>
+        {!isReplyView && (
+             <div className={cn("flex items-center text-muted-foreground", isStandalone ? "mt-2" : "mt-4")}>
+                <div className="flex items-center -ml-3">
+                    <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-primary" onClick={handleCommentClick}>
+                        <MessageCircle className="h-5 w-5" />
+                        <span>{commentCount > 0 ? commentCount : ''}</span>
+                    </Button>
+                    <Button variant="ghost" size="sm" className={cn("flex items-center gap-2", isReposted ? 'text-green-500' : 'hover:text-green-500')} onClick={handleActionClick(handleRepost)}>
+                        <Repeat className="h-5 w-5" />
+                        <span>{repostCount > 0 ? repostCount : ''}</span>
+                    </Button>
+                    <Button variant="ghost" size="sm" className={cn("flex items-center gap-2", isLiked ? 'text-red-500' : 'hover:text-red-500')} onClick={handleActionClick(handleLike)}>
+                        <Heart className={cn("h-5 w-5", isLiked && 'fill-current')} />
+                        <span>{likeCount > 0 ? likeCount : ''}</span>
+                    </Button>
+                    <Button variant="ghost" size="icon" className={cn("hover:text-primary", isBookmarked && "text-primary")} onClick={handleActionClick(handleBookmark)}>
+                        <Bookmark className={cn("h-5 w-5", isBookmarked && 'fill-current')} />
+                    </Button>
+                     <Sheet open={isShareSheetOpen} onOpenChange={setShareSheetOpen}>
+                        <SheetTrigger asChild>
+                            <Button variant="ghost" size="icon" className="hover:text-primary" onClick={(e) => e.stopPropagation()}>
+                                <Share2 className="h-5 w-5" />
+                            </Button>
+                        </SheetTrigger>
+                        <SheetContent side="bottom" className="rounded-t-lg" onClick={(e) => e.stopPropagation()}>
+                            <SheetHeader>
+                                <SheetTitle>Share Post</SheetTitle>
+                            </SheetHeader>
+                            <div className="grid grid-cols-4 gap-4 py-4">
+                                <a href={getShareUrl('twitter')} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center group">
+                                    <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
+                                        <TwitterIcon className="h-7 w-7" />
+                                    </div>
+                                    <span className="text-xs">Twitter</span>
+                                </a>
+                                <a href={getShareUrl('facebook')} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center group">
+                                    <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
+                                        <FacebookIcon className="h-7 w-7" />
+                                    </div>
+                                    <span className="text-xs">Facebook</span>
+                                </a>
+                                <a href={getShareUrl('whatsapp')} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 text-center group">
+                                    <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
+                                        <WhatsAppIcon className="h-7 w-7" />
+                                    </div>
+                                    <span className="text-xs">WhatsApp</span>
+                                </a>
+                                <button onClick={handleCopyLink} className="flex flex-col items-center gap-2 text-center group">
+                                    <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-accent">
+                                        <Copy className="h-7 w-7" />
+                                    </div>
+                                    <span className="text-xs">Copy Link</span>
+                                </button>
+                            </div>
+                        </SheetContent>
+                    </Sheet>
+                </div>
             </div>
-        </div>
+        )}
         
          {isReplyView && (
             <CommentEngagement 
