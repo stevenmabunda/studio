@@ -161,15 +161,15 @@ export function SignupForm() {
   }
 
   return (
-    <div className="space-y-6 flex flex-col">
+    <div className="flex flex-col gap-y-6">
        <div className="mx-auto w-40">
           <Image src="/bholo_logo.png" alt="BHOLO Logo" width={150} height={60} priority />
         </div>
         <p className="text-center text-muted-foreground font-semibold">Sign up to join the conversation.</p>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <AuthFormError message={error} />
-           <fieldset disabled={loading || googleLoading} className="space-y-3">
+           <fieldset disabled={loading || googleLoading} className="space-y-4">
             <FormField
               control={form.control}
               name="name"
