@@ -163,7 +163,7 @@ export function SignupForm() {
   return (
     <div className="flex flex-col gap-y-6">
         <div className="text-left">
-          <h1 className="text-3xl font-bold">Create your account</h1>
+          <h1 className="text-2xl font-bold">Create your account</h1>
         </div>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
