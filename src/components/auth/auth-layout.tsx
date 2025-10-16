@@ -9,7 +9,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
     <div className="grid min-h-screen grid-cols-1 bg-background lg:grid-cols-2">
       <div className="relative hidden lg:flex">
          <Image
-            src="/welcome1.jpg"
+            src="/welcome2.jpg"
             alt="BHOLO welcome banner"
             fill
             className="absolute inset-0 object-cover"
