@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react';
 import Image from 'next/image';
+import { cn } from '@/lib/utils';
 
 export function AuthLayout({ children }: { children: ReactNode }) {
   return (
@@ -15,10 +16,13 @@ export function AuthLayout({ children }: { children: ReactNode }) {
             priority
           />
       </div>
-      <div className="flex flex-col items-center justify-center p-4 lg:border-l">
-        <div className="lg:hidden flex flex-col items-center text-center mb-8">
+      <div className="flex flex-col items-center justify-center p-4 lg:border-l lg:border-white">
+        <div className={cn("lg:hidden w-full flex flex-col items-center text-center mb-8")}>
+            <div className="relative w-full max-w-sm h-48 mb-4">
+              <Image src="/mobile-hero2.png" alt="BHOLO mobile hero" layout="fill" objectFit="contain" priority />
+            </div>
             <Image src="/bholo_logo.png" alt="BHOLO Logo" width={120} height={48} priority />
-            <p className="mt-2 text-lg text-foreground">Welcome to the football banter app.</p>
+            <p className={cn("mt-2 text-lg text-foreground")}>Welcome to the football banter app.</p>
         </div>
         <div className="w-full max-w-sm">
             {children}
