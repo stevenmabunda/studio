@@ -165,6 +165,13 @@ export function LoginForm() {
                 </FormItem>
               )}
             />
+             <div className="text-right">
+                <Link href="/forgot-password" passHref>
+                    <span className="text-sm font-semibold text-primary hover:underline cursor-pointer">
+                        Forgot password?
+                    </span>
+                </Link>
+            </div>
             <Button type="submit" className="w-full mt-2 h-11 text-base" disabled={loading || googleLoading}>
               {loading ? 'Logging In...' : 'Log In'}
             </Button>
