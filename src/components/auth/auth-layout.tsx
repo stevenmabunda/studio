@@ -16,7 +16,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
             priority
           />
       </div>
-      <div className="flex items-center justify-center p-4">
+      <div className="flex items-center justify-center p-4 lg:border-l">
         <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
             {children}
         </div>
