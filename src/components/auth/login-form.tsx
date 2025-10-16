@@ -53,6 +53,7 @@ export function LoginForm() {
   }
 
   const handleAuthError = (err: any) => {
+    console.error("Login failed:", err); // Log the full error
     if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
       setError('Invalid login credentials. Please check your email and password.');
     } else if (err.code === 'auth/invalid-api-key') {
@@ -63,7 +64,6 @@ export function LoginForm() {
     else {
       setError('An unexpected error occurred. Please try again.');
     }
-    console.error("Login failed:", err);
   }
 
   async function onSubmit(values: z.infer<typeof formSchema>) {

@@ -52,6 +52,7 @@ export function SignupForm() {
   });
 
   const handleAuthError = (err: any) => {
+    console.error("Signup failed:", err); // Log the full error
     if (err.code === 'auth/email-already-in-use') {
       setError('An account with this email already exists.');
     } else if (err.code === 'auth/popup-closed-by-user') {
@@ -60,7 +61,6 @@ export function SignupForm() {
     else {
       setError('An unexpected error occurred. Please try again.');
     }
-    console.error("Signup failed:", err);
   };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
