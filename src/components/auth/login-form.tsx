@@ -125,8 +125,8 @@ export function LoginForm() {
 
   return (
     <div className="flex flex-col gap-y-6">
-        <div className="text-left">
-          <h1 className="text-2xl font-bold">Sign into your BHOLO account</h1>
+        <div className="hidden lg:block text-left">
+          <h1 className="text-xl font-bold">Sign into your BHOLO account</h1>
         </div>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
