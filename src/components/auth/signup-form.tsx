@@ -112,7 +112,7 @@ export function SignupForm() {
 
   return (
     <div className="space-y-6">
-        <div className="flex flex-col space-y-2 text-center">
+        <div className="flex flex-col space-y-2 text-center lg:text-left">
             <div className="mx-auto w-32 lg:hidden">
               <Image src="/bholo_logo.png" alt="BHOLO Logo" width={150} height={60} priority />
             </div>

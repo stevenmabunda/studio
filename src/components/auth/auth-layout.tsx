@@ -1,6 +1,8 @@
+'use client';
 
 import type { ReactNode } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 
 export function AuthLayout({ children }: { children: ReactNode }) {
   return (
@@ -18,7 +20,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
               <Link href="/home" aria-label="Home" className="block w-32">
                 <Image src="/bholo_logo.png" alt="BHOLO Logo" width={150} height={60} priority />
              </Link>
-             <h1 className="text-3xl font-bold">Welcome to the football banter app.</h1>
+             <h1 className="text-3xl font-bold">The Football Banter App.</h1>
              <p className="text-lg text-muted-foreground">Opinions wanted, feelings optional.</p>
           </div>
       </div>
