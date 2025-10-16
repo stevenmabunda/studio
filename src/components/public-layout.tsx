@@ -2,11 +2,11 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { AuthSidebar } from '@/components/auth-sidebar';
 import { RightSidebar } from '@/components/right-sidebar';
 import { Button } from './ui/button';
 import Link from 'next/link';
 import { ScrollArea } from './ui/scroll-area';
+import Image from 'next/image';
 
 export function PublicLayout({ children }: { children: ReactNode }) {
 
@@ -15,8 +15,17 @@ export function PublicLayout({ children }: { children: ReactNode }) {
             {/* Desktop Layout */}
             <div className="hidden md:flex justify-center h-screen overflow-hidden">
                 <div className="flex max-w-7xl mx-auto w-full">
-                    <header className="w-[275px] shrink-0 h-full">
-                        <AuthSidebar />
+                    <header className="w-[275px] shrink-0 h-full p-4 flex flex-col">
+                        <Link href="/home" aria-label="Home" className="block w-32">
+                           <Image src="/bholo_logo.png" alt="BHOLO Logo" width={150} height={60} priority />
+                        </Link>
+                        <div className="mt-auto text-sm text-muted-foreground">
+                            <Link href="/privacy" className="hover:underline">Privacy</Link>
+                            <span className="mx-1">·</span>
+                            <Link href="/terms" className="hover:underline">Terms</Link>
+                            <span className="mx-1">·</span>
+                            <Link href="/help" className="hover:underline">Help</Link>
+                        </div>
                     </header>
                     <main className="w-full max-w-[624px] border-x">
                          <ScrollArea className="h-screen no-scrollbar">

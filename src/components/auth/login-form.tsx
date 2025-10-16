@@ -14,6 +14,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import Link from 'next/link';
 import { AuthFormError } from './auth-form-error';
 import { Eye, EyeOff } from 'lucide-react';
+import Image from 'next/image';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email.' }),
@@ -62,11 +63,18 @@ export function LoginForm() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+        <div className="flex flex-col space-y-2 text-center">
+            <div className="mx-auto w-32 lg:hidden">
+              <Image src="/bholo_logo.png" alt="BHOLO Logo" width={150} height={60} priority />
+            </div>
+            <h1 className="text-2xl font-semibold tracking-tight">Welcome Back!</h1>
+            <p className="text-sm text-muted-foreground">Sign in to your BHOLO account.</p>
+        </div>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <AuthFormError message={error} />
-          <fieldset disabled={loading}>
+          <fieldset disabled={loading} className="space-y-4">
             <FormField
               control={form.control}
               name="email"
