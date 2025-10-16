@@ -1,34 +1,30 @@
 
-
 'use client';
 import type { ReactNode } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { SidebarNav } from '@/components/sidebar-nav';
 import { RightSidebar } from '@/components/right-sidebar';
-import { PublicLayout } from '@/components/public-layout';
 import { MobileBottomNav } from '@/components/mobile-bottom-nav';
-import { FloatingCreatePostButton } from '@/components/floating-create-post-button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useEffect } from 'react';
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
-  if (loading) {
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace('/login');
+    }
+  }, [user, loading, router]);
+
+
+  if (loading || !user) {
     return null; // The global loader in AuthProvider handles this.
   }
-
-  // If the user is not logged in, show the public-facing layout.
-  if (!user) {
-    return (
-        <PublicLayout>
-            {children}
-        </PublicLayout>
-    );
-  }
-
+  
   const isCreatorPage = pathname === '/creators';
   if (isCreatorPage) {
     return (

@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { ReactNode } from 'react';
@@ -7,7 +8,7 @@ import Link from 'next/link';
 export function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <div className="grid min-h-screen grid-cols-1 bg-background lg:grid-cols-2">
-      <div className="relative hidden flex-col items-center justify-center bg-background p-10 text-white lg:flex">
+      <div className="relative hidden flex-col items-center justify-center bg-black p-10 text-white lg:flex">
          <Image
             src="https://picsum.photos/seed/bholo-auth/1200/1800"
             alt="BHOLO background image"
