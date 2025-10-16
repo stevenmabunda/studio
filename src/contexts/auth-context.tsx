@@ -31,38 +31,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
+  const [authLoaded, setAuthLoaded] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
-      // Once auth state is confirmed, let the progress bar finish
-      if (progress >= 90) {
-          setLoading(false);
-      }
+      setAuthLoaded(true);
     });
 
     return () => unsubscribe();
-  }, [progress]);
+  }, []);
   
   useEffect(() => {
+    let interval: NodeJS.Timeout;
     if (loading) {
-        const interval = setInterval(() => {
+        interval = setInterval(() => {
             setProgress(prev => {
-                if (prev >= 100) {
+                // If auth is loaded, jump to 100 and finish.
+                if (authLoaded) {
+                    if (prev < 100) return 100;
                     clearInterval(interval);
-                    // Check if auth is also done loading
-                    if (user !== undefined) {
-                        setTimeout(() => setLoading(false), 200);
-                    }
+                    setTimeout(() => setLoading(false), 300); // Small delay for the 100% to show
                     return 100;
                 }
-                return prev + Math.floor(Math.random() * 10) + 1;
+                
+                // Animate up to 90% and wait
+                if (prev >= 90) {
+                    return 90;
+                }
+                // Animate quickly at the start, then slow down
+                const increment = prev < 50 ? 15 : 5;
+                return Math.min(prev + increment, 90);
             });
-        }, 80);
-
-        return () => clearInterval(interval);
+        }, 100);
     }
-  }, [loading, user]);
+    
+    return () => clearInterval(interval);
+
+  }, [loading, authLoaded]);
 
 
   const value = { user, loading };
