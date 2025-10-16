@@ -162,10 +162,9 @@ export function SignupForm() {
 
   return (
     <div className="flex flex-col gap-y-6">
-       <div className="mx-auto w-40">
-          <Image src="/bholo_logo.png" alt="BHOLO Logo" width={150} height={60} priority />
+        <div className="text-left">
+          <h1 className="text-3xl font-bold">Create your account</h1>
         </div>
-        <p className="text-center text-muted-foreground font-semibold">Sign up to join the conversation.</p>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <AuthFormError message={error} />
