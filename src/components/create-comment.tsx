@@ -53,6 +53,8 @@ export function CreateComment({ onComment, isDialog = false }: { onComment: (dat
   const [media, setMedia] = useState<ReplyMedia[]>([]);
   const [posting, setPosting] = useState(false);
   const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
+  const [isGifPopoverOpen, setIsGifPopoverOpen] = useState(false);
+  const [isStickerPopoverOpen, setIsStickerPopoverOpen] = useState(false);
 
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
@@ -142,6 +144,7 @@ export function CreateComment({ onComment, isDialog = false }: { onComment: (dat
       width: parseInt(gif.images.original.width),
       height: parseInt(gif.images.original.height)
     }]);
+    setIsGifPopoverOpen(false);
   }
 
   const onStickerClick = (sticker: any, e: React.SyntheticEvent<HTMLElement, Event>) => {
@@ -158,6 +161,7 @@ export function CreateComment({ onComment, isDialog = false }: { onComment: (dat
       width: parseInt(sticker.images.original.width),
       height: parseInt(sticker.images.original.height)
     }]);
+    setIsStickerPopoverOpen(false);
   };
 
   const isPostable = text.trim().length > 0 || media.length > 0;
@@ -225,7 +229,7 @@ export function CreateComment({ onComment, isDialog = false }: { onComment: (dat
                 <Button variant="ghost" size="icon" onClick={handleActionClick(() => videoInputRef.current?.click())} disabled={posting || hasMedia}>
                     <Film className="h-5 w-5 text-primary" />
                 </Button>
-                 <Popover>
+                 <Popover open={isGifPopoverOpen} onOpenChange={setIsGifPopoverOpen}>
                     <PopoverTrigger asChild>
                       <Button variant="ghost" size="icon" disabled={hasMedia || posting}>
                         <Clapperboard className="h-5 w-5 text-primary" />
@@ -240,7 +244,7 @@ export function CreateComment({ onComment, isDialog = false }: { onComment: (dat
                       </SearchContextManager>
                     </PopoverContent>
                   </Popover>
-                   <Popover>
+                   <Popover open={isStickerPopoverOpen} onOpenChange={setIsStickerPopoverOpen}>
                     <PopoverTrigger asChild>
                       <Button variant="ghost" size="icon" disabled={hasMedia || posting}>
                         <StickyNote className="h-5 w-5 text-primary" />
