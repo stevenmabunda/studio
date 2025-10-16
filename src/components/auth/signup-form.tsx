@@ -6,14 +6,14 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useRouter } from 'next/navigation';
-import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase/config';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import Link from 'next/link';
 import { AuthFormError } from './auth-form-error';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { MailCheck, Eye, EyeOff } from 'lucide-react';
 import Image from 'next/image';
@@ -24,10 +24,21 @@ const formSchema = z.object({
   password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
 });
 
+const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24px" height="24px" {...props}>
+        <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
+        <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
+        <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.223,0-9.657-3.657-11.303-8H6.399v0.11C9.469,36.52,16.223,44,24,44z"/>
+        <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.574l6.19,5.238C39.99,35.536,44,30.169,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
+    </svg>
+);
+
+
 export function SignupForm() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -40,14 +51,25 @@ export function SignupForm() {
     },
   });
 
+  const handleAuthError = (err: any) => {
+    if (err.code === 'auth/email-already-in-use') {
+      setError('An account with this email already exists.');
+    } else if (err.code === 'auth/popup-closed-by-user') {
+       setError('Sign-up cancelled. Please try again.');
+    }
+    else {
+      setError('An unexpected error occurred. Please try again.');
+    }
+    console.error("Signup failed:", err);
+  };
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
     setError(null);
     setSuccess(false);
 
     if (!auth || !db) {
-      setError('Authentication service is not available. Please try again later.');
-      console.error('Firebase auth or db is not initialized.');
+      setError('Authentication service is not available.');
       setLoading(false);
       return;
     }
@@ -55,20 +77,15 @@ export function SignupForm() {
       const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
       const user = userCredential.user;
 
-      // Send verification email
       await sendEmailVerification(user);
+      await updateProfile(user, { displayName: values.name });
 
-      await updateProfile(user, {
-        displayName: values.name,
-      });
-
-      // Create a user document in Firestore
       await setDoc(doc(db, 'users', user.uid), {
         uid: user.uid,
         displayName: values.name,
         email: user.email,
         photoURL: user.photoURL,
-        handle: user.email?.split('@')[0] || 'user',
+        handle: user.email?.split('@')[0] || `user${user.uid.substring(0, 5)}`,
         joined: new Date().toISOString(),
         bio: 'Passionate football fan. Discussing all things football. ⚽',
         location: '',
@@ -82,14 +99,47 @@ export function SignupForm() {
       setSuccess(true);
       
     } catch (err: any) {
-      if (err.code === 'auth/email-already-in-use') {
-        setError('An account with this email already exists.');
-      } else {
-        setError('An unexpected error occurred. Please try again.');
-      }
-      console.error(err);
+      handleAuthError(err);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleGoogleSignIn() {
+    if (!auth || !db) return;
+    setGoogleLoading(true);
+    setError(null);
+    const provider = new GoogleAuthProvider();
+    try {
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
+        
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
+
+        if (!userDoc.exists()) {
+             await setDoc(userDocRef, {
+                uid: user.uid,
+                displayName: user.displayName,
+                email: user.email,
+                photoURL: user.photoURL,
+                handle: user.email?.split('@')[0] || `user${user.uid.substring(0, 5)}`,
+                joined: new Date().toISOString(),
+                bio: 'Passionate football fan. Discussing all things football. ⚽',
+                location: '',
+                country: '',
+                favouriteClub: '',
+                bannerUrl: 'https://placehold.co/1200x400.png',
+                followersCount: 0,
+                followingCount: 0,
+            });
+        }
+        router.push('/home');
+        router.refresh();
+    } catch (err: any) {
+       handleAuthError(err);
+    } finally {
+        setGoogleLoading(false);
     }
   }
   
@@ -104,81 +154,92 @@ export function SignupForm() {
                 </AlertDescription>
             </Alert>
              <Button onClick={() => router.push('/login')} className="w-full">
-                Back to Sign In
+                Back to Log In
             </Button>
         </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-        <div className="flex flex-col space-y-2 text-center lg:text-left">
-            <div className="mx-auto w-32 lg:hidden">
-              <Image src="/bholo_logo.png" alt="BHOLO Logo" width={150} height={60} priority />
-            </div>
-            <h1 className="text-2xl font-semibold tracking-tight">Create an account</h1>
-            <p className="text-sm text-muted-foreground">Join the conversation on BHOLO today.</p>
+    <div className="space-y-6 flex flex-col">
+       <div className="mx-auto w-40">
+          <Image src="/bholo_logo.png" alt="BHOLO Logo" width={150} height={60} priority />
         </div>
+        <p className="text-center text-muted-foreground font-semibold">Sign up to join the conversation.</p>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
           <AuthFormError message={error} />
-           <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Your Name" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input placeholder="you@example.com" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Password</FormLabel>
-                <FormControl>
-                  <div className="relative">
-                    <Input type={showPassword ? "text" : "password"} placeholder="••••••••" {...field} />
-                     <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground"
-                    >
-                        {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                    </button>
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Creating Account...' : 'Create Account'}
-          </Button>
+           <fieldset disabled={loading || googleLoading} className="space-y-3">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Input placeholder="Full Name" {...field} className="bg-secondary text-foreground border-border h-11"/>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Input placeholder="Email" {...field} className="bg-secondary text-foreground border-border h-11"/>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <div className="relative">
+                      <Input type={showPassword ? "text" : "password"} placeholder="Password" {...field} className="bg-secondary text-foreground border-border h-11"/>
+                      <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground"
+                      >
+                          {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                      </button>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit" className="w-full h-11 text-base" disabled={loading || googleLoading}>
+              {loading ? 'Creating Account...' : 'Create Account'}
+            </Button>
+          </fieldset>
         </form>
       </Form>
+       <div className="flex items-center gap-4">
+            <div className="h-px bg-border flex-1" />
+            <span className="text-sm font-semibold text-muted-foreground">OR</span>
+            <div className="h-px bg-border flex-1" />
+       </div>
+
+        <Button variant="outline" className="w-full h-11 text-base" onClick={handleGoogleSignIn} disabled={loading || googleLoading}>
+            {googleLoading ? 'Redirecting...' : (
+                <>
+                    <GoogleIcon className="mr-2" />
+                    Sign up with Google
+                </>
+            )}
+        </Button>
+
       <p className="text-center text-sm text-muted-foreground">
         Already have an account?{' '}
         <Link href="/login" className="font-semibold text-primary hover:underline">
-          Sign in
+          Log in
         </Link>
       </p>
     </div>

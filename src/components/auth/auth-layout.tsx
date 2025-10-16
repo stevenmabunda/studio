@@ -3,6 +3,7 @@
 
 import type { ReactNode } from 'react';
 import Image from 'next/image';
+import { Card } from '../ui/card';
 
 export function AuthLayout({ children }: { children: ReactNode }) {
   return (
@@ -17,9 +18,9 @@ export function AuthLayout({ children }: { children: ReactNode }) {
           />
       </div>
       <div className="flex items-center justify-center p-4 lg:border-l">
-        <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
+        <Card className="w-full max-w-sm p-8 border-border">
             {children}
-        </div>
+        </Card>
       </div>
     </div>
   );
