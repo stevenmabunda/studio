@@ -113,9 +113,9 @@ export default function FantasyPage() {
         <h1 className="text-xl font-bold">Fantasy League</h1>
       </header>
       <main className="flex-1 p-2 md:p-4">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
             {/* Left Column: Pitch and Stats */}
-            <div className="space-y-4">
+            <div className="space-y-4 lg:col-span-2">
                 <Card className="bg-secondary/50">
                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">My Team</CardTitle>
@@ -158,7 +158,7 @@ export default function FantasyPage() {
 
             </div>
             {/* Right Column: Player List */}
-            <Card>
+            <Card className="lg:col-span-3">
                 <CardHeader>
                     <CardTitle>Players</CardTitle>
                     <div className="grid grid-cols-2 gap-2 pt-4">
