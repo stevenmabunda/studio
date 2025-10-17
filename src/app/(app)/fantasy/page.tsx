@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -113,9 +112,9 @@ export default function FantasyPage() {
         <h1 className="text-xl font-bold">Fantasy League</h1>
       </header>
       <main className="flex-1 p-2 md:p-4">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {/* Left Column: Pitch and Stats */}
-            <div className="space-y-4 lg:col-span-1">
+        <div className="flex flex-col gap-4">
+            {/* Top Row: Pitch and Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Card className="bg-secondary/50">
                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">My Team</CardTitle>
@@ -155,13 +154,13 @@ export default function FantasyPage() {
                         {renderPitchPosition('GKP', 2)}
                     </div>
                 </div>
-
             </div>
-            {/* Right Column: Player List */}
-            <Card className="lg:col-span-2">
+
+            {/* Bottom Row: Player List */}
+            <Card>
                 <CardHeader>
                     <CardTitle>Players</CardTitle>
-                    <div className="grid grid-cols-2 gap-2 pt-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 pt-4">
                         <Select value={positionFilter} onValueChange={setPositionFilter}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Position" />
@@ -180,12 +179,29 @@ export default function FantasyPage() {
                                 {TEAMS.map(team => <SelectItem key={team} value={team}>{team}</SelectItem>)}
                             </SelectContent>
                         </Select>
+                        <Select value={String(sortKey)} onValueChange={(val) => handleSort(val as keyof FantasyPlayer)}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Sort By" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="price">Price</SelectItem>
+                            </SelectContent>
+                        </Select>
+                         <Select value={sortOrder} onValueChange={(val) => setSortOrder(val as 'asc' | 'desc')}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Order" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="desc">Descending</SelectItem>
+                                <SelectItem value="asc">Ascending</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                 </CardHeader>
                 <CardContent className="p-0">
-                    <ScrollArea className="h-[60vh]">
+                    <ScrollArea className="h-[60vh] md:h-auto">
                          <Table>
-                            <TableHeader className="sticky top-0 bg-secondary">
+                            <TableHeader className="sticky top-0 bg-secondary z-10">
                                 <TableRow>
                                     <TableHead>Player</TableHead>
                                     <TableHead className="cursor-pointer" onClick={() => handleSort('price')}>Price</TableHead>
@@ -222,10 +238,4 @@ export default function FantasyPage() {
       </main>
     </div>
   );
-
-    
-
-
-    
-
-    
+}
