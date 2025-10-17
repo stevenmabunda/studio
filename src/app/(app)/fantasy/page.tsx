@@ -115,7 +115,7 @@ export default function FantasyPage() {
       <main className="flex-1 p-2 md:p-4">
         <div className="flex flex-col gap-4">
             {/* Top Row: Pitch and Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
                 <Card className="bg-secondary/50">
                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">My Team</CardTitle>
@@ -146,7 +146,7 @@ export default function FantasyPage() {
                     </CardContent>
                 </Card>
 
-                <div className="bg-green-800/20 p-2 md:p-4 rounded-lg relative aspect-[4/5] md:aspect-video">
+                <div className="bg-green-800/20 p-2 md:p-4 rounded-lg relative aspect-[4/5] md:aspect-[5/2]">
                     <Image src="/pitch-vertical.svg" alt="Football pitch" fill className="object-contain opacity-20" />
                      <div className="relative h-full flex flex-col justify-around">
                         {renderPitchPosition('FWD', 3)}
@@ -158,7 +158,7 @@ export default function FantasyPage() {
             </div>
 
             {/* Bottom Row: Player List */}
-            <Card className="bg-destructive/20">
+            <Card className="bg-fantasy-red">
                 <CardHeader>
                     <CardTitle>Players</CardTitle>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2 pt-4">
