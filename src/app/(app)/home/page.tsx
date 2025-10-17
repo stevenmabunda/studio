@@ -23,10 +23,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TrendingTopics } from '@/components/trending-topics';
 import { db } from '@/lib/firebase/config';
 import { onSnapshot, collection, query, where } from 'firebase/firestore';
-import { BettingOddsWidget } from '@/components/betting-odds-widget';
 import LivePage from '../live/page';
 import { Card } from '@/components/ui/card';
 import { SignupPrompt } from '@/components/signup-prompt';
+import FantasyPage from '../fantasy/page';
 
 
 export default function HomePage() {
@@ -258,7 +258,7 @@ export default function HomePage() {
                     <TabsTrigger value="foryou" className="flex-auto shrink-0 rounded-none border-b-2 border-transparent py-3 text-sm font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-2">For You</TabsTrigger>
                     <TabsTrigger value="discover" className="flex-auto shrink-0 rounded-none border-b-2 border-transparent py-3 text-sm font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-2">Discover</TabsTrigger>
                     <TabsTrigger value="live" className="flex-auto shrink-0 rounded-none border-b-2 border-transparent py-3 text-sm font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-2">Match Centre</TabsTrigger>
-                    <TabsTrigger value="betting" className="flex-auto shrink-0 rounded-none border-b-2 border-transparent py-3 text-sm font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-2">Betting</TabsTrigger>
+                    <TabsTrigger value="fantasy" className="flex-auto shrink-0 rounded-none border-b-2 border-transparent py-3 text-sm font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-2">Fantasy</TabsTrigger>
                 </TabsList>
             </div>
             {/* Desktop Header */}
@@ -267,7 +267,7 @@ export default function HomePage() {
                     <TabsTrigger value="foryou" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">For You</TabsTrigger>
                     <TabsTrigger value="discover" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Discover</TabsTrigger>
                     <TabsTrigger value="live" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Match Centre</TabsTrigger>
-                    <TabsTrigger value="betting" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Betting</TabsTrigger>
+                    <TabsTrigger value="fantasy" className="flex-1 shrink-0 rounded-none border-b-2 border-transparent py-4 text-base font-bold text-muted-foreground data-[state=active]:text-white data-[state=active]:border-white data-[state=active]:shadow-none px-4">Fantasy</TabsTrigger>
                 </TabsList>
             </div>
         </header>
@@ -319,13 +319,13 @@ export default function HomePage() {
           <TabsContent value="live" className="h-full">
             <LivePage />
           </TabsContent>
-          <TabsContent value="betting" className="h-full">
-            <Card className="border-0 m-0 shadow-none rounded-none">
-              <BettingOddsWidget />
-            </Card>
+          <TabsContent value="fantasy" className="h-full">
+            <FantasyPage />
           </TabsContent>
         </main>
       </Tabs>
     </div>
   );
 }
+
+    
