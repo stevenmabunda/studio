@@ -83,20 +83,20 @@ export default function FantasyPage() {
     const players = squad.filter(p => p.position === position);
     const placeholders = Array(SQUAD_LIMITS[position] - players.length).fill(null);
     return (
-        <div className={`flex justify-center items-center gap-2 md:gap-4 h-full`}>
+        <div className={`flex justify-center items-center gap-1 md:gap-2 h-full`}>
             {players.map(p => (
                 <div key={p.id} className="text-center group" onClick={() => removePlayer(p)}>
-                    <div className="relative w-12 h-12 md:w-16 md:h-16 mx-auto cursor-pointer">
+                    <div className="relative w-10 h-10 md:w-12 md:h-12 mx-auto cursor-pointer">
                         <Shirt className="w-full h-full text-primary" fill="currentColor" />
                         <MinusCircle className="absolute -top-1 -right-1 h-5 w-5 text-red-500 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
-                    <p className="text-xs font-bold truncate w-12 md:w-16">{p.name.split(' ').pop()}</p>
+                    <p className="text-xs font-bold truncate w-10 md:w-12">{p.name.split(' ').pop()}</p>
                     <p className="text-xs text-muted-foreground">{p.team.substring(0,3).toUpperCase()}</p>
                 </div>
             ))}
             {placeholders.map((_, i) => (
                 <div key={`${position}-placeholder-${i}`} className="text-center">
-                    <div className="w-12 h-12 md:w-16 md:h-16 mx-auto">
+                    <div className="w-10 h-10 md:w-12 md:h-12 mx-auto">
                         <Shirt className="w-full h-full text-white/10" />
                     </div>
                     <p className="text-xs font-bold text-white/20 h-4"> </p>
@@ -222,5 +222,8 @@ export default function FantasyPage() {
       </main>
     </div>
   );
+
+    
+
 
     
