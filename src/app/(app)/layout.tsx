@@ -8,6 +8,7 @@ import { RightSidebar } from '@/components/right-sidebar';
 import { MobileBottomNav } from '@/components/mobile-bottom-nav';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useEffect } from 'react';
+import { cn } from '@/lib/utils';
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
@@ -26,12 +27,27 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   }
   
   const isCreatorPage = pathname === '/creators';
-  if (isCreatorPage) {
+  const isFantasyPage = pathname === '/fantasy';
+
+  if (isCreatorPage || isFantasyPage) {
     return (
-      <div className="flex w-full justify-center">
-        <main className="w-full">
-          {children}
-        </main>
+      <div className="flex w-full justify-center h-screen">
+         <div className="hidden md:flex max-w-7xl mx-auto w-full relative">
+             <header className="w-[275px] shrink-0 h-screen">
+              <SidebarNav />
+            </header>
+            <main className="w-full border-x">
+                 <ScrollArea className="h-screen" id="desktop-scroll-area">
+                    {children}
+                 </ScrollArea>
+            </main>
+         </div>
+         <div className="md:hidden w-full">
+            <main className="w-full pb-16">
+              {children}
+            </main>
+          <MobileBottomNav />
+      </div>
       </div>
     );
   }
