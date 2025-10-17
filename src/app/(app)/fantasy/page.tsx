@@ -19,7 +19,7 @@ const SQUAD_LIMITS: Record<typeof POSITIONS[number], number> = {
   MID: 5,
   FWD: 3,
 };
-const TOTAL_BUDGET = 100.0;
+const TOTAL_BUDGET = 50.0;
 const TOTAL_PLAYERS = 15;
 
 const TEAMS = [...new Set(dummyPlayers.map(p => p.team))].sort();
@@ -127,7 +127,7 @@ export default function FantasyPage() {
                                 <p className="text-muted-foreground">Players</p>
                             </div>
                             <div>
-                                <p className="font-bold text-lg">£{budgetRemaining.toFixed(1)}m</p>
+                                <p className="font-bold text-lg">R{budgetRemaining.toFixed(1)}m</p>
                                 <p className="text-muted-foreground">Budget</p>
                             </div>
                             <div className="hidden md:block">
@@ -216,7 +216,7 @@ export default function FantasyPage() {
                                             <p className="font-bold">{player.name}</p>
                                             <p className="text-xs text-muted-foreground">{player.team} - {player.position}</p>
                                         </TableCell>
-                                        <TableCell>£{player.price.toFixed(1)}m</TableCell>
+                                        <TableCell>R{player.price.toFixed(1)}m</TableCell>
                                         <TableCell className="text-right">
                                             <Button 
                                                 size="icon" 
