@@ -1,3 +1,4 @@
+
 import type {Config} from 'tailwindcss';
 
 export default {
@@ -65,9 +66,6 @@ export default {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))',
         },
-        fantasy: {
-          red: 'hsl(var(--fantasy-red))',
-        }
       },
       borderRadius: {
         lg: 'var(--radius)',
@@ -110,3 +108,5 @@ export default {
   },
   plugins: [require('tailwindcss-animate')],
 } satisfies Config;
+
+    

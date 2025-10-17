@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -55,7 +56,6 @@
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 217.2 32.6% 22.5%;
     --sidebar-ring: 18 100% 50%;
-    --fantasy-red: 2 85% 30%;
   }
   .dark {
     --background: 0 0% 0%;
@@ -90,7 +90,6 @@
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 217.2 32.6% 22.5%;
     --sidebar-ring: 18 100% 50%;
-    --fantasy-red: 2 85% 30%;
   }
 }
 
@@ -179,3 +178,5 @@
   flex: 0 0 100%;
   min-height: 0;
 }
+
+    

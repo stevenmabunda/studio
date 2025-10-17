@@ -158,7 +158,7 @@ export default function FantasyPage() {
             </div>
 
             {/* Bottom Row: Player List */}
-            <Card className="bg-fantasy-red">
+            <Card className="bg-black">
                 <CardHeader>
                     <CardTitle>Players</CardTitle>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2 pt-4">
@@ -240,5 +240,7 @@ export default function FantasyPage() {
     </div>
   );
 }
+
+    
 
     
