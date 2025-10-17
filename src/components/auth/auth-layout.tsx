@@ -1,4 +1,3 @@
-
 'use client';
 
 import type { ReactNode } from 'react';
@@ -25,7 +24,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
 
       <div className="flex flex-col items-center justify-center p-4">
         <div className={cn("lg:hidden w-full flex flex-col items-center text-center mb-1")}>
-            <div className="relative w-full max-w-sm h-48">
+            <div className="relative w-full max-w-sm h-72">
               <Image src="/mobile-hero2.png" alt="BHOLO mobile hero" layout="fill" objectFit="contain" priority />
             </div>
             <Image src="/bholo_logo.png" alt="BHOLO Logo" width={120} height={48} priority />
