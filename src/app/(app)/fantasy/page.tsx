@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -157,7 +158,7 @@ export default function FantasyPage() {
             </div>
 
             {/* Bottom Row: Player List */}
-            <Card>
+            <Card className="bg-destructive/20">
                 <CardHeader>
                     <CardTitle>Players</CardTitle>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2 pt-4">
@@ -239,3 +240,5 @@ export default function FantasyPage() {
     </div>
   );
 }
+
+    
