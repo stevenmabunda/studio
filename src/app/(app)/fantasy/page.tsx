@@ -146,7 +146,7 @@ export default function FantasyPage() {
                     </CardContent>
                 </Card>
 
-                <div className="bg-green-800/20 p-2 md:p-4 rounded-lg relative aspect-[4/5] md:aspect-[5/2]">
+                <div className="bg-green-800/20 p-2 md:p-4 rounded-lg relative aspect-[4/5] md:aspect-[16/9]">
                     <Image src="/pitch-vertical.svg" alt="Football pitch" fill className="object-contain opacity-20" />
                      <div className="relative h-full flex flex-col justify-around">
                         {renderPitchPosition('FWD', 3)}
