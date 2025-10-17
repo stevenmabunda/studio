@@ -978,7 +978,7 @@ export function Post(props: PostProps) {
                          <div className="md:hidden absolute top-0 left-0 right-0 z-20 p-2 space-y-2 bg-gradient-to-b from-black/60 to-transparent">
                              <div className="flex items-center justify-between">
                                 <DialogClose asChild>
-                                    <Button variant="ghost" size="icon" className="h-9 w-9 text-white rounded-full bg-black/30 hover:bg-black/50 -ml-1">
+                                    <Button variant="ghost" size="icon" className="h-9 w-9 text-white rounded-full bg-black/80 hover:bg-black/70">
                                         <X />
                                     </Button>
                                 </DialogClose>
