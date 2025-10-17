@@ -29,29 +29,47 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const isCreatorPage = pathname === '/creators';
   const isFantasyPage = pathname === '/fantasy';
 
+  // Special layout for pages that need full width
   if (isCreatorPage || isFantasyPage) {
-    return (
-      <div className="flex w-full justify-center h-screen">
-         <div className="hidden md:flex max-w-7xl mx-auto w-full relative">
-             <header className="w-[275px] shrink-0 h-screen">
-              <SidebarNav />
+    const desktopLayout = (
+        <div className="hidden md:flex max-w-7xl mx-auto w-full relative">
+            <header className="w-[275px] shrink-0 h-screen">
+                <SidebarNav />
             </header>
             <main className="w-full border-x">
-                 <ScrollArea className="h-screen" id="desktop-scroll-area">
+                <ScrollArea className="h-screen" id="desktop-scroll-area">
                     {children}
-                 </ScrollArea>
+                </ScrollArea>
             </main>
-         </div>
-         <div className="md:hidden w-full">
+            {/* The right sidebar is conditionally rendered here */}
+            {!isFantasyPage && (
+                 <aside className="hidden xl:block w-[350px] shrink-0 h-screen">
+                    <ScrollArea className="h-full">
+                        <RightSidebar />
+                    </ScrollArea>
+                </aside>
+            )}
+        </div>
+    );
+     // This mobile layout is now simplified as it's shared
+    const mobileLayout = (
+        <div className="md:hidden w-full">
             <main className="w-full pb-16">
               {children}
             </main>
           <MobileBottomNav />
       </div>
-      </div>
+    );
+    
+    return (
+        <div className="flex w-full justify-center h-screen">
+            {desktopLayout}
+            {mobileLayout}
+        </div>
     );
   }
 
+  // Default layout for all other pages
   return (
     <>
       {/* Desktop Layout: Centered wrapper with sticky sidebars and a single scrollable main area */}
