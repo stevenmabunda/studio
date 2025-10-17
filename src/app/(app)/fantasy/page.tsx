@@ -86,17 +86,17 @@ export default function FantasyPage() {
         <div className={`flex justify-center items-center gap-1 md:gap-2 h-full`}>
             {players.map(p => (
                 <div key={p.id} className="text-center group" onClick={() => removePlayer(p)}>
-                    <div className="relative w-10 h-10 md:w-12 md:h-12 mx-auto cursor-pointer">
+                    <div className="relative w-8 h-8 md:w-10 md:h-10 mx-auto cursor-pointer">
                         <Shirt className="w-full h-full text-primary" fill="currentColor" />
-                        <MinusCircle className="absolute -top-1 -right-1 h-5 w-5 text-red-500 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <MinusCircle className="absolute -top-1 -right-1 h-4 w-4 md:h-5 md:w-5 text-red-500 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
-                    <p className="text-xs font-bold truncate w-10 md:w-12">{p.name.split(' ').pop()}</p>
-                    <p className="text-xs text-muted-foreground">{p.team.substring(0,3).toUpperCase()}</p>
+                    <p className="text-xs font-bold truncate w-8 md:w-10">{p.name.split(' ').pop()}</p>
+                    <p className="text-[10px] md:text-xs text-muted-foreground">{p.team.substring(0,3).toUpperCase()}</p>
                 </div>
             ))}
             {placeholders.map((_, i) => (
                 <div key={`${position}-placeholder-${i}`} className="text-center">
-                    <div className="w-10 h-10 md:w-12 md:h-12 mx-auto">
+                    <div className="w-8 h-8 md:w-10 md:h-10 mx-auto">
                         <Shirt className="w-full h-full text-white/10" />
                     </div>
                     <p className="text-xs font-bold text-white/20 h-4"> </p>
@@ -113,9 +113,9 @@ export default function FantasyPage() {
         <h1 className="text-xl font-bold">Fantasy League</h1>
       </header>
       <main className="flex-1 p-2 md:p-4">
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* Left Column: Pitch and Stats */}
-            <div className="space-y-4 lg:col-span-2">
+            <div className="space-y-4 lg:col-span-1">
                 <Card className="bg-secondary/50">
                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">My Team</CardTitle>
@@ -158,7 +158,7 @@ export default function FantasyPage() {
 
             </div>
             {/* Right Column: Player List */}
-            <Card className="lg:col-span-3">
+            <Card className="lg:col-span-2">
                 <CardHeader>
                     <CardTitle>Players</CardTitle>
                     <div className="grid grid-cols-2 gap-2 pt-4">
@@ -225,5 +225,7 @@ export default function FantasyPage() {
 
     
 
+
+    
 
     
