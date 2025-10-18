@@ -52,7 +52,6 @@ export default function HomePage() {
   const [isHeaderHidden, setIsHeaderHidden] = useState(false);
   const lastScrollY = useRef(0);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
-  const [hasFetchedInitial, setHasFetchedInitial] = useState(false);
   
   useEffect(() => {
     if (user && db) {
@@ -71,14 +70,6 @@ export default function HomePage() {
     document.title = 'Home | BHOLO';
   }, []);
   
-  useEffect(() => {
-    // Only fetch if we haven't fetched the initial posts yet.
-    if (!hasFetchedInitial) {
-        fetchForYouPosts({ limit: 20 });
-        setHasFetchedInitial(true);
-    }
-  }, [hasFetchedInitial, fetchForYouPosts]);
-
   useEffect(() => {
     // This effect handles restoring scroll position.
     if (!loadingForYou && forYouPosts.length > 0) {

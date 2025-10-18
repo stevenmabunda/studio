@@ -92,11 +92,13 @@ export function PostProvider({ children }: { children: ReactNode }) {
   const fetchForYouPosts = useCallback(async (options: { limit?: number; lastPostId?: string } = {}) => {
       if (!options.lastPostId) setLoadingForYou(true);
       try {
+          // If we are loading more and have prefetched posts, use them first.
           if (options.lastPostId && prefetchedPosts.length > 0) {
               const postsToAppend = [...prefetchedPosts];
               setForYouPosts(prev => [...prev, ...postsToAppend]);
-              setPrefetchedPosts([]); 
+              setPrefetchedPosts([]); // Clear prefetched posts after using them
               
+              // Prefetch the next batch
               if (postsToAppend.length > 0) {
                   getRecentPosts({ limit: 20, lastPostId: postsToAppend[postsToAppend.length - 1].id }).then(newPrefetchedPosts => {
                       setPrefetchedPosts(newPrefetchedPosts);
@@ -105,11 +107,13 @@ export function PostProvider({ children }: { children: ReactNode }) {
               return postsToAppend;
           }
 
+          // Standard fetch for initial load or when prefetched is empty
           const posts = await getRecentPosts(options);
           if (options.lastPostId) {
               setForYouPosts(prev => [...prev, ...posts]);
           } else {
               setForYouPosts(posts);
+              // Prefetch the next page after the initial load
               if (posts.length > 0) {
                    getRecentPosts({ limit: 20, lastPostId: posts[posts.length - 1].id }).then(newPrefetchedPosts => {
                       setPrefetchedPosts(newPrefetchedPosts);
@@ -127,6 +131,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
 
 
   useEffect(() => {
+    // This effect ensures initial posts are only fetched once per session.
     if (!hasFetchedInitial) {
         fetchForYouPosts({ limit: 20 });
         setHasFetchedInitial(true);
