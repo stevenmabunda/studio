@@ -36,8 +36,8 @@ const generatePlayers = (team: string, count: number, position: FantasyPlayer['p
     return players;
 };
 
-// Generate players for all teams except Orlando Pirates
-const otherTeams = teams.filter(t => t !== "Orlando Pirates");
+// Generate players for all teams except Orlando Pirates and Kaizer Chiefs
+const otherTeams = teams.filter(t => t !== "Orlando Pirates" && t !== "Kaizer Chiefs");
 const otherPlayers = otherTeams.flatMap(team => [
     ...generatePlayers(team, 2, 'GKP', [4.0, 5.5]),
     ...generatePlayers(team, 5, 'DEF', [4.0, 7.5]),
@@ -91,5 +91,40 @@ const orlandoPiratesPlayers: FantasyPlayer[] = [
     { id: playerIdCounter++, name: 'Yanela Mbuthuma', position: 'FWD', team: 'Orlando Pirates', price: 6.5 },
 ];
 
+const kaizerChiefsPlayers: FantasyPlayer[] = [
+    // Goalkeepers
+    { id: playerIdCounter++, name: 'Brandon Petersen', position: 'GKP', team: 'Kaizer Chiefs', price: 5.5 },
+    { id: playerIdCounter++, name: 'Fierce Ntwari', position: 'GKP', team: 'Kaizer Chiefs', price: 5.0 },
+    { id: playerIdCounter++, name: 'Bruce Bvuma', position: 'GKP', team: 'Kaizer Chiefs', price: 4.5 },
+    
+    // Defenders
+    { id: playerIdCounter++, name: 'Dillan Solomons', position: 'DEF', team: 'Kaizer Chiefs', price: 6.0 },
+    { id: playerIdCounter++, name: 'Inacio Miguel', position: 'DEF', team: 'Kaizer Chiefs', price: 6.2 },
+    { id: playerIdCounter++, name: 'Bradley Cross', position: 'DEF', team: 'Kaizer Chiefs', price: 5.8 },
+    { id: playerIdCounter++, name: 'Thabiso Monyane', position: 'DEF', team: 'Kaizer Chiefs', price: 6.5 },
+    { id: playerIdCounter++, name: 'Aden McCarthy', position: 'DEF', team: 'Kaizer Chiefs', price: 5.0 },
+    { id: playerIdCounter++, name: 'Reeve Frosler', position: 'DEF', team: 'Kaizer Chiefs', price: 6.8 },
+    { id: playerIdCounter++, name: 'Paseka Mako', position: 'DEF', team: 'Kaizer Chiefs', price: 6.4 },
+    { id: playerIdCounter++, name: 'Zitha Kwinika', position: 'DEF', team: 'Kaizer Chiefs', price: 6.0 },
 
-export const dummyPlayers: FantasyPlayer[] = [...otherPlayers, ...orlandoPiratesPlayers];
+    // Midfielders
+    { id: playerIdCounter++, name: 'Nkosingiphile Ngcobo', position: 'MID', team: 'Kaizer Chiefs', price: 8.5 },
+    { id: playerIdCounter++, name: 'Mduduzi Shabalala', position: 'MID', team: 'Kaizer Chiefs', price: 7.0 },
+    { id: playerIdCounter++, name: 'Wandile Duba', position: 'MID', team: 'Kaizer Chiefs', price: 6.5 },
+    { id: playerIdCounter++, name: 'Sibongiseni Mthethwa', position: 'MID', team: 'Kaizer Chiefs', price: 7.8 },
+    { id: playerIdCounter++, name: 'Mfundo Vilakazi', position: 'MID', team: 'Kaizer Chiefs', price: 6.0 },
+    { id: playerIdCounter++, name: 'Gaston Sirino', position: 'MID', team: 'Kaizer Chiefs', price: 9.5 },
+    { id: playerIdCounter++, name: 'Thabo Cele', position: 'MID', team: 'Kaizer Chiefs', price: 7.2 },
+    { id: playerIdCounter++, name: 'Siphesihle Ndlovu', position: 'MID', team: 'Kaizer Chiefs', price: 6.8 },
+    { id: playerIdCounter++, name: 'Pule Modi', position: 'MID', team: 'Kaizer Chiefs', price: 7.5 },
+    
+    // Forwards
+    { id: playerIdCounter++, name: 'Khanyisa Mayo', position: 'FWD', team: 'Kaizer Chiefs', price: 11.5 },
+    { id: playerIdCounter++, name: 'Ashley Du Preez', position: 'FWD', team: 'Kaizer Chiefs', price: 10.0 },
+    { id: playerIdCounter++, name: 'Makabi Lilepo', position: 'FWD', team: 'Kaizer Chiefs', price: 9.0 },
+    { id: playerIdCounter++, name: 'Naledi Hloogwane', position: 'FWD', team: 'Kaizer Chiefs', price: 5.5 },
+    { id: playerIdCounter++, name: 'Flavio Silva', position: 'FWD', team: 'Kaizer Chiefs', price: 8.0 },
+];
+
+
+export const dummyPlayers: FantasyPlayer[] = [...otherPlayers, ...orlandoPiratesPlayers, ...kaizerChiefsPlayers];
