@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
@@ -176,7 +177,7 @@ export default function FantasyPage() {
             <div className="grid grid-cols-1 gap-4">
                 <Card className="bg-secondary/50">
                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">My Team</CardTitle>
+                        <CardTitle className="text-sm font-medium">My Team - {user?.displayName}</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="grid grid-cols-3 md:grid-cols-4 gap-2 text-center text-sm">
@@ -298,3 +299,5 @@ export default function FantasyPage() {
     </div>
   );
 }
+
+    
