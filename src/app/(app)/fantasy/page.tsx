@@ -63,10 +63,10 @@ const welcomeCards = [
 
 const latestNews = [
     {
-        title: "FPL player price changes - rises, falls and top transfers",
-        subtitle: "Fantasy Premier League",
-        imageUrl: "https://picsum.photos/seed/scout1/600/400",
-        imageHint: "price changes"
+        title: "Chiefs secure goalless draw in Congo",
+        subtitle: "Kaizer Chiefs and AS Simba drew 0-0 in their CAF Confederation Cup second preliminary round first-leg on Saturday afternoon.",
+        imageUrl: "/new/chief-goal-less-draw-congo.jpg",
+        imageHint: "Kaizer Chiefs"
     },
     {
         title: "Latest Premier League player injuries - club by club news",
@@ -418,3 +418,5 @@ export default function FantasyPage({ isEmbedded = false }: FantasyPageProps) {
     </div>
   );
 }
+
+    
