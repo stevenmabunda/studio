@@ -31,10 +31,10 @@ export function RightSidebar() {
         />
       </div>
        <div className="border border-border rounded-lg p-4">
-        <TrendingTopics />
+        <FixturesWidget />
       </div>
        <div className="border border-border rounded-lg p-4">
-        <FixturesWidget />
+        <TrendingTopics />
       </div>
        <div className="border border-border rounded-lg p-4">
         <WhoToFollow />
