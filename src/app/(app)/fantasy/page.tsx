@@ -94,12 +94,11 @@ interface FantasyPageProps {
 }
 
 export default function FantasyPage({ isEmbedded = false }: FantasyPageProps) {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
-  const router = useRouter();
   
   const [squad, setSquad] = useState<FantasyPlayer[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(true);
   const [positionFilter, setPositionFilter] = useState<string>('all');
   const [teamFilter, setTeamFilter] = useState<string>('all');
   const [sortKey, setSortKey] = useState<keyof FantasyPlayer>('price');
@@ -117,27 +116,23 @@ export default function FantasyPage({ isEmbedded = false }: FantasyPageProps) {
   ).current;
 
   useEffect(() => {
-    if (!isWhitelisted && !isEmbedded) {
-      router.replace('/home');
-      return;
-    }
-    if (user) {
-      setLoading(true);
+    if (user && isWhitelisted) {
+      setDataLoading(true);
       getFantasySquad(user.uid)
         .then(setSquad)
         .catch(() => toast({ variant: 'destructive', description: "Could not load your team." }))
-        .finally(() => setLoading(false));
+        .finally(() => setDataLoading(false));
     } else {
-        setLoading(false);
+        setDataLoading(false);
     }
-  }, [user, toast, isWhitelisted, isEmbedded, router]);
+  }, [user, toast, isWhitelisted]);
   
   // Effect to save squad whenever it changes
   useEffect(() => {
-    if (user && !loading && isWhitelisted) {
+    if (user && !dataLoading && isWhitelisted) {
       debouncedSave(user.uid, squad);
     }
-  }, [squad, user, loading, debouncedSave, isWhitelisted]);
+  }, [squad, user, dataLoading, debouncedSave, isWhitelisted]);
 
 
   const budgetRemaining = useMemo(() => {
@@ -340,7 +335,7 @@ export default function FantasyPage({ isEmbedded = false }: FantasyPageProps) {
     </main>
   );
 
-  if (loading || (!isWhitelisted && !isEmbedded)) {
+  if (authLoading || dataLoading) {
     return (
       <div className="flex h-full min-h-screen flex-col">
         <header className="sticky top-0 z-10 border-b bg-background/80 p-4 backdrop-blur-sm flex items-center gap-4">
@@ -354,13 +349,25 @@ export default function FantasyPage({ isEmbedded = false }: FantasyPageProps) {
     );
   }
   
-  if (isEmbedded) {
-    return isWhitelisted ? squadSelectionContent : (
-        <div className="p-8 text-center text-muted-foreground">
-            <h2 className="text-xl font-bold">Coming Soon</h2>
-            <p>The Fantasy League is currently in a private beta. Stay tuned for the public release!</p>
+  if (!isWhitelisted) {
+     return (
+        <div className="flex h-full min-h-screen flex-col">
+          <header className="sticky top-0 z-10 border-b bg-background/80 p-4 backdrop-blur-sm flex items-center gap-4">
+            <Image src="/psl-logo.png" alt="PSL Logo" width={40} height={40} />
+            <h1 className="text-xl font-bold">Fantasy League</h1>
+          </header>
+          <main className="flex-1 flex items-center justify-center p-4">
+              <div className="text-center">
+                  <h2 className="text-2xl font-bold">Coming Soon!</h2>
+                  <p className="text-muted-foreground mt-2">The Fantasy League is currently in a private beta. Stay tuned for the public release!</p>
+              </div>
+          </main>
         </div>
     );
+  }
+  
+  if (isEmbedded) {
+    return squadSelectionContent;
   }
 
   return (
