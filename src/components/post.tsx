@@ -532,17 +532,16 @@ export function Post(props: PostProps) {
     }
 
     if (!isStandalone && !isReplyView) {
+      // Logic to save scroll position
       try {
-        const desktopScrollArea = document.querySelector(
-          '#desktop-scroll-area > div'
-        );
+        const desktopScrollArea = document.querySelector('#desktop-scroll-area > div');
         if (desktopScrollArea) {
           sessionStorage.setItem('desktopScrollY', String(desktopScrollArea.scrollTop));
         } else {
           sessionStorage.setItem('homeScrollY', String(window.scrollY));
         }
       } catch (e) {
-        console.error('Could not save scroll position:', e);
+        console.error("Could not save scroll position:", e);
       }
       router.push(`/post/${id}`);
     }

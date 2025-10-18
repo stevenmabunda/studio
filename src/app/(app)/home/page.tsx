@@ -72,6 +72,7 @@ export default function HomePage() {
   }, []);
   
   useEffect(() => {
+    // Only fetch if we haven't fetched the initial posts yet.
     if (!hasFetchedInitial) {
         fetchForYouPosts({ limit: 20 });
         setHasFetchedInitial(true);
@@ -79,6 +80,7 @@ export default function HomePage() {
   }, [hasFetchedInitial, fetchForYouPosts]);
 
   useEffect(() => {
+    // This effect handles restoring scroll position.
     if (!loadingForYou && forYouPosts.length > 0) {
       try {
         const desktopScrollY = sessionStorage.getItem('desktopScrollY');
@@ -99,26 +101,6 @@ export default function HomePage() {
       }
     }
   }, [loadingForYou, forYouPosts.length]);
-
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-        try {
-            const desktopScrollArea = document.querySelector('#desktop-scroll-area > div');
-            if (desktopScrollArea) {
-                sessionStorage.setItem('desktopScrollY', String(desktopScrollArea.scrollTop));
-            } else {
-                sessionStorage.setItem('homeScrollY', String(window.scrollY));
-            }
-        } catch(e) {
-            console.error("Could not save scroll position:", e);
-        }
-    };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-
-    return () => {
-        window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, []);
 
 
   const loadMoreForYouPosts = useCallback(async () => {
@@ -327,5 +309,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    
