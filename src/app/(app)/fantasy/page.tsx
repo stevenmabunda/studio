@@ -180,7 +180,7 @@ export default function FantasyPage() {
                         <CardTitle className="text-sm font-medium">My Team - {user?.displayName}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="grid grid-cols-3 md:grid-cols-4 gap-2 text-center text-sm">
+                        <div className="grid grid-cols-4 gap-2 text-center text-sm">
                             <div>
                                 <p className="font-bold text-lg">{squad.length}/{TOTAL_PLAYERS}</p>
                                 <p className="text-muted-foreground">Players</p>
@@ -189,17 +189,13 @@ export default function FantasyPage() {
                                 <p className="font-bold text-lg">R{budgetRemaining.toFixed(1)}m</p>
                                 <p className="text-muted-foreground">Budget</p>
                             </div>
-                            <div className="hidden md:block">
-                                <p className="font-bold text-lg">{playersByPosition['GKP']}/{SQUAD_LIMITS['GKP']}</p>
-                                <p className="text-muted-foreground">GKP</p>
+                            <div>
+                                <p className="font-bold text-lg">1,204</p>
+                                <p className="text-muted-foreground">Points</p>
                             </div>
-                            <div className="hidden md:block">
-                                <p className="font-bold text-lg">{playersByPosition['DEF']}/{SQUAD_LIMITS['DEF']}</p>
-                                <p className="text-muted-foreground">DEF</p>
-                            </div>
-                             <div className="md:hidden">
-                                <p className="font-bold text-lg">{playersByPosition['MID']}/{SQUAD_LIMITS['MID']}</p>
-                                <p className="text-muted-foreground">MID</p>
+                            <div className="cursor-pointer hover:bg-white/5 rounded-md p-1 -m-1">
+                                <p className="font-bold text-lg">5th</p>
+                                <p className="text-muted-foreground">Leaderboard</p>
                             </div>
                         </div>
                     </CardContent>
