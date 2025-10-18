@@ -302,6 +302,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
     
     const updater = (posts: PostType[]) => posts.map(p => p.id === postId ? { ...p, content: data.text } : p)
     setForYouPosts(updater);
+    setNewForYouPosts(updater);
   };
 
   const deletePost = async (postId: string) => {
@@ -310,6 +311,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
 
     const updater = (posts: PostType[]) => posts.filter(p => p.id !== postId)
     setForYouPosts(updater);
+    setNewForYouPosts(updater);
   };
 
   const addVote = async (postId: string, choiceIndex: number) => {
@@ -329,6 +331,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
       });
 
     setForYouPosts(updater);
+    setNewForYouPosts(updater);
 
     try {
       await runTransaction(db, async (transaction) => {
@@ -385,6 +388,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
         
         const updater = (posts: PostType[]) => posts.map(p => p.id === postId ? { ...p, comments: p.comments + 1 } : p);
         setForYouPosts(updater);
+        setNewForYouPosts(updater);
         
         const postAuthorId = postDoc.data()?.authorId;
         if (user.uid !== postAuthorId) {
@@ -415,6 +419,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
         : p
     );
     setForYouPosts(updater);
+    setNewForYouPosts(updater);
 
     try {
         await runTransaction(db, async (transaction) => {
@@ -453,6 +458,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
             : p
         );
         setForYouPosts(revertUpdater);
+        setNewForYouPosts(revertUpdater);
     }
   };
   
