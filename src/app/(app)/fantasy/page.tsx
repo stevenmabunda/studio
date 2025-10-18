@@ -127,14 +127,14 @@ export default function FantasyPage() {
     const players = squad.filter(p => p.position === position);
     const placeholders = Array(SQUAD_LIMITS[position] - players.length).fill(null);
     return (
-        <div className={`flex justify-center items-center gap-1 md:gap-2 h-full`}>
+        <div className={`flex justify-around items-center gap-1 md:gap-2 h-full`}>
             {players.map(p => (
                 <div key={p.id} className="text-center group" onClick={() => removePlayer(p)}>
                     <div className="relative w-8 h-8 md:w-10 md:h-10 mx-auto cursor-pointer">
                         <Shirt className="w-full h-full text-primary" fill="currentColor" />
                         <MinusCircle className="absolute -top-1 -right-1 h-4 w-4 md:h-5 md:w-5 text-red-500 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
-                    <p className="text-xs font-bold truncate w-8 md:w-10">{p.name.split(' ').pop()}</p>
+                    <p className="text-xs font-bold truncate w-14 md:w-16">{p.name.split(' ').pop()}</p>
                     <p className="text-[10px] md:text-xs text-muted-foreground">{p.team.substring(0,3).toUpperCase()}</p>
                 </div>
             ))}
@@ -143,7 +143,7 @@ export default function FantasyPage() {
                     <div className="w-8 h-8 md:w-10 md:h-10 mx-auto">
                         <Shirt className="w-full h-full text-white/10" />
                     </div>
-                    <p className="text-xs font-bold text-white/20 h-4"> </p>
+                    <p className="text-xs font-bold text-white/20 h-4 w-14 md:w-16"> </p>
                     <p className="text-xs text-muted-foreground h-3"> </p>
                 </div>
             ))}
