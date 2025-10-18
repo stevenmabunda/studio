@@ -41,7 +41,7 @@ const navItems = [
   { href: '/notifications', label: 'Notifications', icon: Bell },
   { href: '/messages', label: 'Messages', icon: MessageSquare },
   { href: '/live', label: 'Match Centre', icon: ShieldCheck },
-  { href: '/fixtures', label: 'Fixtures', icon: Gamepad2 },
+  { href: '/fantasy', label: 'Fantasy', icon: Gamepad2 },
   { href: '/bookmarks', label: 'Bookmarks', icon: Bookmark },
   { href: '/profile', label: 'My Profile', icon: User },
 ];
