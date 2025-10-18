@@ -47,9 +47,10 @@ const otherPlayers = otherTeams.flatMap(team => [
 
 
 const orlandoPiratesPlayers: FantasyPlayer[] = [
-    // Goalkeepers (Added placeholders)
+    // Goalkeepers
     { id: playerIdCounter++, name: 'Sipho Chaine', position: 'GKP', team: 'Orlando Pirates', price: 5.5 },
     { id: playerIdCounter++, name: 'Melusi Buthelezi', position: 'GKP', team: 'Orlando Pirates', price: 5.0 },
+    { id: playerIdCounter++, name: 'Siyabonga Dladla', position: 'GKP', team: 'Orlando Pirates', price: 4.5 },
 
     // Defenders
     { id: playerIdCounter++, name: 'Nkosinathi Sibisi', position: 'DEF', team: 'Orlando Pirates', price: 7.0 },
@@ -93,5 +94,3 @@ const orlandoPiratesPlayers: FantasyPlayer[] = [
 
 
 export const dummyPlayers: FantasyPlayer[] = [...otherPlayers, ...orlandoPiratesPlayers];
-
-    
