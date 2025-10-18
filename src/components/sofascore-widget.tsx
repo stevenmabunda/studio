@@ -1,8 +1,26 @@
+
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { useEffect, useState } from 'react';
 
 export function SofascoreWidget() {
+  const [widgetSrc, setWidgetSrc] = useState('');
+
+  useEffect(() => {
+    const config = {
+      "widget": "standings",
+      "host": "widgets.sofascore.com",
+      "tournament": "3830",
+      "season": "79701",
+      "showCompetitionLogo": true,
+      "theme": "dark", // Change theme to dark
+    };
+    
+    const queryString = new URLSearchParams(config as any).toString();
+    setWidgetSrc(`https://widgets.sofascore.com/embed/tournament/3830/season/79701/standings/Premiership%2025%2F26?${queryString}`);
+  }, []);
+
   return (
     <Card>
       <CardHeader>
@@ -11,7 +29,7 @@ export function SofascoreWidget() {
       <CardContent className="p-0">
         <iframe 
             id="sofa-standings-embed-3830-79701" 
-            src="https://widgets.sofascore.com/embed/tournament/3830/season/79701/standings/Premiership%2025%2F26?widgetTitle=Premiership%2025%2F26&showCompetitionLogo=true" 
+            src={widgetSrc}
             style={{ 
                 height: '500px', 
                 maxWidth: '768px', 

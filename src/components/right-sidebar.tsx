@@ -1,3 +1,4 @@
+
 'use client';
 import { TrendingTopics } from "@/components/trending-topics";
 import { WhoToFollow } from "./who-to-follow";
@@ -34,6 +35,9 @@ export function RightSidebar() {
         <TrendingTopics />
       </div>
       <SofascoreWidget />
+       <div className="border border-border rounded-lg p-4">
+        <FixturesWidget />
+      </div>
        <div className="border border-border rounded-lg p-4">
         <WhoToFollow />
       </div>
