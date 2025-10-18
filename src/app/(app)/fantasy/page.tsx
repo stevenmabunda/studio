@@ -418,5 +418,3 @@ export default function FantasyPage({ isEmbedded = false }: FantasyPageProps) {
     </div>
   );
 }
-
-    
