@@ -19,7 +19,7 @@ const SQUAD_LIMITS: Record<typeof POSITIONS[number], number> = {
   MID: 5,
   FWD: 3,
 };
-const TOTAL_BUDGET = 50.0;
+const TOTAL_BUDGET = 100.0;
 const TOTAL_PLAYERS = 15;
 
 const TEAMS = [...new Set(dummyPlayers.map(p => p.team))].sort();
