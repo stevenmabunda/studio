@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
@@ -22,7 +21,7 @@ export function SofascoreWidget() {
   }, []);
 
   return (
-    <Card>
+    <Card className="bg-black">
       <CardHeader>
         <CardTitle className="text-lg font-bold text-primary">Standings</CardTitle>
       </CardHeader>
