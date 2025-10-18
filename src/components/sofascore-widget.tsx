@@ -27,19 +27,21 @@ export function SofascoreWidget() {
         <CardTitle className="text-lg font-bold text-primary">Standings</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        <iframe 
-            id="sofa-standings-embed-3830-79701" 
-            src={widgetSrc}
-            style={{ 
-                height: '500px', 
-                maxWidth: '768px', 
-                width: '100%' 
-            }} 
-            frameBorder="0" 
-            scrolling="no"
-            title="Sofascore Standings"
-        >
-        </iframe>
+        {widgetSrc && (
+            <iframe 
+                id="sofa-standings-embed-3830-79701" 
+                src={widgetSrc}
+                style={{ 
+                    height: '500px', 
+                    maxWidth: '768px', 
+                    width: '100%' 
+                }} 
+                frameBorder="0" 
+                scrolling="no"
+                title="Sofascore Standings"
+            >
+            </iframe>
+        )}
         <div style={{ fontSize: '12px', fontFamily: 'Arial, sans-serif', textAlign: 'left', padding: '10px' }}>
           Standings provided by <a target="_blank" href="https://www.sofascore.com/tournament/football/south-africa/premiership/358#id:79701" rel="noopener noreferrer">Sofascore</a>
         </div>
