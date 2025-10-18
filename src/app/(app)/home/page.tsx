@@ -293,7 +293,7 @@ export default function HomePage() {
             <LivePage />
           </TabsContent>
           <TabsContent value="fantasy" className="h-full">
-            <FantasyPage />
+            <FantasyPage isEmbedded={true} />
           </TabsContent>
         </main>
       </Tabs>

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
@@ -86,7 +87,11 @@ const latestNews = [
     }
 ];
 
-export default function FantasyPage() {
+interface FantasyPageProps {
+  isEmbedded?: boolean;
+}
+
+export default function FantasyPage({ isEmbedded = false }: FantasyPageProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   
@@ -198,7 +203,131 @@ export default function FantasyPage() {
         </div>
     )
   }
-  
+
+  const squadSelectionContent = (
+    <main className="flex-1 p-2 md:p-4">
+      <div className="flex flex-col gap-4">
+        {/* Top Row: Pitch and Stats */}
+        <div className="grid grid-cols-1 gap-4">
+            <Card className="bg-secondary/50">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">My Team - {user?.displayName}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-4 gap-2 text-center text-sm">
+                        <div>
+                            <p className="font-bold text-lg">{squad.length}/{TOTAL_PLAYERS}</p>
+                            <p className="text-muted-foreground">Players</p>
+                        </div>
+                        <div>
+                            <p className="font-bold text-lg">R{budgetRemaining.toFixed(1)}m</p>
+                            <p className="text-muted-foreground">Budget</p>
+                        </div>
+                        <div>
+                            <p className="font-bold text-lg">1,204</p>
+                            <p className="text-muted-foreground">Points</p>
+                        </div>
+                        <div className="cursor-pointer hover:bg-white/5 rounded-md p-1 -m-1">
+                            <p className="font-bold text-lg">5th</p>
+                            <p className="text-muted-foreground">Leaderboard</p>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <div className="p-2 md:p-4 rounded-lg relative aspect-[16/9]">
+                <Image src="/fantasy-pitch.jpg" alt="Football pitch" fill className="object-cover rounded-lg" />
+                <div className="relative h-full flex flex-col justify-around">
+                    {renderPitchPosition('GKP', 2)}
+                    {renderPitchPosition('DEF', 5)}
+                    {renderPitchPosition('MID', 5)}
+                    {renderPitchPosition('FWD', 3)}
+                </div>
+            </div>
+        </div>
+
+        {/* Bottom Row: Player List */}
+        <Card className="bg-black">
+            <CardHeader>
+                <CardTitle>Players</CardTitle>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 pt-4">
+                    <Select value={positionFilter} onValueChange={setPositionFilter}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Position" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Positions</SelectItem>
+                            {POSITIONS.map(pos => <SelectItem key={pos} value={pos}>{pos}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                    <Select value={teamFilter} onValueChange={setTeamFilter}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Team" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Teams</SelectItem>
+                            {TEAMS.map(team => <SelectItem key={team} value={team}>{team}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                    <Select value={String(sortKey)} onValueChange={(val) => handleSort(val as keyof FantasyPlayer)}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Sort By" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="price">Price</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <Select value={sortOrder} onValueChange={(val) => setSortOrder(val as 'asc' | 'desc')}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Order" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="desc">Descending</SelectItem>
+                            <SelectItem value="asc">Ascending</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+            </CardHeader>
+            <CardContent className="p-0">
+                <ScrollArea className="h-[60vh] md:h-auto">
+                    <Table>
+                        <TableHeader className="sticky top-0 bg-secondary z-10">
+                            <TableRow>
+                                <TableHead>Player</TableHead>
+                                <TableHead className="cursor-pointer" onClick={() => handleSort('price')}>Price</TableHead>
+                                <TableHead className="text-right">Action</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {filteredPlayers.map(player => (
+                                <TableRow key={player.id}>
+                                    <TableCell>
+                                        <p className="font-bold">{player.name}</p>
+                                        <p className="text-xs text-muted-foreground">{player.team} - {player.position}</p>
+                                    </TableCell>
+                                    <TableCell>R{player.price.toFixed(1)}m</TableCell>
+                                    <TableCell className="text-right">
+                                        <Button 
+                                            size="icon" 
+                                            variant="ghost" 
+                                            onClick={() => addPlayer(player)}
+                                            disabled={!canAddPlayer(player)}
+                                            className="h-8 w-8 text-green-500 disabled:text-muted-foreground/30"
+                                        >
+                                            <PlusCircle />
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </ScrollArea>
+            </CardContent>
+        </Card>
+      </div>
+    </main>
+  );
+
   if (loading) {
     return (
       <div className="flex h-full min-h-screen flex-col">
@@ -211,6 +340,10 @@ export default function FantasyPage() {
         </main>
       </div>
     );
+  }
+  
+  if (isEmbedded) {
+    return squadSelectionContent;
   }
 
   return (
@@ -278,127 +411,7 @@ export default function FantasyPage() {
             </div>
         </TabsContent>
         <TabsContent value="squad-selection">
-             <main className="flex-1 p-2 md:p-4">
-                <div className="flex flex-col gap-4">
-                    {/* Top Row: Pitch and Stats */}
-                    <div className="grid grid-cols-1 gap-4">
-                        <Card className="bg-secondary/50">
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">My Team - {user?.displayName}</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="grid grid-cols-4 gap-2 text-center text-sm">
-                                    <div>
-                                        <p className="font-bold text-lg">{squad.length}/{TOTAL_PLAYERS}</p>
-                                        <p className="text-muted-foreground">Players</p>
-                                    </div>
-                                    <div>
-                                        <p className="font-bold text-lg">R{budgetRemaining.toFixed(1)}m</p>
-                                        <p className="text-muted-foreground">Budget</p>
-                                    </div>
-                                    <div>
-                                        <p className="font-bold text-lg">1,204</p>
-                                        <p className="text-muted-foreground">Points</p>
-                                    </div>
-                                    <div className="cursor-pointer hover:bg-white/5 rounded-md p-1 -m-1">
-                                        <p className="font-bold text-lg">5th</p>
-                                        <p className="text-muted-foreground">Leaderboard</p>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        <div className="p-2 md:p-4 rounded-lg relative aspect-[16/9]">
-                            <Image src="/fantasy-pitch.jpg" alt="Football pitch" fill className="object-cover rounded-lg" />
-                            <div className="relative h-full flex flex-col justify-around">
-                                {renderPitchPosition('FWD', 3)}
-                                {renderPitchPosition('MID', 5)}
-                                {renderPitchPosition('DEF', 5)}
-                                {renderPitchPosition('GKP', 2)}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Bottom Row: Player List */}
-                    <Card className="bg-black">
-                        <CardHeader>
-                            <CardTitle>Players</CardTitle>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 pt-4">
-                                <Select value={positionFilter} onValueChange={setPositionFilter}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Position" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All Positions</SelectItem>
-                                        {POSITIONS.map(pos => <SelectItem key={pos} value={pos}>{pos}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                                <Select value={teamFilter} onValueChange={setTeamFilter}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Team" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All Teams</SelectItem>
-                                        {TEAMS.map(team => <SelectItem key={team} value={team}>{team}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                                <Select value={String(sortKey)} onValueChange={(val) => handleSort(val as keyof FantasyPlayer)}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Sort By" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="price">Price</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <Select value={sortOrder} onValueChange={(val) => setSortOrder(val as 'asc' | 'desc')}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Order" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="desc">Descending</SelectItem>
-                                        <SelectItem value="asc">Ascending</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="p-0">
-                            <ScrollArea className="h-[60vh] md:h-auto">
-                                <Table>
-                                    <TableHeader className="sticky top-0 bg-secondary z-10">
-                                        <TableRow>
-                                            <TableHead>Player</TableHead>
-                                            <TableHead className="cursor-pointer" onClick={() => handleSort('price')}>Price</TableHead>
-                                            <TableHead className="text-right">Action</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {filteredPlayers.map(player => (
-                                            <TableRow key={player.id}>
-                                                <TableCell>
-                                                    <p className="font-bold">{player.name}</p>
-                                                    <p className="text-xs text-muted-foreground">{player.team} - {player.position}</p>
-                                                </TableCell>
-                                                <TableCell>R{player.price.toFixed(1)}m</TableCell>
-                                                <TableCell className="text-right">
-                                                    <Button 
-                                                        size="icon" 
-                                                        variant="ghost" 
-                                                        onClick={() => addPlayer(player)}
-                                                        disabled={!canAddPlayer(player)}
-                                                        className="h-8 w-8 text-green-500 disabled:text-muted-foreground/30"
-                                                    >
-                                                        <PlusCircle />
-                                                    </Button>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </ScrollArea>
-                        </CardContent>
-                    </Card>
-                </div>
-            </main>
+             {squadSelectionContent}
         </TabsContent>
       </Tabs>
     </div>
