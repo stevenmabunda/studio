@@ -1,4 +1,3 @@
-
 'use client';
 import { TrendingTopics } from "@/components/trending-topics";
 import { WhoToFollow } from "./who-to-follow";
@@ -7,6 +6,7 @@ import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FixturesWidget } from "./fixtures-widget";
+import { SofascoreWidget } from "./sofascore-widget";
 
 export function RightSidebar() {
   const router = useRouter();
@@ -30,12 +30,10 @@ export function RightSidebar() {
             onKeyDown={handleSearch}
         />
       </div>
-      <div className="border border-border rounded-lg p-4">
-        <FixturesWidget />
-      </div>
        <div className="border border-border rounded-lg p-4">
         <TrendingTopics />
       </div>
+      <SofascoreWidget />
        <div className="border border-border rounded-lg p-4">
         <WhoToFollow />
       </div>
