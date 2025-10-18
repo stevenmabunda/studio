@@ -36,8 +36,8 @@ const generatePlayers = (team: string, count: number, position: FantasyPlayer['p
     return players;
 };
 
-// Generate players for all teams except Orlando Pirates and Kaizer Chiefs
-const otherTeams = teams.filter(t => t !== "Orlando Pirates" && t !== "Kaizer Chiefs");
+// Generate players for all teams except the main ones
+const otherTeams = teams.filter(t => t !== "Orlando Pirates" && t !== "Kaizer Chiefs" && t !== "Mamelodi Sundowns");
 const otherPlayers = otherTeams.flatMap(team => [
     ...generatePlayers(team, 2, 'GKP', [4.0, 5.5]),
     ...generatePlayers(team, 5, 'DEF', [4.0, 7.5]),
@@ -126,5 +126,52 @@ const kaizerChiefsPlayers: FantasyPlayer[] = [
     { id: playerIdCounter++, name: 'Flavio Silva', position: 'FWD', team: 'Kaizer Chiefs', price: 8.0 },
 ];
 
+const mamelodiSundownsPlayers: FantasyPlayer[] = [
+    // Goalkeepers
+    { id: playerIdCounter++, name: 'Ronwen Williams', position: 'GKP', team: 'Mamelodi Sundowns', price: 6.0 },
+    { id: playerIdCounter++, name: 'Denis Onyango', position: 'GKP', team: 'Mamelodi Sundowns', price: 5.5 },
+    { id: playerIdCounter++, name: 'Reyaad Pieterse', position: 'GKP', team: 'Mamelodi Sundowns', price: 5.0 },
+    { id: playerIdCounter++, name: 'Jody February', position: 'GKP', team: 'Mamelodi Sundowns', price: 4.5 },
+    { id: playerIdCounter++, name: 'Nqobani Biyela', position: 'GKP', team: 'Mamelodi Sundowns', price: 4.0 },
 
-export const dummyPlayers: FantasyPlayer[] = [...otherPlayers, ...orlandoPiratesPlayers, ...kaizerChiefsPlayers];
+    // Defenders
+    { id: playerIdCounter++, name: 'Khuliso Mudau', position: 'DEF', team: 'Mamelodi Sundowns', price: 7.5 },
+    { id: playerIdCounter++, name: 'Aubrey Modiba', position: 'DEF', team: 'Mamelodi Sundowns', price: 7.0 },
+    { id: playerIdCounter++, name: 'Grant Kekana', position: 'DEF', team: 'Mamelodi Sundowns', price: 6.8 },
+    { id: playerIdCounter++, name: 'Thapelo Morena', position: 'DEF', team: 'Mamelodi Sundowns', price: 6.5 },
+    { id: playerIdCounter++, name: 'Mothobi Mvala', position: 'DEF', team: 'Mamelodi Sundowns', price: 6.5 },
+    { id: playerIdCounter++, name: 'Mosa Lebusa', position: 'DEF', team: 'Mamelodi Sundowns', price: 6.2 },
+    { id: playerIdCounter++, name: 'Zuko Mdunyelwa', position: 'DEF', team: 'Mamelodi Sundowns', price: 5.8 },
+    { id: playerIdCounter++, name: 'Devine Lunga', position: 'DEF', team: 'Mamelodi Sundowns', price: 5.5 },
+    { id: playerIdCounter++, name: 'Keanu Cupido', position: 'DEF', team: 'Mamelodi Sundowns', price: 5.2 },
+    { id: playerIdCounter++, name: 'Kegan Johannes', position: 'DEF', team: 'Mamelodi Sundowns', price: 5.0 },
+    { id: playerIdCounter++, name: 'Thato Sibiya', position: 'DEF', team: 'Mamelodi Sundowns', price: 4.5 },
+    { id: playerIdCounter++, name: 'Fawaaz Basadein', position: 'DEF', team: 'Mamelodi Sundowns', price: 4.5 },
+    { id: playerIdCounter++, name: 'Asenjo Tiwani', position: 'DEF', team: 'Mamelodi Sundowns', price: 4.0 },
+    { id: playerIdCounter++, name: 'Malibongwe Lhoza', position: 'DEF', team: 'Mamelodi Sundowns', price: 4.0 },
+
+    // Midfielders
+    { id: playerIdCounter++, name: 'Themba Zwane', position: 'MID', team: 'Mamelodi Sundowns', price: 12.5 },
+    { id: playerIdCounter++, name: 'Tebogo Mokoena', position: 'MID', team: 'Mamelodi Sundowns', price: 11.0 },
+    { id: playerIdCounter++, name: 'Marcelo Allende', position: 'MID', team: 'Mamelodi Sundowns', price: 10.5 },
+    { id: playerIdCounter++, name: 'Jayden Adams', position: 'MID', team: 'Mamelodi Sundowns', price: 9.0 },
+    { id: playerIdCounter++, name: 'Nuno Santos', position: 'MID', team: 'Mamelodi Sundowns', price: 8.5 },
+    { id: playerIdCounter++, name: 'Katlego Ntsabeleng', position: 'MID', team: 'Mamelodi Sundowns', price: 8.0 },
+    { id: playerIdCounter++, name: 'Sphelele Mkhulise', position: 'MID', team: 'Mamelodi Sundowns', price: 7.5 },
+    { id: playerIdCounter++, name: 'Miguel Reisinho', position: 'MID', team: 'Mamelodi Sundowns', price: 7.0 },
+    { id: playerIdCounter++, name: 'Bathusi Aubaas', position: 'MID', team: 'Mamelodi Sundowns', price: 6.5 },
+    { id: playerIdCounter++, name: 'Gomolemo Kekana', position: 'MID', team: 'Mamelodi Sundowns', price: 5.0 },
+
+    // Forwards
+    { id: playerIdCounter++, name: 'Peter Shalulile', position: 'FWD', team: 'Mamelodi Sundowns', price: 13.0 },
+    { id: playerIdCounter++, name: 'Iqraam Rayners', position: 'FWD', team: 'Mamelodi Sundowns', price: 11.5 },
+    { id: playerIdCounter++, name: 'Thapelo Maseko', position: 'FWD', team: 'Mamelodi Sundowns', price: 10.0 },
+    { id: playerIdCounter++, name: 'Tashreeq Matthews', position: 'FWD', team: 'Mamelodi Sundowns', price: 9.5 },
+    { id: playerIdCounter++, name: 'Lebo Mothiba', position: 'FWD', team: 'Mamelodi Sundowns', price: 9.0 },
+    { id: playerIdCounter++, name: 'Arthur Sales', position: 'FWD', team: 'Mamelodi Sundowns', price: 8.5 },
+    { id: playerIdCounter++, name: 'Siyabonga Mabena', position: 'FWD', team: 'Mamelodi Sundowns', price: 6.0 },
+    { id: playerIdCounter++, name: 'Kutlwano Lethlaku', position: 'FWD', team: 'Mamelodi Sundowns', price: 5.5 },
+];
+
+
+export const dummyPlayers: FantasyPlayer[] = [...otherPlayers, ...orlandoPiratesPlayers, ...kaizerChiefsPlayers, ...mamelodiSundownsPlayers];
