@@ -59,7 +59,6 @@ const orlandoPiratesPlayers: FantasyPlayer[] = [
     { id: playerIdCounter++, name: 'Deon Hotto', position: 'DEF', team: 'Orlando Pirates', price: 7.2 },
     { id: playerIdCounter++, name: 'Thabiso Sesane', position: 'DEF', team: 'Orlando Pirates', price: 5.5 },
     { id: playerIdCounter++, name: 'Thabiso Lebitso', position: 'DEF', team: 'Orlando Pirates', price: 5.8 },
-    { id: playerIdCounter++, name: 'Paseka Mako', position: 'DEF', team: 'Orlando Pirates', price: 6.0 }, // Assuming Deon Van Rooyen is a typo for Paseka Mako
     { id: playerIdCounter++, name: 'Siyabonga Ndlozi', position: 'DEF', team: 'Orlando Pirates', price: 4.5 },
     { id: playerIdCounter++, name: 'Mbekezeli Mbokazi', position: 'DEF', team: 'Orlando Pirates', price: 4.8 },
     { id: playerIdCounter++, name: 'Nkosinathi Ndaba', position: 'DEF', team: 'Orlando Pirates', price: 4.6 },
