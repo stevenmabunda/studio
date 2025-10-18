@@ -109,7 +109,8 @@ export default function FantasyPage() {
 
   return (
     <div className="flex h-full min-h-screen flex-col">
-      <header className="sticky top-0 z-10 border-b bg-background/80 p-4 backdrop-blur-sm">
+      <header className="sticky top-0 z-10 border-b bg-background/80 p-4 backdrop-blur-sm flex items-center gap-4">
+        <Image src="/psl-logo.png" alt="PSL Logo" width={40} height={40} />
         <h1 className="text-xl font-bold">Fantasy League</h1>
       </header>
       <main className="flex-1 p-2 md:p-4">
