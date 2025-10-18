@@ -10,7 +10,7 @@ import {
   SidebarMenuButton,
   SidebarFooter,
 } from '@/components/ui/sidebar';
-import { Home, Hash, Users, Bell, User, MessageSquare, LogOut, Bookmark, MoreHorizontal, Star, ShieldCheck } from 'lucide-react';
+import { Home, Hash, Users, Bell, User, MessageSquare, LogOut, Bookmark, MoreHorizontal, Star, ShieldCheck, Gamepad2 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -41,6 +41,7 @@ const navItems = [
   { href: '/notifications', label: 'Notifications', icon: Bell },
   { href: '/messages', label: 'Messages', icon: MessageSquare },
   { href: '/live', label: 'Match Centre', icon: ShieldCheck },
+  { href: '/fixtures', label: 'Fixtures', icon: Gamepad2 },
   { href: '/bookmarks', label: 'Bookmarks', icon: Bookmark },
   { href: '/profile', label: 'My Profile', icon: User },
 ];
