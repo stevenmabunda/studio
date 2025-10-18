@@ -116,7 +116,7 @@ export default function FantasyPage({ isEmbedded = false }: FantasyPageProps) {
   ).current;
 
   useEffect(() => {
-    if (user && isWhitelisted) {
+    if (user) {
       setDataLoading(true);
       getFantasySquad(user.uid)
         .then(setSquad)
@@ -125,14 +125,14 @@ export default function FantasyPage({ isEmbedded = false }: FantasyPageProps) {
     } else {
         setDataLoading(false);
     }
-  }, [user, toast, isWhitelisted]);
+  }, [user, toast]);
   
   // Effect to save squad whenever it changes
   useEffect(() => {
-    if (user && !dataLoading && isWhitelisted) {
+    if (user && !dataLoading) {
       debouncedSave(user.uid, squad);
     }
-  }, [squad, user, dataLoading, debouncedSave, isWhitelisted]);
+  }, [squad, user, dataLoading, debouncedSave]);
 
 
   const budgetRemaining = useMemo(() => {
@@ -349,7 +349,7 @@ export default function FantasyPage({ isEmbedded = false }: FantasyPageProps) {
     );
   }
   
-  if (!isWhitelisted) {
+  if (!isWhitelisted && process.env.NODE_ENV === 'production') {
      return (
         <div className="flex h-full min-h-screen flex-col">
           <header className="sticky top-0 z-10 border-b bg-background/80 p-4 backdrop-blur-sm flex items-center gap-4">
