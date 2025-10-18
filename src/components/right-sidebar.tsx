@@ -7,7 +7,6 @@ import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FixturesWidget } from "./fixtures-widget";
-import { SofascoreWidget } from "./sofascore-widget";
 
 export function RightSidebar() {
   const router = useRouter();
@@ -34,7 +33,6 @@ export function RightSidebar() {
        <div className="border border-border rounded-lg p-4">
         <TrendingTopics />
       </div>
-      <SofascoreWidget />
        <div className="border border-border rounded-lg p-4">
         <FixturesWidget />
       </div>
