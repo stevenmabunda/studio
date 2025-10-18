@@ -4,7 +4,7 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { dummyPlayers, type FantasyPlayer } from '@/lib/dummy-players';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -37,6 +37,27 @@ function debounce<T extends (...args: any[]) => void>(func: T, delay: number) {
     timeout = setTimeout(() => func.apply(this, args), delay);
   };
 }
+
+const welcomeCards = [
+    {
+        title: "Pick Your Squad",
+        description: "Use your budget of £100m to pick a squad of 15 players from the Premier League.",
+        imageUrl: "https://picsum.photos/seed/fantasy1/600/400",
+        imageHint: "football jersey"
+    },
+    {
+        title: "Create and Join Leagues",
+        description: "Play against friends and family, colleagues or a web community in invitational leagues and cups.",
+        imageUrl: "https://picsum.photos/seed/fantasy2/600/400",
+        imageHint: "mobile phone app"
+    },
+    {
+        title: "Compete Against Friends",
+        description: "Play against friends and family, colleagues or a web community in invitational leagues and cups.",
+        imageUrl: "https://picsum.photos/seed/fantasy3/600/400",
+        imageHint: "leaderboard"
+    }
+];
 
 export default function FantasyPage() {
   const { user } = useAuth();
@@ -171,6 +192,37 @@ export default function FantasyPage() {
         <Image src="/psl-logo.png" alt="PSL Logo" width={40} height={40} />
         <h1 className="text-xl font-bold">Fantasy League</h1>
       </header>
+
+       {squad.length === 0 && (
+          <div className="p-4 md:p-8 bg-black">
+              <div className="text-left mb-8">
+                  <h2 className="text-3xl font-bold">Welcome, {user?.displayName}</h2>
+                  <p className="text-muted-foreground">Get started with your fantasy league.</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {welcomeCards.map((card, index) => (
+                    <Card key={index} className="bg-secondary border-border overflow-hidden">
+                        <div className="relative h-48 w-full">
+                            <Image
+                                src={card.imageUrl}
+                                alt={card.title}
+                                fill
+                                className="object-cover"
+                                data-ai-hint={card.imageHint}
+                            />
+                        </div>
+                        <CardHeader>
+                            <CardTitle>{card.title}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <CardDescription>{card.description}</CardDescription>
+                        </CardContent>
+                    </Card>
+                ))}
+              </div>
+          </div>
+       )}
+
       <main className="flex-1 p-2 md:p-4">
         <div className="flex flex-col gap-4">
             {/* Top Row: Pitch and Stats */}
@@ -189,7 +241,7 @@ export default function FantasyPage() {
                                 <p className="font-bold text-lg">R{budgetRemaining.toFixed(1)}m</p>
                                 <p className="text-muted-foreground">Budget</p>
                             </div>
-                            <div>
+                             <div>
                                 <p className="font-bold text-lg">1,204</p>
                                 <p className="text-muted-foreground">Points</p>
                             </div>
@@ -295,5 +347,7 @@ export default function FantasyPage() {
     </div>
   );
 }
+
+    
 
     
