@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import Link from 'next/link';
@@ -15,14 +14,13 @@ import type { PostType } from '@/lib/data';
 import { ScrollArea } from './ui/scroll-area';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from './ui/button';
-import { FANTASY_LEAGUE_WHITELIST } from '@/lib/feature-flags';
 
 const navItems = [
   { href: '/home', icon: Home, label: 'Home' },
   { href: '/explore', icon: Search, label: 'Explore' },
   { href: 'POST_ACTION', icon: Plus, label: 'Post' },
   { href: '/live', label: 'Match Centre', icon: ShieldCheck },
-  { href: '/fantasy', label: 'Fantasy', icon: Gamepad2, featureFlag: FANTASY_LEAGUE_WHITELIST },
+  { href: '/fantasy', label: 'Fantasy', icon: Gamepad2 },
   { href: '/profile', icon: User, label: 'Profile' },
 ];
 
@@ -56,17 +54,10 @@ export function MobileBottomNav() {
     }
   };
 
-  const filteredNavItems = navItems.filter(item => {
-    if (item.featureFlag) {
-      return user && item.featureFlag.includes(user.uid);
-    }
-    return true;
-  });
-
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-black border-t border-border z-40">
       <div className="flex justify-evenly items-center h-full">
-        {filteredNavItems.map((item) => {
+        {navItems.map((item) => {
           if (item.href === 'POST_ACTION') {
             return (
               <Sheet key={item.label} open={isDialogOpen} onOpenChange={setIsDialogOpen}>

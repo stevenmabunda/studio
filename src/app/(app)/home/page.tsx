@@ -27,7 +27,6 @@ import LivePage from '../live/page';
 import { Card } from '@/components/ui/card';
 import { SignupPrompt } from '@/components/signup-prompt';
 import FantasyPage from '../fantasy/page';
-import { FANTASY_LEAGUE_WHITELIST } from '@/lib/feature-flags';
 
 
 export default function HomePage() {
@@ -54,11 +53,6 @@ export default function HomePage() {
   const lastScrollY = useRef(0);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
 
-  const isFantasyWhitelisted = useMemo(() => {
-    if (!user) return false;
-    return FANTASY_LEAGUE_WHITELIST.includes(user.uid);
-  }, [user]);
-  
   useEffect(() => {
     if (user && db) {
       const notificationsRef = collection(db, 'users', user.uid, 'notifications');
@@ -192,8 +186,8 @@ export default function HomePage() {
     { value: 'foryou', label: 'For You' },
     { value: 'discover', label: 'Discover' },
     { value: 'live', label: 'Match Centre' },
-    { value: 'fantasy', label: 'Fantasy', featureFlag: isFantasyWhitelisted },
-  ].filter(tab => tab.featureFlag !== false);
+    { value: 'fantasy', label: 'Fantasy' },
+  ];
 
   return (
     <div className="flex h-full min-h-screen flex-col">

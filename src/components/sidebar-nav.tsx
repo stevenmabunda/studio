@@ -34,7 +34,6 @@ import type { PostType } from '@/lib/data';
 import Image from 'next/image';
 import { onSnapshot, collection, query, where } from 'firebase/firestore';
 import { SidebarBadge } from './ui/sidebar-badge';
-import { FANTASY_LEAGUE_WHITELIST } from '@/lib/feature-flags';
 
 const navItems = [
   { href: '/home', label: 'Home', icon: Home },
@@ -42,7 +41,7 @@ const navItems = [
   { href: '/notifications', label: 'Notifications', icon: Bell },
   { href: '/messages', label: 'Messages', icon: MessageSquare },
   { href: '/live', label: 'Match Centre', icon: ShieldCheck },
-  { href: '/fantasy', label: 'Fantasy', icon: Gamepad2, featureFlag: FANTASY_LEAGUE_WHITELIST },
+  { href: '/fantasy', label: 'Fantasy', icon: Gamepad2 },
   { href: '/bookmarks', label: 'Bookmarks', icon: Bookmark },
   { href: '/profile', label: 'My Profile', icon: User },
 ];
@@ -92,13 +91,6 @@ export function SidebarNav() {
 
   const userHandle = user?.email?.split('@')[0] || 'user';
 
-  const filteredNavItems = navItems.filter(item => {
-    if (item.featureFlag) {
-      return user && item.featureFlag.includes(user.uid);
-    }
-    return true;
-  });
-
   return (
     <div className="h-full flex-col sticky top-0 flex w-full">
       <Sidebar className="h-screen overflow-y-auto">
@@ -114,7 +106,7 @@ export function SidebarNav() {
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
-            {filteredNavItems.map((item) => (
+            {navItems.map((item) => (
               <SidebarMenuItem key={item.href}>
                 <SidebarMenuButton
                   asChild

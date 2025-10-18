@@ -16,7 +16,6 @@ import { saveFantasySquad, getFantasySquad } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FANTASY_LEAGUE_WHITELIST } from '@/lib/feature-flags';
 import { useRouter } from 'next/navigation';
 
 
@@ -104,11 +103,6 @@ export default function FantasyPage({ isEmbedded = false }: FantasyPageProps) {
   const [sortKey, setSortKey] = useState<keyof FantasyPlayer>('price');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
-  const isWhitelisted = useMemo(() => {
-    if (!user) return false;
-    return FANTASY_LEAGUE_WHITELIST.includes(user.uid);
-  }, [user]);
-  
   const debouncedSave = useRef(
     debounce((userId: string, newSquad: FantasyPlayer[]) => {
       saveFantasySquad(userId, newSquad);
@@ -346,23 +340,6 @@ export default function FantasyPage({ isEmbedded = false }: FantasyPageProps) {
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </main>
       </div>
-    );
-  }
-  
-  if (!isWhitelisted && process.env.NODE_ENV === 'production') {
-     return (
-        <div className="flex h-full min-h-screen flex-col">
-          <header className="sticky top-0 z-10 border-b bg-background/80 p-4 backdrop-blur-sm flex items-center gap-4">
-            <Image src="/psl-logo.png" alt="PSL Logo" width={40} height={40} />
-            <h1 className="text-xl font-bold">Fantasy League</h1>
-          </header>
-          <main className="flex-1 flex items-center justify-center p-4">
-              <div className="text-center">
-                  <h2 className="text-2xl font-bold">Coming Soon!</h2>
-                  <p className="text-muted-foreground mt-2">The Fantasy League is currently in a private beta. Stay tuned for the public release!</p>
-              </div>
-          </main>
-        </div>
     );
   }
   
