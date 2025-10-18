@@ -16,6 +16,8 @@ import { saveFantasySquad, getFantasySquad } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { FANTASY_LEAGUE_WHITELIST } from '@/lib/feature-flags';
+import { useRouter } from 'next/navigation';
 
 
 const POSITIONS = ['GKP', 'DEF', 'MID', 'FWD'] as const;
@@ -94,6 +96,7 @@ interface FantasyPageProps {
 export default function FantasyPage({ isEmbedded = false }: FantasyPageProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const router = useRouter();
   
   const [squad, setSquad] = useState<FantasyPlayer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -101,6 +104,11 @@ export default function FantasyPage({ isEmbedded = false }: FantasyPageProps) {
   const [teamFilter, setTeamFilter] = useState<string>('all');
   const [sortKey, setSortKey] = useState<keyof FantasyPlayer>('price');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
+  const isWhitelisted = useMemo(() => {
+    if (!user) return false;
+    return FANTASY_LEAGUE_WHITELIST.includes(user.uid);
+  }, [user]);
   
   const debouncedSave = useRef(
     debounce((userId: string, newSquad: FantasyPlayer[]) => {
@@ -109,6 +117,10 @@ export default function FantasyPage({ isEmbedded = false }: FantasyPageProps) {
   ).current;
 
   useEffect(() => {
+    if (!isWhitelisted && !isEmbedded) {
+      router.replace('/home');
+      return;
+    }
     if (user) {
       setLoading(true);
       getFantasySquad(user.uid)
@@ -118,14 +130,14 @@ export default function FantasyPage({ isEmbedded = false }: FantasyPageProps) {
     } else {
         setLoading(false);
     }
-  }, [user, toast]);
+  }, [user, toast, isWhitelisted, isEmbedded, router]);
   
   // Effect to save squad whenever it changes
   useEffect(() => {
-    if (user && !loading) {
+    if (user && !loading && isWhitelisted) {
       debouncedSave(user.uid, squad);
     }
-  }, [squad, user, loading, debouncedSave]);
+  }, [squad, user, loading, debouncedSave, isWhitelisted]);
 
 
   const budgetRemaining = useMemo(() => {
@@ -328,7 +340,7 @@ export default function FantasyPage({ isEmbedded = false }: FantasyPageProps) {
     </main>
   );
 
-  if (loading) {
+  if (loading || (!isWhitelisted && !isEmbedded)) {
     return (
       <div className="flex h-full min-h-screen flex-col">
         <header className="sticky top-0 z-10 border-b bg-background/80 p-4 backdrop-blur-sm flex items-center gap-4">
@@ -343,7 +355,12 @@ export default function FantasyPage({ isEmbedded = false }: FantasyPageProps) {
   }
   
   if (isEmbedded) {
-    return squadSelectionContent;
+    return isWhitelisted ? squadSelectionContent : (
+        <div className="p-8 text-center text-muted-foreground">
+            <h2 className="text-xl font-bold">Coming Soon</h2>
+            <p>The Fantasy League is currently in a private beta. Stay tuned for the public release!</p>
+        </div>
+    );
   }
 
   return (
