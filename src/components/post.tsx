@@ -516,35 +516,37 @@ export function Post(props: PostProps) {
   const displayText = needsTruncation ? `${content.substring(0, 280)}` : content;
 
   const handlePostClick = () => {
-      if (id.startsWith('temp_')) return;
+    if (id.startsWith('temp_')) return;
 
-      if (isVideo) {
-        if(isFeedVideoPlaying) {
-          router.push(`/post/${id}`);
-        } else if (videoRef.current) {
-            if (videoRef.current.paused) {
-                videoRef.current.play().catch(e => console.error("Play failed", e));
-            } else {
-                videoRef.current.pause();
-            }
+    if (isVideo) {
+      if (isFeedVideoPlaying) {
+        router.push(`/post/${id}`);
+      } else if (videoRef.current) {
+        if (videoRef.current.paused) {
+          videoRef.current.play().catch((e) => console.error("Play failed", e));
+        } else {
+          videoRef.current.pause();
         }
-        return;
       }
-      
-      if (!isStandalone && !isReplyView) {
-          try {
-            const desktopScrollArea = document.querySelector('#desktop-scroll-area > div');
-            if (desktopScrollArea) {
-                sessionStorage.setItem('desktopScrollY', String(desktopScrollArea.scrollTop));
-            } else {
-                sessionStorage.setItem('homeScrollY', String(window.scrollY));
-            }
-          } catch(e) {
-            console.error("Could not save scroll position:", e);
-          }
-          router.push(`/post/${id}`);
+      return;
+    }
+
+    if (!isStandalone && !isReplyView) {
+      try {
+        const desktopScrollArea = document.querySelector(
+          '#desktop-scroll-area > div'
+        );
+        if (desktopScrollArea) {
+          sessionStorage.setItem('desktopScrollY', String(desktopScrollArea.scrollTop));
+        } else {
+          sessionStorage.setItem('homeScrollY', String(window.scrollY));
+        }
+      } catch (e) {
+        console.error('Could not save scroll position:', e);
       }
-  }
+      router.push(`/post/${id}`);
+    }
+  };
 
   const handleCommentClick = (e: React.MouseEvent) => {
     e.stopPropagation();
