@@ -1,16 +1,20 @@
-
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { dummyPlayers, type FantasyPlayer } from '@/lib/dummy-players';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { PlusCircle, MinusCircle, Shirt } from 'lucide-react';
+import { PlusCircle, MinusCircle, Shirt, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/use-auth';
+import { saveFantasySquad, getFantasySquad } from './actions';
+import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
+
 
 const POSITIONS = ['GKP', 'DEF', 'MID', 'FWD'] as const;
 const SQUAD_LIMITS: Record<typeof POSITIONS[number], number> = {
@@ -24,12 +28,51 @@ const TOTAL_PLAYERS = 15;
 
 const TEAMS = [...new Set(dummyPlayers.map(p => p.team))].sort();
 
+// Debounce function
+function debounce<T extends (...args: any[]) => void>(func: T, delay: number) {
+  let timeout: NodeJS.Timeout;
+  return function(this: ThisParameterType<T>, ...args: Parameters<T>) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(this, args), delay);
+  };
+}
+
 export default function FantasyPage() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  
   const [squad, setSquad] = useState<FantasyPlayer[]>([]);
+  const [loading, setLoading] = useState(true);
   const [positionFilter, setPositionFilter] = useState<string>('all');
   const [teamFilter, setTeamFilter] = useState<string>('all');
   const [sortKey, setSortKey] = useState<keyof FantasyPlayer>('price');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  
+  const debouncedSave = useRef(
+    debounce((userId: string, newSquad: FantasyPlayer[]) => {
+      saveFantasySquad(userId, newSquad);
+    }, 1000)
+  ).current;
+
+  useEffect(() => {
+    if (user) {
+      setLoading(true);
+      getFantasySquad(user.uid)
+        .then(setSquad)
+        .catch(() => toast({ variant: 'destructive', description: "Could not load your team." }))
+        .finally(() => setLoading(false));
+    } else {
+        setLoading(false);
+    }
+  }, [user, toast]);
+  
+  // Effect to save squad whenever it changes
+  useEffect(() => {
+    if (user && !loading) {
+      debouncedSave(user.uid, squad);
+    }
+  }, [squad, user, loading, debouncedSave]);
+
 
   const budgetRemaining = useMemo(() => {
     return squad.reduce((acc, player) => acc - player.price, TOTAL_BUDGET);
@@ -105,6 +148,20 @@ export default function FantasyPage() {
             ))}
         </div>
     )
+  }
+  
+  if (loading) {
+    return (
+      <div className="flex h-full min-h-screen flex-col">
+        <header className="sticky top-0 z-10 border-b bg-background/80 p-4 backdrop-blur-sm flex items-center gap-4">
+           <Image src="/psl-logo.png" alt="PSL Logo" width={40} height={40} />
+           <h1 className="text-xl font-bold">Fantasy League</h1>
+        </header>
+        <main className="flex-1 p-2 md:p-4 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </main>
+      </div>
+    );
   }
 
   return (
@@ -241,7 +298,3 @@ export default function FantasyPage() {
     </div>
   );
 }
-
-    
-
-    
