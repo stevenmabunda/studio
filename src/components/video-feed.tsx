@@ -11,10 +11,9 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
 import Link from 'next/link';
 
-function VideoPlayer({ post, isActive }: { post: PostType, isActive: boolean }) {
+function VideoPlayer({ post, isActive, isMuted, onMuteToggle }: { post: PostType, isActive: boolean, isMuted: boolean, onMuteToggle: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
 
   useEffect(() => {
     if (isActive) {
@@ -26,6 +25,12 @@ function VideoPlayer({ post, isActive }: { post: PostType, isActive: boolean }) 
       if(videoRef.current) videoRef.current.currentTime = 0;
     }
   }, [isActive]);
+  
+  useEffect(() => {
+    if(videoRef.current) {
+        videoRef.current.muted = isMuted;
+    }
+  }, [isMuted]);
 
   const togglePlay = () => {
     if (videoRef.current?.paused) {
@@ -48,6 +53,16 @@ function VideoPlayer({ post, isActive }: { post: PostType, isActive: boolean }) 
     };
   }, []);
 
+  const handleMuteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onMuteToggle();
+  }
+  
+  const handleEngagementClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Future logic for liking, sharing, etc. will go here
+  }
+
   return (
     <div className="relative h-full w-full bg-black" onClick={togglePlay}>
       <video
@@ -56,7 +71,6 @@ function VideoPlayer({ post, isActive }: { post: PostType, isActive: boolean }) 
         className="w-full h-full object-contain"
         loop
         playsInline
-        muted={isMuted}
       />
       {!isPlaying && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -72,19 +86,19 @@ function VideoPlayer({ post, isActive }: { post: PostType, isActive: boolean }) 
         </div>
       </div>
       <div className="absolute right-2 bottom-24 flex flex-col items-center gap-6 text-white z-10 sm:bottom-1/2 sm:translate-y-1/2">
-        <button className="flex flex-col items-center">
+        <button onClick={handleEngagementClick} className="flex flex-col items-center">
             <Heart className="h-8 w-8" />
             <span className="text-xs font-bold">{post.likes}</span>
         </button>
-        <button className="flex flex-col items-center">
+        <button onClick={handleEngagementClick} className="flex flex-col items-center">
             <MessageCircle className="h-8 w-8" />
             <span className="text-xs font-bold">{post.comments}</span>
         </button>
-        <button className="flex flex-col items-center">
+        <button onClick={handleEngagementClick} className="flex flex-col items-center">
             <Share2 className="h-8 w-8" />
             <span className="text-xs font-bold">Share</span>
         </button>
-         <button onClick={(e) => { e.stopPropagation(); setIsMuted(m => !m);}} className="flex flex-col items-center">
+         <button onClick={handleMuteClick} className="flex flex-col items-center">
             {isMuted ? <VolumeX className="h-8 w-8" /> : <Volume2 className="h-8 w-8" />}
         </button>
       </div>
@@ -103,6 +117,7 @@ export function VideoFeed() {
     loop: false,
   });
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isMuted, setIsMuted] = useState(true);
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -149,7 +164,12 @@ export function VideoFeed() {
       <div className="embla__container">
         {posts.map((post, index) => (
           <div key={post.id} className="embla__slide">
-            <VideoPlayer post={post} isActive={index === activeIndex} />
+            <VideoPlayer 
+                post={post} 
+                isActive={index === activeIndex} 
+                isMuted={isMuted}
+                onMuteToggle={() => setIsMuted(prev => !prev)}
+            />
           </div>
         ))}
       </div>
