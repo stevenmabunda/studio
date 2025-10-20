@@ -1,3 +1,4 @@
+
 'use server';
 
 import {
@@ -171,11 +172,17 @@ export async function getVideoPosts(options: { lastPostId?: string } = {}): Prom
 
   try {
     const postsRef = collection(db, 'posts');
+    
+    // Fetch posts from the last 14 days
+    const twoWeeksAgo = new Date();
+    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+
     const queryConstraints = [
-      orderBy('createdAt', 'desc')
+      where('createdAt', '>=', twoWeeksAgo),
+      orderBy('createdAt', 'desc'),
     ];
     
-    // This part is for potential pagination in the future, but for now we fetch all.
+    // This part is for potential pagination in the future, but for now we fetch all within the date range.
     if (options.lastPostId) {
       const lastPostDoc = await getDoc(doc(db, 'posts', options.lastPostId));
       if (lastPostDoc.exists()) {

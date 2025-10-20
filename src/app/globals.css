@@ -170,6 +170,7 @@
   overflow: hidden;
   height: 100vh; /* Make carousel full screen height */
   width: 100vw; /* Make carousel full screen width */
+  scroll-snap-type: y mandatory;
 }
 .embla__container {
   display: flex;
@@ -180,4 +181,5 @@
   flex: 0 0 100vh; /* Each slide is full viewport height */
   min-height: 0;
   position: relative;
+  scroll-snap-align: start;
 }
