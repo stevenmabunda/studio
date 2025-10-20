@@ -21,6 +21,7 @@ import { collection, onSnapshot, orderBy, query, type Timestamp } from 'firebase
 import { Skeleton } from './ui/skeleton';
 import { Button } from './ui/button';
 import { Post } from './post';
+import { useToast } from '@/hooks/use-toast';
 
 // Helper components for social icons
 const TwitterIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -105,7 +106,8 @@ function CommentSheet({ post, onOpenChange }: { post: PostType, onOpenChange: (o
 function ShareSheet({ post }: { post: PostType }) {
     const { toast } = useToast();
 
-    const handleCopyLink = () => {
+    const handleCopyLink = (e: React.MouseEvent) => {
+        e.stopPropagation();
         const postUrl = `${window.location.origin}/post/${post.id}`;
         navigator.clipboard.writeText(postUrl);
         toast({ description: "Link copied to clipboard!" });
