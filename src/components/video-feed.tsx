@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -72,7 +71,7 @@ function VideoPlayer({ post, isActive }: { post: PostType, isActive: boolean }) 
             <span>Original Audio - {post.authorName}</span>
         </div>
       </div>
-      <div className="absolute bottom-[80px] right-2 flex flex-col items-center gap-6 text-white z-10">
+      <div className="absolute right-2 bottom-24 flex flex-col items-center gap-6 text-white z-10 sm:bottom-1/2 sm:translate-y-1/2">
         <button className="flex flex-col items-center">
             <Heart className="h-8 w-8" />
             <span className="text-xs font-bold">{post.likes}</span>

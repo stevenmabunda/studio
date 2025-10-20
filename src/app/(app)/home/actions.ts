@@ -1,4 +1,3 @@
-
 'use server';
 
 import {
@@ -165,20 +164,18 @@ export async function getRecentPosts(options: { limit?: number; lastPostId?: str
     }
 }
 
-export async function getVideoPosts(options: { limit?: number; lastPostId?: string } = {}): Promise<PostType[]> {
+export async function getVideoPosts(options: { lastPostId?: string } = {}): Promise<PostType[]> {
   if (!db) {
     return [];
   }
 
   try {
-    // A more robust way to get video posts is to fetch a larger batch and filter,
-    // as Firestore doesn't support querying for non-empty arrays without a composite index.
     const postsRef = collection(db, 'posts');
     const queryConstraints = [
-      orderBy('createdAt', 'desc'),
-      limit(50) // Fetch a larger batch to find videos
+      orderBy('createdAt', 'desc')
     ];
-
+    
+    // This part is for potential pagination in the future, but for now we fetch all.
     if (options.lastPostId) {
       const lastPostDoc = await getDoc(doc(db, 'posts', options.lastPostId));
       if (lastPostDoc.exists()) {
@@ -212,9 +209,7 @@ export async function getVideoPosts(options: { limit?: number; lastPostId?: stri
       .filter(post => post.media && post.media.some(m => m.type === 'video'))
       .filter(post => !DUMMY_USER_IDS.includes(post.authorId));
 
-    // We return up to the limit from the filtered list. This isn't perfect pagination
-    // but avoids complex server logic for now.
-    return filteredVideoPosts.slice(0, options.limit || 10);
+    return filteredVideoPosts;
 
   } catch (error) {
     console.error("Error fetching video posts:", error);

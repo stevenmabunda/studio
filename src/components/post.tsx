@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -519,13 +517,11 @@ export function Post(props: PostProps) {
     if (id.startsWith('temp_')) return;
 
     if (isVideo) {
-        // When a video is clicked in the feed, navigate to the immersive video viewer
         router.push(`/video?postId=${id}`);
         return;
     }
 
     if (!isStandalone && !isReplyView) {
-      // Logic to save scroll position
       try {
         const desktopScrollArea = document.querySelector('#desktop-scroll-area > div');
         if (desktopScrollArea) {
@@ -628,11 +624,6 @@ export function Post(props: PostProps) {
     setImageViewerStartIndex(index);
     setIsImageViewerOpen(true);
   };
-
-  const handleVideoPlayClick = (e: React.MouseEvent) => {
-      e.stopPropagation();
-      router.push(`/video?postId=${id}`);
-  }
 
   const handleMuteToggle = (e: React.MouseEvent) => {
       e.stopPropagation();
@@ -785,9 +776,9 @@ export function Post(props: PostProps) {
         {poll && <Poll poll={poll} postId={id} />}
         
         {mediaExists && (
-          <div className={cn("mt-3 rounded-2xl overflow-hidden border", isVideo && 'relative w-full bg-black flex items-center justify-center max-h-[80vh]')}>
+          <div className={cn("mt-3 rounded-2xl overflow-hidden border", isVideo && 'relative w-full bg-black flex items-center justify-center max-h-[80vh] cursor-pointer group/video')} onClick={handlePostClick}>
             {isVideo && media[0].url ? (
-                <div className="relative w-full h-full cursor-pointer group/video" onClick={handleVideoPlayClick}>
+                <div className="relative w-full h-full">
                   <video
                     ref={videoRef}
                     src={media[0].url}
@@ -1127,5 +1118,3 @@ export function Post(props: PostProps) {
       </div>
   );
 }
-
-    
