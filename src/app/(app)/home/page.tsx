@@ -186,7 +186,6 @@ export default function HomePage() {
   const homeTabs = [
     { value: 'foryou', label: 'For You' },
     { value: 'discover', label: 'Discover' },
-    { value: 'video', label: 'Video'},
     { value: 'live', label: 'Match Centre' },
     { value: 'fantasy', label: 'Fantasy' },
   ];
@@ -295,9 +294,6 @@ export default function HomePage() {
           </TabsContent>
            <TabsContent value="trending" className="h-full p-4">
              <TrendingTopics />
-          </TabsContent>
-          <TabsContent value="video" className="h-full p-0 m-0">
-            <VideoFeedPage />
           </TabsContent>
           <TabsContent value="live" className="h-full">
             <LivePage />

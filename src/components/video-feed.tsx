@@ -72,7 +72,7 @@ function VideoPlayer({ post, isActive }: { post: PostType, isActive: boolean }) 
             <span>Original Audio - {post.authorName}</span>
         </div>
       </div>
-      <div className="absolute bottom-[80px] right-2 flex flex-col items-center gap-4 text-white z-10">
+      <div className="absolute bottom-[80px] right-2 flex flex-col items-center gap-6 text-white z-10">
         <button className="flex flex-col items-center">
             <Heart className="h-8 w-8" />
             <span className="text-xs font-bold">{post.likes}</span>
@@ -149,7 +149,7 @@ export function VideoFeed() {
     <div className="h-screen w-screen bg-black embla" ref={emblaRef}>
       <div className="embla__container">
         {posts.map((post, index) => (
-          <div key={post.id} className="embla__slide relative">
+          <div key={post.id} className="embla__slide">
             <VideoPlayer post={post} isActive={index === activeIndex} />
           </div>
         ))}
@@ -157,4 +157,3 @@ export function VideoFeed() {
     </div>
   );
 }
-
