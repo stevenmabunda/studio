@@ -519,16 +519,9 @@ export function Post(props: PostProps) {
     if (id.startsWith('temp_')) return;
 
     if (isVideo) {
-      if (isFeedVideoPlaying) {
-        router.push(`/post/${id}`);
-      } else if (videoRef.current) {
-        if (videoRef.current.paused) {
-          videoRef.current.play().catch((e) => console.error("Play failed", e));
-        } else {
-          videoRef.current.pause();
-        }
-      }
-      return;
+        // When a video is clicked in the feed, navigate to the immersive video viewer
+        router.push(`/video?postId=${id}`);
+        return;
     }
 
     if (!isStandalone && !isReplyView) {
@@ -638,15 +631,7 @@ export function Post(props: PostProps) {
 
   const handleVideoPlayClick = (e: React.MouseEvent) => {
       e.stopPropagation();
-      if(isFeedVideoPlaying) {
-          router.push(`/post/${id}`);
-      } else if (videoRef.current) {
-          if (videoRef.current.paused) {
-              videoRef.current.play().catch(e => console.error("Play failed", e));
-          } else {
-              videoRef.current.pause();
-          }
-      }
+      router.push(`/video?postId=${id}`);
   }
 
   const handleMuteToggle = (e: React.MouseEvent) => {

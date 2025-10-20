@@ -168,6 +168,8 @@
 /* Embla Carousel Styles for Video Feed */
 .embla {
   overflow: hidden;
+  height: 100%;
+  width: 100%;
 }
 .embla__container {
   display: flex;
@@ -178,5 +180,3 @@
   flex: 0 0 100%;
   min-height: 0;
 }
-
-    
