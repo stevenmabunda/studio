@@ -24,8 +24,7 @@ export async function generateMetadata(
   const postImage = post.media?.find(m => m.type === 'image')?.url;
   
   const openGraphImages = postImage ? [{ url: postImage }] : [];
-  const twitterImages = postImage ? [postImage] : [];
-
+  
   return {
     title: `Post by @${post.authorHandle} | BHOLO`,
     description: description,
@@ -39,7 +38,7 @@ export async function generateMetadata(
       card: postImage ? 'summary_large_image' : 'summary',
       title: `${post.authorName} (@${post.authorHandle}) on BHOLO`,
       description: description,
-      images: twitterImages,
+      images: openGraphImages, // Corrected this line
     },
   };
 }
