@@ -21,8 +21,10 @@ export async function generateMetadata(
   }
 
   const description = post.content.substring(0, 155);
-  const previousImages = (await parent).openGraph?.images || [];
   const postImage = post.media?.find(m => m.type === 'image')?.url;
+  
+  const openGraphImages = postImage ? [{ url: postImage }] : [];
+  const twitterImages = postImage ? [postImage] : [];
 
   return {
     title: `Post by @${post.authorHandle} | BHOLO`,
@@ -31,13 +33,13 @@ export async function generateMetadata(
       title: `${post.authorName} (@${post.authorHandle}) on BHOLO`,
       description: description,
       url: `/post/${id}`,
-      images: postImage ? [postImage, ...previousImages] : previousImages,
+      images: openGraphImages,
     },
      twitter: {
       card: postImage ? 'summary_large_image' : 'summary',
       title: `${post.authorName} (@${post.authorHandle}) on BHOLO`,
       description: description,
-      images: postImage ? [postImage] : [],
+      images: twitterImages,
     },
   };
 }
