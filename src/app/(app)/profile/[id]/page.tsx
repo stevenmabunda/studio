@@ -332,7 +332,7 @@ export default function ProfilePage() {
                            {media.type === 'video' ? (
                                 <>
                                     <Image
-                                        src={media.hint || "https://picsum.photos/seed/vid-thumb/300/300"}
+                                        src={media.url || "https://picsum.photos/seed/vid-thumb/300/300"}
                                         alt={`Video from post ${post.id}`}
                                         fill
                                         className="object-cover"
