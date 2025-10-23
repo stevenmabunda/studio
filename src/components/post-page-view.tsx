@@ -16,8 +16,70 @@ import { ArrowLeft } from 'lucide-react';
 import { PostSkeleton } from '@/components/post-skeleton';
 import { Button } from '@/components/ui/button';
 import { getPost } from '@/app/(app)/post/[id]/actions';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
+import { useToast } from '@/hooks/use-toast';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 
-type Comment = PostType;
+
+function ReplyDialog({ post, onReply, open, onOpenChange }: { post: PostType, onReply: (data: { text: string; media: any[] }) => Promise<boolean | null>, open: boolean, onOpenChange: (open: boolean) => void }) {
+    const { toast } = useToast();
+    const router = useRouter();
+
+    const handleCreateReply = async (data: { text: string; media: any[] }) => {
+        try {
+            const success = await onReply(data);
+            if (success) {
+                onOpenChange(false);
+                toast({
+                    description: "Your reply was sent.",
+                    action: (
+                        <Button variant="outline" size="sm" onClick={() => {
+                            router.push(`/post/${post.id}#comments`);
+                        }}>
+                            View
+                        </Button>
+                    ),
+                });
+                return true;
+            }
+             return null;
+        } catch (error) {
+            toast({ variant: 'destructive', description: "Failed to send reply." });
+            return null;
+        }
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="p-0 gap-0" onClick={(e) => e.stopPropagation()}>
+                <DialogHeader className="p-4 border-b">
+                     <DialogTitle className="sr-only">Reply to post</DialogTitle>
+                     <DialogClose />
+                </DialogHeader>
+                <div className="p-4">
+                    <div className="flex space-x-3">
+                        <div className="flex flex-col items-center">
+                            <Avatar className="h-10 w-10">
+                                <AvatarImage src={post.authorAvatar} alt={post.authorName} />
+                                <AvatarFallback>{post.authorName.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                        </div>
+                        <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                                <span className="font-bold">{post.authorName}</span>
+                                <span className="text-sm text-muted-foreground">@{post.authorHandle}</span>
+                            </div>
+                            <p className="mt-4 text-sm text-muted-foreground">
+                                Replying to <span className="text-primary">@{post.authorHandle}</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <CreateComment onComment={handleCreateReply} isDialog={true} />
+            </DialogContent>
+        </Dialog>
+    );
+}
 
 export function PostPageView({ postId }: { postId: string }) {
   const { user } = useAuth();
@@ -28,6 +90,7 @@ export function PostPageView({ postId }: { postId: string }) {
   const [loadingPost, setLoadingPost] = useState(true);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loadingComments, setLoadingComments] = useState(true);
+  const [isHeaderReplyDialogOpen, setIsHeaderReplyDialogOpen] = useState(false);
   const commentSectionRef = useRef<HTMLDivElement>(null);
   
   const handleBack = () => {
@@ -106,13 +169,18 @@ export function PostPageView({ postId }: { postId: string }) {
     }
   }
 
-  const Header = ({ onBack }: { onBack: () => void }) => (
-    <header className="sticky top-0 z-10 flex items-center gap-4 border-b bg-background/80 p-4 backdrop-blur-sm h-14">
-        <Button variant="ghost" size="icon" className="h-8 w-8 -ml-2" onClick={onBack}>
-            <ArrowLeft />
-        </Button>
-        <div>
-            <h1 className="text-xl font-bold">Post</h1>
+  const Header = ({ onBack, onReplyClick }: { onBack: () => void, onReplyClick: () => void }) => (
+    <header className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b bg-background/80 p-2 md:p-4 backdrop-blur-sm h-14">
+        <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="h-8 w-8 -ml-2" onClick={onBack}>
+                <ArrowLeft />
+            </Button>
+            <div>
+                <h1 className="text-xl font-bold">Post</h1>
+            </div>
+        </div>
+        <div className="md:hidden">
+            <Button size="sm" className="rounded-full" onClick={onReplyClick}>Reply</Button>
         </div>
     </header>
   );
@@ -120,7 +188,7 @@ export function PostPageView({ postId }: { postId: string }) {
   if (loadingPost) {
     return (
         <div>
-            <Header onBack={handleBack} />
+            <Header onBack={handleBack} onReplyClick={() => {}} />
             <PostSkeleton />
         </div>
     );
@@ -129,7 +197,7 @@ export function PostPageView({ postId }: { postId: string }) {
   if (!post) {
       return (
           <div>
-              <Header onBack={handleBack} />
+              <Header onBack={handleBack} onReplyClick={() => {}} />
               <div className="p-8 text-center text-muted-foreground">
                 <h2 className="text-xl font-bold">Post not found</h2>
                 <p>This post may have been deleted.</p>
@@ -140,7 +208,7 @@ export function PostPageView({ postId }: { postId: string }) {
 
   return (
     <div className="h-screen flex flex-col">
-      <Header onBack={handleBack} />
+      <Header onBack={handleBack} onReplyClick={() => setIsHeaderReplyDialogOpen(true)} />
       <div className="flex-1 overflow-y-auto">
         <Post {...post} isStandalone={true} />
         
@@ -176,6 +244,12 @@ export function PostPageView({ postId }: { postId: string }) {
             )}
         </div>
       </div>
+      <ReplyDialog 
+        post={post}
+        onReply={handleCreateComment}
+        open={isHeaderReplyDialogOpen}
+        onOpenChange={setIsHeaderReplyDialogOpen}
+      />
     </div>
   );
 }
