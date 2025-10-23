@@ -214,7 +214,7 @@ export default function ProfilePage() {
           src={profile.bannerUrl}
           alt="Profile banner"
           fill
-          className="object-contain"
+          className="object-cover"
           style={{ objectPosition: `center ${profile.bannerPosition || 50}%` }}
           priority
           data-ai-hint="stadium lights"
@@ -544,7 +544,7 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
                                 src={bannerPreview} 
                                 alt="Banner preview" 
                                 fill 
-                                className="object-contain" 
+                                className="object-cover" 
                                 style={{ objectPosition: `center ${bannerPosition}%` }}
                                 draggable="false"
                              />
@@ -617,3 +617,6 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
     
 
 
+
+
+    
