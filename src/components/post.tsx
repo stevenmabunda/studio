@@ -64,6 +64,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 type PostProps = PostType & {
   isStandalone?: boolean;
   isReplyView?: boolean;
+  parentPostId?: string;
 };
 
 type CommentType = PostType;
@@ -334,6 +335,7 @@ export function Post(props: PostProps) {
     poll,
     isStandalone = false,
     isReplyView = false,
+    parentPostId,
   } = props;
   
   const router = useRouter();
@@ -909,7 +911,7 @@ export function Post(props: PostProps) {
         
          {isReplyView && (
             <CommentEngagement 
-                parentPostId={props.parentPostId as string} 
+                parentPostId={parentPostId as string} 
                 commentId={id} 
                 initialLikes={initialLikes} 
                 onReplyClick={handleCommentClick}
@@ -1107,7 +1109,7 @@ export function Post(props: PostProps) {
                                     {loadingComments ? (
                                         Array.from({length: 3}).map((_, i) => <CommentSkeleton key={i} />)
                                     ) : comments.length > 0 ? (
-                                        comments.map((comment) => <Comment key={`comment-${comment.id}`} comment={comment} parentPostId={id} onReplyClick={() => setIsReplyDialogOpen(true)} />)
+                                        comments.map((comment) => <Post key={`comment-${comment.id}`} {...comment} isReplyView={true} parentPostId={id}/>)
                                     ) : (
                                         <p className="p-8 text-center text-muted-foreground text-sm">No comments yet.</p>
                                     )}

@@ -165,7 +165,7 @@ export function PostPageView({ postId }: { postId: string }) {
                         "border-b",
                         index % 2 !== 0 && "border-b-transparent"
                     )}>
-                        <Post {...comment} isReplyView={true} />
+                        <Post {...comment} isReplyView={true} parentPostId={post.id} />
                     </div>
                  ))
             ) : (
