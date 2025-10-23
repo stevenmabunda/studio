@@ -328,17 +328,27 @@ export default function ProfilePage() {
             ) : mediaPosts.length > 0 ? (
                  <div className="grid grid-cols-3 gap-1">
                     {mediaPosts.flatMap(post => post.media?.map((media, index) => (
-                        <Link key={`${post.id}-${index}`} href={`/post/${post.id}`} className="relative aspect-square w-full block group">
-                            <Image
-                                src={media.url}
-                                alt={`Media from post ${post.id}`}
-                                fill
-                                className="object-cover"
-                            />
-                             {media.type === 'video' && (
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                    <PlayCircle className="h-8 w-8 text-white drop-shadow-lg" />
-                                </div>
+                        <Link key={`${post.id}-${index}`} href={`/post/${post.id}`} className="relative aspect-square w-full block group bg-secondary">
+                           {media.type === 'video' ? (
+                                <>
+                                    <Image
+                                        src={media.hint || "https://placehold.co/300x300.png"} // Use a placeholder or a generated thumbnail
+                                        alt={`Video from post ${post.id}`}
+                                        fill
+                                        className="object-cover"
+                                        data-ai-hint="video thumbnail"
+                                    />
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                                        <PlayCircle className="h-8 w-8 text-white drop-shadow-lg" />
+                                    </div>
+                                </>
+                            ) : (
+                                <Image
+                                    src={media.url}
+                                    alt={`Media from post ${post.id}`}
+                                    fill
+                                    className="object-cover"
+                                />
                             )}
                         </Link>
                     )) ?? [])}
