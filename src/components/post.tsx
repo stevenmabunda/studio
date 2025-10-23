@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -57,6 +58,7 @@ import useEmblaCarousel from 'embla-carousel-react';
 import { LoginOrSignupDialog } from "./login-or-signup-dialog";
 import { ProfileHoverCard } from "./profile-hover-card";
 import { useTabContext } from "@/contexts/tab-context";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 
 type PostProps = PostType & {
@@ -339,6 +341,7 @@ export function Post(props: PostProps) {
   const { editPost, deletePost, likePost, repostPost, bookmarkPost, bookmarkedPostIds, addComment, addVote, likedPostIds } = usePosts();
   const { toast } = useToast();
   const { setActiveTab } = useTabContext();
+  const isMobile = useIsMobile();
 
   const [comments, setComments] = useState<CommentType[]>([]);
   const [loadingComments, setLoadingComments] = useState(false);
@@ -515,8 +518,8 @@ export function Post(props: PostProps) {
 
   const handlePostClick = () => {
     if (id.startsWith('temp_')) return;
-
-    if (isVideo) {
+    
+    if (isVideo && isMobile) {
         router.push(`/video?postId=${id}`);
         return;
     }
