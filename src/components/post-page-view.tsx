@@ -179,7 +179,7 @@ export function PostPageView({ postId }: { postId: string }) {
                 <h1 className="text-xl font-bold">Post</h1>
             </div>
         </div>
-        <div className="md:hidden">
+        <div className="hidden md:block">
             <Button size="sm" className="rounded-full" onClick={onReplyClick}>Reply</Button>
         </div>
     </header>
