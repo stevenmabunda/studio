@@ -10,7 +10,7 @@ import Script from 'next/script';
 
 export const metadata: Metadata = {
   title: 'BHOLO',
-  description: 'A football-focused social media app.',
+  description: 'The football banter app.',
   icons: {
     icon: '/favicon_io/favicon.ico',
     shortcut: '/favicon_io/favicon-16x16.png',
