@@ -370,6 +370,7 @@ export function Post(props: PostProps) {
   const [videoThumbnail, setVideoThumbnail] = useState<string | null>(null);
   const [isFeedVideoPlaying, setIsFeedVideoPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
+  const [videoProgress, setVideoProgress] = useState(0);
 
 
   const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
@@ -380,6 +381,7 @@ export function Post(props: PostProps) {
   const mediaExists = media && media.length > 0;
   const isVideo = mediaExists && media[0].type === 'video';
   const videoRef = useRef<HTMLVideoElement>(null);
+  const progressRef = useRef<HTMLDivElement>(null);
 
   const isAuthor = user && user.uid === authorId;
 
@@ -428,7 +430,6 @@ export function Post(props: PostProps) {
     }
   }, [isVideo, media]);
   
-
   useEffect(() => {
     if (!isVideo || !videoRef.current) return;
     
@@ -455,7 +456,25 @@ export function Post(props: PostProps) {
           observer.unobserve(videoElement);
       }
     };
-}, [isVideo]);
+  }, [isVideo]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const handleTimeUpdate = () => {
+        if (video.duration > 0) {
+            setVideoProgress((video.currentTime / video.duration) * 100);
+        }
+    };
+
+    video.addEventListener('timeupdate', handleTimeUpdate);
+    return () => {
+      if (video && document.body.contains(video)) {
+          video.removeEventListener('timeupdate', handleTimeUpdate);
+      }
+    };
+  }, [isFeedVideoPlaying]);
 
 
   useEffect(() => {
@@ -521,12 +540,29 @@ export function Post(props: PostProps) {
   const handlePostClick = () => {
     if (id.startsWith('temp_')) return;
     
-    if (isVideo && isMobile) {
+    // On desktop, always go to the post page
+    if (!isMobile) {
+      if (!isStandalone && !isReplyView) {
+        saveScrollPosition();
+        router.push(`/post/${id}`);
+      }
+      return;
+    }
+
+    // On mobile, video opens immersive player, others open post page
+    if (isVideo) {
+        saveScrollPosition();
         router.push(`/video?postId=${id}`);
         return;
     }
 
     if (!isStandalone && !isReplyView) {
+      saveScrollPosition();
+      router.push(`/post/${id}`);
+    }
+  };
+  
+  const saveScrollPosition = () => {
       try {
         const desktopScrollArea = document.querySelector('#desktop-scroll-area > div');
         if (desktopScrollArea) {
@@ -537,9 +573,7 @@ export function Post(props: PostProps) {
       } catch (e) {
         console.error("Could not save scroll position:", e);
       }
-      router.push(`/post/${id}`);
-    }
-  };
+  }
 
   const handleCommentClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -634,6 +668,14 @@ export function Post(props: PostProps) {
       e.stopPropagation();
       setIsMuted(prev => !prev);
   }
+
+  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!videoRef.current || !progressRef.current) return;
+    const rect = progressRef.current.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const newTime = (clickX / rect.width) * videoRef.current.duration;
+    videoRef.current.currentTime = newTime;
+  };
 
   useEffect(() => {
     if (videoRef.current) {
@@ -800,6 +842,15 @@ export function Post(props: PostProps) {
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 group-hover/video:opacity-100 transition-opacity">
                       {isFeedVideoPlaying ? <Pause className="h-12 w-12 text-white/70 drop-shadow-lg" fill="currentColor" /> : <Play className="h-12 w-12 text-white/70 drop-shadow-lg" fill="currentColor" />}
                   </div>
+                  {isFeedVideoPlaying && (
+                    <div 
+                      ref={progressRef}
+                      className="absolute bottom-2 left-2 right-2 h-2.5 cursor-pointer"
+                      onClick={handleSeek}
+                    >
+                        <Progress value={videoProgress} className="h-full" />
+                    </div>
+                  )}
               </div>
             ) : singleImage && media[0].url ? (
               <div 
@@ -1001,7 +1052,7 @@ export function Post(props: PostProps) {
                         </div>
 
 
-                        <div className="relative flex-1 w-full h-full flex items-center justify-center group/viewer">
+                        <div className="relative flex-1 w-full h-full group/viewer">
                             <div className="overflow-hidden w-full h-full" ref={emblaRef}>
                                 <div className="flex h-full">
                                     {media?.filter(m => m.type === 'image').map((image, index) => (
@@ -1123,3 +1174,5 @@ export function Post(props: PostProps) {
       </div>
   );
 }
+
+    
