@@ -148,10 +148,13 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (!authLoading) {
-        fetchProfileData();
-        fetchPosts();
+        fetchProfileData().then(() => {
+            // Fetch posts only after profile data has been loaded
+            fetchPosts();
+        });
     }
   }, [authLoading, fetchProfileData, fetchPosts]);
+
 
   if (authLoading || profileLoading || !currentUser) {
       return (
@@ -612,3 +615,4 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
     
 
     
+
