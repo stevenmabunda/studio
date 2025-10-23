@@ -332,7 +332,7 @@ export default function ProfilePage() {
                            {media.type === 'video' ? (
                                 <>
                                     <Image
-                                        src={media.hint || "https://placehold.co/300x300.png"} // Use a placeholder or a generated thumbnail
+                                        src={media.hint || "https://picsum.photos/seed/vid-thumb/300/300"}
                                         alt={`Video from post ${post.id}`}
                                         fill
                                         className="object-cover"
@@ -627,6 +627,9 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
     
 
 
+
+
+    
 
 
     
