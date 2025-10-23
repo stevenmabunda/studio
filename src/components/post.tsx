@@ -909,9 +909,9 @@ export function Post(props: PostProps) {
             </div>
         )}
         
-         {isReplyView && (
+         {isReplyView && parentPostId && (
             <CommentEngagement 
-                parentPostId={parentPostId as string} 
+                parentPostId={parentPostId} 
                 commentId={id} 
                 initialLikes={initialLikes} 
                 onReplyClick={handleCommentClick}
@@ -1005,13 +1005,13 @@ export function Post(props: PostProps) {
                             <div className="overflow-hidden w-full h-full" ref={emblaRef}>
                                 <div className="flex h-full">
                                     {media?.filter(m => m.type === 'image').map((image, index) => (
-                                        <div key={index} className="flex-[0_0_100%] min-w-0 relative flex items-center justify-center">
+                                        <div key={index} className="flex-[0_0_100%] min-w-0 relative">
                                             <Image
                                                 src={image.url}
                                                 alt={`Enlarged view of post image ${index + 1}`}
                                                 width={image.width || 1200}
                                                 height={image.height || 1200}
-                                                className="object-contain"
+                                                className="w-full h-full object-contain"
                                             />
                                         </div>
                                     ))}
