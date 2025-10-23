@@ -540,20 +540,10 @@ export function Post(props: PostProps) {
   const handlePostClick = () => {
     if (id.startsWith('temp_')) return;
     
-    // On desktop, always go to the post page
-    if (!isMobile) {
-      if (!isStandalone && !isReplyView) {
-        saveScrollPosition();
-        router.push(`/post/${id}`);
-      }
+    if (isVideo && isMobile) {
+      saveScrollPosition();
+      router.push(`/video?postId=${id}`);
       return;
-    }
-
-    // On mobile, video opens immersive player, others open post page
-    if (isVideo) {
-        saveScrollPosition();
-        router.push(`/video?postId=${id}`);
-        return;
     }
 
     if (!isStandalone && !isReplyView) {
@@ -830,7 +820,7 @@ export function Post(props: PostProps) {
                     ref={videoRef}
                     src={media[0].url}
                     poster={videoThumbnail || ''}
-                    className="w-full h-full object-contain max-h-[80vh]"
+                    className="w-full h-full object-contain max-h-[80vh] bg-black"
                     playsInline
                     loop
                   />
@@ -1174,5 +1164,3 @@ export function Post(props: PostProps) {
       </div>
   );
 }
-
-    
