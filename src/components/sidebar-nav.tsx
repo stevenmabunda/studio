@@ -125,7 +125,7 @@ export function SidebarNav() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}
-             <SidebarMenuItem className="px-2 mt-4 hidden md:block">
+            <SidebarMenuItem className="px-2 mt-4 hidden md:block">
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
                   <Button className="w-full h-14 text-lg rounded-full">Kick-It!</Button>
@@ -139,7 +139,7 @@ export function SidebarNav() {
                   </div>
                 </DialogContent>
               </Dialog>
-          </SidebarMenuItem>
+            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
          <SidebarFooter className="mt-auto">
