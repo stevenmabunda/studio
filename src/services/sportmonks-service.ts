@@ -261,7 +261,7 @@ export async function getFixturesByDateFromApi(): Promise<MatchType[]> {
 // Service function to get live matches from SportMonks
 export async function getLiveMatchesFromSportMonks(): Promise<MatchType[]> {
   const params = new URLSearchParams({
-    include: 'participants;scores;periods;league;state',
+    include: 'participants;scores;periods;events;league.country;round',
   });
   const apiData = await fetchFromSportMonksApi<SportMonksFixture[]>('livescores/inplay', params);
 
