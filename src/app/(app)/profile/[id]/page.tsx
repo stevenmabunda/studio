@@ -297,7 +297,6 @@ export default function ProfilePage() {
       <Tabs defaultValue="posts" className="w-full border-t" onValueChange={handleTabChange}>
         <TabsList className="flex w-full justify-around rounded-none border-b bg-transparent p-0">
           <TabsTrigger value="posts" className="flex-1 rounded-none py-3 text-sm font-semibold text-muted-foreground data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none">Posts</TabsTrigger>
-          <TabsTrigger value="replies" className="flex-1 rounded-none py-3 text-sm font-semibold text-muted-foreground data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none">Replies</TabsTrigger>
           <TabsTrigger value="media" className="flex-1 rounded-none py-3 text-sm font-semibold text-muted-foreground data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none">Media</TabsTrigger>
           <TabsTrigger value="likes" className="flex-1 rounded-none py-3 text-sm font-semibold text-muted-foreground data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none">Likes</TabsTrigger>
         </TabsList>
@@ -315,9 +314,6 @@ export default function ProfilePage() {
             )}
           </div>
         </TabsContent>
-        <TabsContent value="replies">
-            <div className="p-8 text-center text-muted-foreground">No replies yet.</div>
-        </TabsContent>
         <TabsContent value="media">
             {mediaPostsLoading ? (
                  <div className="grid grid-cols-3 gap-1 p-1">
@@ -333,7 +329,7 @@ export default function ProfilePage() {
                             .map((media, index) => (
                                 <Link key={`${post.id}-${index}`} href={`/post/${post.id}`} className="relative aspect-square w-full block group bg-secondary">
                                     <Image
-                                        src={media.url || "https://picsum.photos/seed/placeholder/300/300"}
+                                        src={media.url}
                                         alt={`Media from post ${post.id}`}
                                         fill
                                         className="object-cover"
@@ -623,4 +619,5 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
 
 
     
+
 
