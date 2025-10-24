@@ -1,12 +1,11 @@
-
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useRouter } from 'next/navigation';
-import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification, GoogleAuthProvider, signInWithRedirect, getRedirectResult } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase/config';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,7 +14,7 @@ import Link from 'next/link';
 import { AuthFormError } from './auth-form-error';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { MailCheck, Eye, EyeOff } from 'lucide-react';
+import { MailCheck, Eye, EyeOff, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 
 const formSchema = z.object({
@@ -51,11 +50,42 @@ export function SignupForm() {
     },
   });
 
+  // Handle redirect result from Google sign in
+  useEffect(() => {
+    const handleRedirect = async () => {
+      try {
+        setGoogleLoading(true);
+        const result = await getRedirectResult(auth);
+        if (result) {
+          const user = result.user;
+          const userDocRef = doc(db, 'users', user.uid);
+          const userDoc = await getDoc(userDocRef);
+          if (!userDoc.exists()) {
+             await setDoc(userDocRef, {
+                uid: user.uid, displayName: user.displayName, email: user.email, photoURL: user.photoURL,
+                handle: user.email?.split('@')[0] || `user${user.uid.substring(0, 5)}`,
+                joined: new Date().toISOString(), bio: 'Passionate football fan. Discussing all things football. ⚽',
+                location: '', country: '', favouriteClub: '', bannerUrl: 'https://placehold.co/1200x400.png',
+                followersCount: 0, followingCount: 0,
+            });
+          }
+          router.push('/home');
+          router.refresh();
+        }
+      } catch (err: any) {
+        handleAuthError(err);
+      } finally {
+        setGoogleLoading(false);
+      }
+    };
+    handleRedirect();
+  }, []);
+
   const handleAuthError = (err: any) => {
     console.error("Signup failed:", err); // Log the full error
     if (err.code === 'auth/email-already-in-use') {
       setError('An account with this email already exists.');
-    } else if (err.code === 'auth/popup-closed-by-user') {
+    } else if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
        setError('Sign-up cancelled. Please try again.');
     }
     else {
@@ -110,37 +140,7 @@ export function SignupForm() {
     setGoogleLoading(true);
     setError(null);
     const provider = new GoogleAuthProvider();
-    try {
-        const result = await signInWithPopup(auth, provider);
-        const user = result.user;
-        
-        const userDocRef = doc(db, 'users', user.uid);
-        const userDoc = await getDoc(userDocRef);
-
-        if (!userDoc.exists()) {
-             await setDoc(userDocRef, {
-                uid: user.uid,
-                displayName: user.displayName,
-                email: user.email,
-                photoURL: user.photoURL,
-                handle: user.email?.split('@')[0] || `user${user.uid.substring(0, 5)}`,
-                joined: new Date().toISOString(),
-                bio: 'Passionate football fan. Discussing all things football. ⚽',
-                location: '',
-                country: '',
-                favouriteClub: '',
-                bannerUrl: 'https://placehold.co/1200x400.png',
-                followersCount: 0,
-                followingCount: 0,
-            });
-        }
-        router.push('/home');
-        router.refresh();
-    } catch (err: any) {
-       handleAuthError(err);
-    } finally {
-        setGoogleLoading(false);
-    }
+    await signInWithRedirect(auth, provider);
   }
   
   if (success) {
@@ -215,7 +215,7 @@ export function SignupForm() {
               )}
             />
             <Button type="submit" className="w-full h-11 text-base" disabled={loading || googleLoading}>
-              {loading ? 'Creating Account...' : 'Create Account'}
+              {loading || googleLoading ? <Loader2 className="animate-spin" /> : 'Create Account'}
             </Button>
           </fieldset>
         </form>
@@ -227,7 +227,12 @@ export function SignupForm() {
        </div>
 
         <Button variant="outline" className="w-full h-11 text-base" onClick={handleGoogleSignIn} disabled={loading || googleLoading}>
-            {googleLoading ? 'Redirecting...' : (
+             {googleLoading ? (
+                 <>
+                    <Loader2 className="mr-2 animate-spin" />
+                    Checking...
+                </>
+            ) : (
                 <>
                     <GoogleIcon className="mr-2" />
                     Sign up with Google

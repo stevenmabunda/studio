@@ -1,19 +1,18 @@
-
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useRouter } from 'next/navigation';
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithRedirect, getRedirectResult } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase/config';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import Link from 'next/link';
 import { AuthFormError } from './auth-form-error';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 
@@ -46,6 +45,36 @@ export function LoginForm() {
       password: '',
     },
   });
+  
+  // Handle redirect result from Google sign in
+  useEffect(() => {
+    const handleRedirect = async () => {
+      try {
+        setGoogleLoading(true);
+        const result = await getRedirectResult(auth);
+        if (result) {
+          const user = result.user;
+          const userDocRef = doc(db, 'users', user.uid);
+          const userDoc = await getDoc(userDocRef);
+          if (!userDoc.exists()) {
+             await setDoc(userDocRef, {
+                uid: user.uid, displayName: user.displayName, email: user.email, photoURL: user.photoURL,
+                handle: user.email?.split('@')[0] || `user${user.uid.substring(0, 5)}`,
+                joined: new Date().toISOString(), bio: 'Passionate football fan. Discussing all things football. ⚽',
+                location: '', country: '', favouriteClub: '', bannerUrl: 'https://placehold.co/1200x400.png',
+                followersCount: 0, followingCount: 0,
+            });
+          }
+          handleAuthSuccess();
+        }
+      } catch (err: any) {
+        handleAuthError(err);
+      } finally {
+        setGoogleLoading(false);
+      }
+    };
+    handleRedirect();
+  }, []);
 
   const handleAuthSuccess = () => {
     router.push('/home');
@@ -58,7 +87,7 @@ export function LoginForm() {
       setError('Invalid login credentials. Please check your email and password.');
     } else if (err.code === 'auth/invalid-api-key') {
        setError('Firebase API Key is not valid. Please check your configuration.');
-    } else if (err.code === 'auth/popup-closed-by-user') {
+    } else if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
        setError('Sign-in cancelled. Please try again.');
     }
     else {
@@ -90,37 +119,7 @@ export function LoginForm() {
     setGoogleLoading(true);
     setError(null);
     const provider = new GoogleAuthProvider();
-    try {
-        const result = await signInWithPopup(auth, provider);
-        const user = result.user;
-        
-        // Check if user exists in Firestore
-        const userDocRef = doc(db, 'users', user.uid);
-        const userDoc = await getDoc(userDocRef);
-
-        if (!userDoc.exists()) {
-             await setDoc(userDocRef, {
-                uid: user.uid,
-                displayName: user.displayName,
-                email: user.email,
-                photoURL: user.photoURL,
-                handle: user.email?.split('@')[0] || `user${user.uid.substring(0, 5)}`,
-                joined: new Date().toISOString(),
-                bio: 'Passionate football fan. Discussing all things football. ⚽',
-                location: '',
-                country: '',
-                favouriteClub: '',
-                bannerUrl: 'https://placehold.co/1200x400.png',
-                followersCount: 0,
-                followingCount: 0,
-            });
-        }
-        handleAuthSuccess();
-    } catch (err: any) {
-       handleAuthError(err);
-    } finally {
-        setGoogleLoading(false);
-    }
+    await signInWithRedirect(auth, provider);
   }
 
   return (
@@ -173,7 +172,7 @@ export function LoginForm() {
                 </Link>
             </div>
             <Button type="submit" className="w-full mt-2 h-11 text-base" disabled={loading || googleLoading}>
-              {loading ? 'Logging In...' : 'Log In'}
+              {loading || googleLoading ? <Loader2 className="animate-spin" /> : 'Log In'}
             </Button>
           </fieldset>
         </form>
@@ -185,7 +184,12 @@ export function LoginForm() {
        </div>
 
         <Button variant="outline" className="w-full h-11 text-base" onClick={handleGoogleSignIn} disabled={loading || googleLoading}>
-            {googleLoading ? 'Redirecting...' : (
+            {googleLoading ? (
+                 <>
+                    <Loader2 className="mr-2 animate-spin" />
+                    Checking...
+                </>
+            ) : (
                 <>
                     <GoogleIcon className="mr-2" />
                     Log in with Google
