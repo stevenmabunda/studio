@@ -327,31 +327,21 @@ export default function ProfilePage() {
                  </div>
             ) : mediaPosts.length > 0 ? (
                  <div className="grid grid-cols-3 gap-1">
-                    {mediaPosts.flatMap(post => post.media?.map((media, index) => (
-                        <Link key={`${post.id}-${index}`} href={`/post/${post.id}`} className="relative aspect-square w-full block group bg-secondary">
-                           {media.type === 'video' ? (
-                                <>
+                    {mediaPosts.flatMap(post => 
+                        post.media
+                            ?.filter(media => media.type === 'image')
+                            .map((media, index) => (
+                                <Link key={`${post.id}-${index}`} href={`/post/${post.id}`} className="relative aspect-square w-full block group bg-secondary">
                                     <Image
-                                        src={media.url || "https://picsum.photos/seed/vid-thumb/300/300"}
-                                        alt={`Video from post ${post.id}`}
+                                        src={media.url || "https://picsum.photos/seed/placeholder/300/300"}
+                                        alt={`Media from post ${post.id}`}
                                         fill
                                         className="object-cover"
-                                        data-ai-hint="video thumbnail"
+                                        data-ai-hint={media.hint || 'user content'}
                                     />
-                                    <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                                        <PlayCircle className="h-8 w-8 text-white drop-shadow-lg" />
-                                    </div>
-                                </>
-                            ) : (
-                                <Image
-                                    src={media.url}
-                                    alt={`Media from post ${post.id}`}
-                                    fill
-                                    className="object-cover"
-                                />
-                            )}
-                        </Link>
-                    )) ?? [])}
+                                </Link>
+                            )) ?? []
+                    )}
                 </div>
             ) : (
                 <div className="p-8 text-center text-muted-foreground">
@@ -633,3 +623,4 @@ function EditProfileDialog({ isOpen, onOpenChange, profile, onProfileUpdate }: {
 
 
     
+
