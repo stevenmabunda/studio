@@ -16,6 +16,83 @@ interface SportMonksApiResponse<T> {
     timezone?: string;
 }
 
+// Type for Venue
+interface Venue {
+    id: number;
+    name: string;
+    city: string;
+    capacity: number;
+    image_path: string;
+}
+
+// Type for Event
+interface Event {
+    id: number;
+    type: {
+        name: string;
+        code: string;
+    };
+    period: {
+        id: number;
+        description: string;
+    };
+    player?: {
+        id: number;
+        name: string;
+        image_path: string;
+    };
+    related_player?: {
+        id: number;
+        name: string;
+        image_path: string;
+    };
+    minute: number;
+    extra_minute: number | null;
+}
+
+// Type for Statistic
+interface Statistic {
+    id: number;
+    type: {
+        name: string;
+    };
+    value: number | string;
+    participant_id: number;
+}
+
+// Type for Sidelined
+interface Sidelined {
+    id: number;
+    sideline: {
+        player: {
+            id: number;
+            name: string;
+            image_path: string;
+        };
+        type: {
+            name: string;
+        };
+        start_date: string;
+        end_date: string | null;
+    };
+}
+
+// Type for WeatherReport
+interface WeatherReport {
+    description: string;
+    icon: string;
+    temperature: {
+        temp: number;
+        unit: string;
+    };
+    wind: {
+        speed: string;
+        degree: number;
+    };
+    humidity: string;
+}
+
+
 // Type for a single Fixture/Match from SportMonks
 interface SportMonksFixture {
     id: number;
@@ -49,6 +126,11 @@ interface SportMonksFixture {
         minutes: number | null;
         // Add other properties if available in the API response for periods
     }[];
+    venue?: Venue;
+    events?: Event[];
+    statistics?: Statistic[];
+    sidelined?: Sidelined[];
+    weatherReport?: WeatherReport;
 }
 
 // Type for a League with today's fixtures nested
@@ -310,6 +392,17 @@ export async function getRoundWithOdds(roundId: number): Promise<RoundWithOdds |
 
     const apiData = await fetchFromSportMonksApi<RoundWithOdds>(`rounds/${roundId}`, params);
 
+    return apiData ? apiData.data : null;
+}
+
+// Service function to get a single fixture by its ID
+export async function getFixtureById(fixtureId: number): Promise<SportMonksFixture | null> {
+    const params = new URLSearchParams({
+        include: 'participants;league;venue;state;scores;events.type;events.period;events.player;statistics.type;sidelined.sideline.player;sidelined.sideline.type;weatherReport',
+    });
+
+    const apiData = await fetchFromSportMonksApi<SportMonksFixture>(`fixtures/${fixtureId}`, params);
+    
     return apiData ? apiData.data : null;
 }
 
