@@ -2,7 +2,7 @@
 'use client';
 import { getTodaysFixtures } from "@/app/(app)/home/actions";
 import { FixturesWidget } from "@/components/fixtures-widget";
-import { SofascoreWidget } from "@/components/sofascore-widget";
+import { StandingsTable } from "@/components/standings-table";
 import { useEffect, useState } from "react";
 import type { MatchType } from "@/lib/data";
 
@@ -40,7 +40,7 @@ export default function LivePage() {
                     <FixturesWidget isPage={true} matches={todaysMatches} loading={loading} emptyMessage="No fixtures scheduled for today." />
                 </div>
                 <div className="px-4">
-                    <SofascoreWidget />
+                    <StandingsTable />
                 </div>
             </main>
         </div>

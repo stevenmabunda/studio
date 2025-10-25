@@ -1,6 +1,9 @@
 
 'use client';
 
+// This component is no longer in use and can be safely deleted.
+// It has been replaced by the native StandingsTable component.
+
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { useEffect, useState } from 'react';
 
