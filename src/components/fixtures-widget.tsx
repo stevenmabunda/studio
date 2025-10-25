@@ -28,7 +28,7 @@ function MatchSkeleton() {
 }
 
 
-export function FixturesWidget({ isPage = false, matches: propMatches, loading: propLoading, emptyMessage = "No fixtures scheduled for today." }: { isPage?: boolean, matches?: MatchType[], loading?: boolean, emptyMessage?: string }) {
+export function FixturesWidget({ isPage = false, matches: propMatches, loading: propLoading, emptyMessage = "No live matches right now." }: { isPage?: boolean, matches?: MatchType[], loading?: boolean, emptyMessage?: string }) {
     const [internalMatches, setInternalMatches] = useState<MatchType[]>([]);
     const [internalLoading, setInternalLoading] = useState(true);
 
@@ -51,6 +51,8 @@ export function FixturesWidget({ isPage = false, matches: propMatches, loading: 
             };
 
             fetchMatches();
+            const intervalId = setInterval(fetchMatches, 60000); // Refresh every minute
+            return () => clearInterval(intervalId);
         }
     }, [propMatches]);
 
@@ -95,10 +97,10 @@ export function FixturesWidget({ isPage = false, matches: propMatches, loading: 
                 </div>
             )}
             
-            {!isPage && matches.length > 0 && (
+            {!isPage && (
                 <div className="pt-4">
                     <Button variant="link" className="p-0 text-primary w-fit text-sm" asChild>
-                        <Link href="/live">Show more</Link>
+                        <Link href="/live">View Match Centre</Link>
                     </Button>
                 </div>
             )}
@@ -111,7 +113,7 @@ export function FixturesWidget({ isPage = false, matches: propMatches, loading: 
 
     return (
         <>
-            <h2 className="text-xl font-bold mb-4 text-primary">Today's Fixtures</h2>
+            <h2 className="text-xl font-bold mb-4 text-primary">Live Now</h2>
             {content}
         </>
     );

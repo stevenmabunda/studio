@@ -24,8 +24,8 @@ export default function LivePage() {
         };
 
         fetchFixtures();
-         // Refresh every 5 minutes
-        const intervalId = setInterval(fetchFixtures, 5 * 60 * 1000);
+         // Refresh every minute for live scores
+        const intervalId = setInterval(fetchFixtures, 1 * 60 * 1000);
 
         return () => clearInterval(intervalId);
     }, []);
@@ -37,7 +37,7 @@ export default function LivePage() {
             </header>
             <main className="flex-1 space-y-6">
                 <div className="p-4">
-                    <FixturesWidget isPage={true} matches={todaysMatches} loading={loading} emptyMessage="No fixtures scheduled for today." />
+                    <FixturesWidget isPage={true} matches={todaysMatches} loading={loading} emptyMessage="No matches are currently live." />
                 </div>
                 <div className="px-4">
                     <StandingsTable />
