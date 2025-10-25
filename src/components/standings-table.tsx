@@ -1,8 +1,8 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getStandingsBySeasonId, type SportMonksStanding } from '@/services/sportmonks-service';
+import { getStandings } from '@/app/(app)/live/actions';
+import type { SportMonksStanding } from '@/services/sportmonks-service';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -21,8 +21,7 @@ export function StandingsTable() {
         const fetchStandings = async () => {
             setLoading(true);
             try {
-                // Using the default Premier League Season ID
-                const data = await getStandingsBySeasonId();
+                const data = await getStandings();
                 setStandings(data);
             } catch (error) {
                 console.error("Failed to fetch standings:", error);
