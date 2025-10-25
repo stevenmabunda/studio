@@ -147,8 +147,8 @@ export interface SportMonksStanding {
     league_id: number;
     season_id: number;
     stage_id: number;
-    group_id: number;
-    round_id: number;
+    group_id: number | null;
+    round_id: number | null;
     standing_rule_id: number;
     position: number;
     result: string;
@@ -161,7 +161,33 @@ export interface SportMonksStanding {
     details: {
         type_id: number;
         value: number;
+        type: {
+            name: string;
+        }
     }[];
+    form: {
+        fixture_id: number;
+        form: string; // "W", "D", "L"
+    }[];
+    stage: {
+        id: number;
+        name: string;
+    };
+    league: {
+        id: number;
+        name: string;
+    };
+    group: {
+        id: number;
+        name: string;
+    } | null;
+    rule: {
+        id: number;
+        type: {
+            id: number;
+            name: string;
+        }
+    }
 }
 
 // Betting Odds Types
@@ -356,7 +382,7 @@ export async function getLiveMatchesFromSportMonks(): Promise<MatchType[]> {
 
 export async function getStandingsBySeasonId(seasonId: number = PREMIER_LEAGUE_SEASON_ID): Promise<SportMonksStanding[]> {
     const params = new URLSearchParams({
-        include: 'participant;details.type',
+        include: 'participant;rule.type;details.type;form;stage;league;group',
     });
     const apiData = await fetchFromSportMonksApi<SportMonksStanding[]>(`standings/seasons/${seasonId}`, params);
 
