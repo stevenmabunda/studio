@@ -347,7 +347,7 @@ async function fetchFromSportMonksApi<T>(endpoint: string, params?: URLSearchPar
 export async function getFixturesByDateFromApi(): Promise<MatchType[]> {
   const today = getTodayDateString();
   const params = new URLSearchParams({
-    include: 'today.scores;today.participants;today.league;today.state;today.periods',
+    include: 'today.scores;today.participants;today.league;today.state;today.periods;today.stage;today.group;today.round',
   });
 
   const apiData = await fetchFromSportMonksApi<SportMonksLeagueWithFixtures[]>(`leagues/date/${today}`, params);

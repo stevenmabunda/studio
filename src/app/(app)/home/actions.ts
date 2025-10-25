@@ -21,8 +21,7 @@ export async function getTrendingHashtags(
 
 export async function getTodaysFixtures(): Promise<MatchType[]> {
   try {
-    // Updated to get only live matches for the fixtures list.
-    const matches = await getLiveMatchesFromSportMonks();
+    const matches = await getFixturesByDateFromApi();
     return matches;
   } catch (error) {
     console.error("Error in getTodaysFixtures server action:", error);
