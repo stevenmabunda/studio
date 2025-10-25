@@ -131,6 +131,7 @@ interface SportMonksFixture {
     statistics?: Statistic[];
     sidelined?: Sidelined[];
     weatherReport?: WeatherReport;
+    round?: Round;
 }
 
 // Type for a League with today's fixtures nested
@@ -310,10 +311,10 @@ function mapSportMonksToMatchType(fixtures: SportMonksFixture[]): MatchType[] {
 
 // Reusable fetch function for the SportMonks API
 async function fetchFromSportMonksApi<T>(endpoint: string, params?: URLSearchParams): Promise<SportMonksApiResponse<T> | null> {
-  const apiKey = process.env.SPORTMONKS_API_KEY;
+  const apiKey = process.env.NEXT_PUBLIC_SPORTMONKS_API_KEY;
 
   if (!apiKey) {
-      console.error("SportMonks API key is missing. Please add SPORTMONKS_API_KEY to your .env file.");
+      console.error("SportMonks API key is missing. Please add NEXT_PUBLIC_SPORTMONKS_API_KEY to your .env file.");
       throw new Error("API key for SportMonks is not configured.");
   }
   
