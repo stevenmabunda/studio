@@ -998,7 +998,7 @@ export function Post(props: PostProps) {
                     
                     <div className="flex-1 flex flex-col min-h-0 md:h-full relative">
                         {/* Mobile Header for Image Viewer */}
-                         <div className="md:hidden absolute top-0 left-0 right-0 z-20 p-2 space-y-2 bg-gradient-to-b from-black/60 to-transparent">
+                         <div className="md:hidden absolute top-0 left-0 right-0 z-20 p-2 pt-4 space-y-2 bg-gradient-to-b from-black/60 to-transparent">
                              <div className="flex items-center justify-between">
                                 <DialogClose asChild>
                                     <Button variant="ghost" size="icon" className="h-9 w-9 text-white rounded-full bg-black/80 hover:bg-black/70">
