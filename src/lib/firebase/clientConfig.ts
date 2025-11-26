@@ -3,16 +3,15 @@ import type { FirebaseOptions } from 'firebase/app';
 // =================================================================================
 // IMPORTANT!
 //
-// This file is now configured with your Firebase project credentials.
-// For security reasons, it's a good practice to move these keys to
-// environment variables if you plan to share this code publicly.
+// Your Firebase config is now sourced from environment variables.
+// You will need to set these variables in your deployment environment (e.g., Netlify).
 // =================================================================================
 
 export const firebaseConfig: FirebaseOptions = {
-  apiKey: "AIzaSyCGKzB16b4-1d3RxGpUceFXcuHLpsjNudE",
-  authDomain: "goal-chatter.firebaseapp.com",
-  projectId: "goal-chatter",
-  storageBucket: "goal-chatter.firebasestorage.app",
-  messagingSenderId: "507540885804",
-  appId: "1:507540885804:web:647f6858ce067450589c89"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 };
