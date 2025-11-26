@@ -5,6 +5,7 @@ import type { FirebaseOptions } from 'firebase/app';
 //
 // Your Firebase config is now sourced from environment variables.
 // You will need to set these variables in your deployment environment (e.g., Netlify).
+// For client-side access, these variables must be prefixed with NEXT_PUBLIC_.
 // =================================================================================
 
 export const firebaseConfig: FirebaseOptions = {
