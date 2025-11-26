@@ -113,7 +113,7 @@ export function FixturesWidget({ isPage = false, matches: propMatches, loading: 
 
     return (
         <>
-            <h2 className="text-xl font-bold mb-4 text-primary">Live Now</h2>
+            <h2 className="text-xl font-bold mb-4 text-primary">Betway Premiership Fixtures</h2>
             {content}
         </>
     );
