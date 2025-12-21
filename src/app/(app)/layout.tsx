@@ -8,7 +8,6 @@ import { RightSidebar } from '@/components/right-sidebar';
 import { MobileBottomNav } from '@/components/mobile-bottom-nav';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useEffect } from 'react';
-import { cn } from '@/lib/utils';
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
@@ -21,7 +20,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     }
   }, [user, loading, router]);
 
-
   if (loading || !user) {
     return null; // The global loader in AuthProvider handles this.
   }
@@ -29,42 +27,36 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const isCreatorPage = pathname === '/creators';
   const isFantasyPage = pathname === '/fantasy';
 
-  // Special layout for pages that need full width
+  // Special full-width layout for specific pages
   if (isCreatorPage || isFantasyPage) {
-    const desktopLayout = (
-        <div className="hidden md:flex max-w-7xl mx-auto w-full relative">
-            <header className="w-[275px] shrink-0 h-screen">
-                <SidebarNav />
-            </header>
-            <main className="w-full border-x">
-                <ScrollArea className="h-screen" id="desktop-scroll-area">
-                    {children}
-                </ScrollArea>
-            </main>
-            {/* The right sidebar is conditionally rendered here */}
-            {!isFantasyPage && (
-                 <aside className="hidden xl:block w-[350px] shrink-0 h-screen">
-                    <ScrollArea className="h-full">
-                        <RightSidebar />
-                    </ScrollArea>
-                </aside>
-            )}
-        </div>
-    );
-     // This mobile layout is now simplified as it's shared
-    const mobileLayout = (
-        <div className="md:hidden w-full">
-            <main className="w-full pb-16">
-              {children}
-            </main>
-          <MobileBottomNav />
-      </div>
-    );
-    
     return (
         <div className="flex w-full justify-center h-screen">
-            {desktopLayout}
-            {mobileLayout}
+            {/* Desktop Layout for special pages */}
+            <div className="hidden md:flex max-w-7xl mx-auto w-full relative">
+                <header className="w-[275px] shrink-0 h-screen">
+                    <SidebarNav />
+                </header>
+                <main className="w-full border-x">
+                    <ScrollArea className="h-screen" id="desktop-scroll-area">
+                        {children}
+                    </ScrollArea>
+                </main>
+                {/* Conditionally hide RightSidebar for fantasy page */}
+                {!isFantasyPage && (
+                     <aside className="hidden xl:block w-[350px] shrink-0 h-screen">
+                        <ScrollArea className="h-full">
+                            <RightSidebar />
+                        </ScrollArea>
+                    </aside>
+                )}
+            </div>
+            {/* Mobile Layout for special pages */}
+            <div className="md:hidden w-full">
+                <main className="w-full pb-16">
+                  {children}
+                </main>
+              <MobileBottomNav />
+            </div>
         </div>
     );
   }
@@ -72,7 +64,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   // Default layout for all other pages
   return (
     <>
-      {/* Desktop Layout: Centered wrapper with sticky sidebars and a single scrollable main area */}
+      {/* Default Desktop Layout */}
       <div className="hidden md:flex justify-center h-screen overflow-hidden">
         <div className="flex max-w-7xl mx-auto w-full relative">
           <header className="w-[275px] shrink-0 h-screen">
@@ -93,7 +85,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         </div>
       </div>
       
-      {/* Mobile Layout */}
+      {/* Default Mobile Layout */}
       <div className="md:hidden w-full">
             <main className="w-full pb-16">
               {children}
