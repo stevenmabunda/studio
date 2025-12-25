@@ -99,7 +99,6 @@
   }
   body {
     @apply bg-background text-foreground;
-    overscroll-behavior-y: contain;
   }
   
   /* Prevent horizontal scroll globally */
@@ -147,8 +146,10 @@
     }
   }
 
-  .md\\:flex html, .md\\:flex body {
-    height: 100vh;
+  @media (min-width: 768px) {
+    html, body {
+      height: 100%;
+    }
   }
   
   /* Force text wrap & prevent breaking layout */
