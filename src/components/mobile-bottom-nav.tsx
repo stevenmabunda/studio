@@ -19,8 +19,8 @@ const navItems = [
   { href: '/home', icon: Home, label: 'Home' },
   { href: '/explore', icon: Search, label: 'Explore' },
   { href: 'POST_ACTION', icon: Plus, label: 'Post' },
-  { href: '/live', label: 'Match Centre', icon: ShieldCheck },
-  { href: '/fantasy', label: 'Fantasy', icon: Gamepad2 },
+  // { href: '/live', label: 'Match Centre', icon: ShieldCheck },
+  // { href: '/fantasy', label: 'Fantasy', icon: Gamepad2 },
   { href: '/profile', icon: User, label: 'Profile' },
 ];
 

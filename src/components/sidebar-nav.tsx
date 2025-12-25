@@ -40,8 +40,8 @@ const navItems = [
   { href: '/explore', label: 'Explore', icon: Hash },
   { href: '/notifications', label: 'Notifications', icon: Bell },
   { href: '/messages', label: 'Messages', icon: MessageSquare },
-  { href: '/live', label: 'Match Centre', icon: ShieldCheck },
-  { href: '/fantasy', label: 'Fantasy', icon: Gamepad2 },
+  // { href: '/live', label: 'Match Centre', icon: ShieldCheck },
+  // { href: '/fantasy', label: 'Fantasy', icon: Gamepad2 },
   { href: '/bookmarks', label: 'Bookmarks', icon: Bookmark },
   { href: '/profile', label: 'My Profile', icon: User },
 ];

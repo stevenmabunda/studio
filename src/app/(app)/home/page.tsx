@@ -186,8 +186,8 @@ export default function HomePage() {
   const homeTabs = [
     { value: 'foryou', label: 'For You' },
     { value: 'discover', label: 'Discover' },
-    { value: 'live', label: 'Match Centre' },
-    { value: 'fantasy', label: 'Fantasy' },
+    // { value: 'live', label: 'Match Centre' },
+    // { value: 'fantasy', label: 'Fantasy' },
   ];
 
   return (
@@ -295,12 +295,12 @@ export default function HomePage() {
            <TabsContent value="trending" className="h-full p-4">
              <TrendingTopics />
           </TabsContent>
-          <TabsContent value="live" className="h-full">
+          {/* <TabsContent value="live" className="h-full">
             <LivePage />
           </TabsContent>
           <TabsContent value="fantasy" className="h-full">
             <FantasyPage isEmbedded={true} />
-          </TabsContent>
+          </TabsContent> */}
         </main>
       </Tabs>
     </div>
