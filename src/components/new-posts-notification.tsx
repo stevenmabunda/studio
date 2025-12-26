@@ -1,3 +1,4 @@
+
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
@@ -29,14 +30,16 @@ export function NewPostsNotification({ show, avatars, onClick }: NewPostsNotific
             className="h-10 rounded-full bg-primary/90 text-primary-foreground shadow-lg backdrop-blur-sm hover:bg-primary"
           >
             <ArrowUp className="h-4 w-4 mr-2" />
-            <div className="flex items-center -space-x-2 mr-2">
-              {uniqueAvatars.map((src, index) => (
-                <Avatar key={index} className="h-6 w-6 border-2 border-primary-foreground">
-                  <AvatarImage src={src} />
-                  <AvatarFallback>U</AvatarFallback>
-                </Avatar>
-              ))}
-            </div>
+            {uniqueAvatars.length > 0 && (
+              <div className="flex items-center -space-x-2 mr-2">
+                {uniqueAvatars.map((src, index) => (
+                  <Avatar key={index} className="h-6 w-6 border-2 border-primary-foreground">
+                    <AvatarImage src={src} />
+                    <AvatarFallback>U</AvatarFallback>
+                  </Avatar>
+                ))}
+              </div>
+            )}
             <span>New Posts</span>
           </Button>
         </motion.div>

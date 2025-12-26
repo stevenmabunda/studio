@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { ReactNode } from 'react';
@@ -6,7 +7,7 @@ import type { PostType } from '@/lib/data';
 import type { Media } from '@/components/create-post';
 import { useAuth } from '@/hooks/use-auth';
 import { db, storage } from '@/lib/firebase/config';
-import { collection, addDoc, serverTimestamp, getDocs, query, type Timestamp, doc, updateDoc, runTransaction, deleteDoc, orderBy, getDoc, setDoc, writeBatch, limit, onSnapshot, where } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDocs, query, type Timestamp, doc, updateDoc, runTransaction, deleteDoc, orderBy, getDoc, setDoc, writeBatch, limit, onSnapshot, where, startAfter } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { formatTimestamp } from '@/lib/utils';
 import type { ReplyMedia } from '@/components/create-comment';
@@ -87,38 +88,15 @@ export function PostProvider({ children }: { children: ReactNode }) {
   const [likedPostIds, setLikedPostIds] = useState<Set<string>>(new Set());
   
   const [hasFetchedInitial, setHasFetchedInitial] = useState(false);
-  const [prefetchedPosts, setPrefetchedPosts] = useState<PostType[]>([]);
 
   const fetchForYouPosts = useCallback(async (options: { limit?: number; lastPostId?: string } = {}) => {
       if (!options.lastPostId) setLoadingForYou(true);
       try {
-          // If we are loading more and have prefetched posts, use them first.
-          if (options.lastPostId && prefetchedPosts.length > 0) {
-              const postsToAppend = [...prefetchedPosts];
-              setForYouPosts(prev => [...prev, ...postsToAppend]);
-              setPrefetchedPosts([]); // Clear prefetched posts after using them
-              
-              // Prefetch the next batch
-              if (postsToAppend.length > 0) {
-                  getRecentPosts({ limit: 20, lastPostId: postsToAppend[postsToAppend.length - 1].id }).then(newPrefetchedPosts => {
-                      setPrefetchedPosts(newPrefetchedPosts);
-                  });
-              }
-              return postsToAppend;
-          }
-
-          // Standard fetch for initial load or when prefetched is empty
           const posts = await getRecentPosts(options);
           if (options.lastPostId) {
               setForYouPosts(prev => [...prev, ...posts]);
           } else {
               setForYouPosts(posts);
-              // Prefetch the next page after the initial load
-              if (posts.length > 0) {
-                   getRecentPosts({ limit: 20, lastPostId: posts[posts.length - 1].id }).then(newPrefetchedPosts => {
-                      setPrefetchedPosts(newPrefetchedPosts);
-                  });
-              }
           }
           return posts;
       } catch (error) {
@@ -127,11 +105,10 @@ export function PostProvider({ children }: { children: ReactNode }) {
       } finally {
           setLoadingForYou(false);
       }
-  }, [prefetchedPosts]);
+  }, []);
 
 
   useEffect(() => {
-    // This effect ensures initial posts are only fetched once per session.
     if (!hasFetchedInitial) {
         fetchForYouPosts({ limit: 20 });
         setHasFetchedInitial(true);
@@ -140,7 +117,13 @@ export function PostProvider({ children }: { children: ReactNode }) {
 
 
   const showNewForYouPosts = () => {
-    setForYouPosts(prev => [...newForYouPosts, ...prev]);
+    setForYouPosts(prev => {
+      // Create a set of existing post IDs for quick lookup
+      const existingIds = new Set(prev.map(p => p.id));
+      // Filter out any new posts that might have already been added (e.g., by scrolling to top)
+      const uniqueNewPosts = newForYouPosts.filter(p => !existingIds.has(p.id));
+      return [...uniqueNewPosts, ...prev];
+    });
     setNewForYouPosts([]);
   };
 
@@ -172,41 +155,45 @@ export function PostProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!db || !user) return;
+    
+    // The timestamp of the latest post currently visible in the feed
+    const latestPostTimestamp = forYouPosts.length > 0 && forYouPosts[0].createdAt
+      ? new Date(forYouPosts[0].createdAt)
+      : new Date(0);
 
-    const postsQuery = query(collection(db, 'posts'), orderBy('createdAt', 'desc'), limit(1));
+    const postsQuery = query(
+        collection(db, 'posts'), 
+        where('createdAt', '>', latestPostTimestamp),
+        orderBy('createdAt', 'desc')
+    );
     
     const unsubscribe = onSnapshot(postsQuery, (snapshot) => {
-        snapshot.docChanges().forEach((change) => {
-            if (change.type === "added") {
-                const postData = change.doc.data();
-                const now = new Date();
-                const postDate = (postData.createdAt as Timestamp)?.toDate() || now;
-                const isRecent = (now.getTime() - postDate.getTime()) < 5 * 60 * 1000;
-                
-                setForYouPosts(currentForYouPosts => {
-                    setNewForYouPosts(currentNewPosts => {
-                        const postExists = currentForYouPosts.some(p => p.id === change.doc.id) || currentNewPosts.some(p => p.id === change.doc.id);
-                        
-                        if (isRecent && !postExists && postData.authorId !== user.uid) {
-                            const newPost: PostType = {
-                                id: change.doc.id,
-                                ...postData,
-                                timestamp: formatTimestamp(postDate),
-                                createdAt: postDate.toISOString()
-                            } as PostType;
-                            
-                            return [newPost, ...currentNewPosts];
-                        }
-                        return currentNewPosts;
-                    });
-                    return currentForYouPosts;
-                });
+        const incomingPosts: PostType[] = [];
+        snapshot.forEach((doc) => {
+            const postData = doc.data();
+            const createdAt = (postData.createdAt as Timestamp)?.toDate();
+            // Ensure post is not by the current user and not already in any list
+            if (postData.authorId !== user.uid && !forYouPosts.some(p => p.id === doc.id) && !newForYouPosts.some(p => p.id === doc.id)) {
+                 incomingPosts.push({
+                    id: doc.id,
+                    ...postData,
+                    timestamp: formatTimestamp(createdAt),
+                    createdAt: createdAt.toISOString()
+                 } as PostType);
             }
         });
+
+        if (incomingPosts.length > 0) {
+            setNewForYouPosts(prev => {
+                const existingNewIds = new Set(prev.map(p => p.id));
+                const trulyNewPosts = incomingPosts.filter(p => !existingNewIds.has(p.id));
+                return [...trulyNewPosts, ...prev];
+            });
+        }
     });
 
     return () => unsubscribe();
-  }, [user]);
+  }, [user, forYouPosts, newForYouPosts]);
 
 
   const addPost = async ({ text, media, poll, location, tribeId, communityId }: { text: string; media: Media[]; poll?: PostType['poll'], location?: string | null, tribeId?: string, communityId?: string }): Promise<PostType | null> => {
@@ -252,7 +239,6 @@ export function PostProvider({ children }: { children: ReactNode }) {
     
     setForYouPosts(prev => [optimisticPost, ...prev]);
 
-    // Don't wait for uploads to finish, UI updates optimistically
     const uploadPromises = media.map(async (m) => {
         if (m.type === 'gif' || m.type === 'sticker') {
             return { url: m.url, type: m.type, width: m.width, height: m.height, hint: 'giphy content' };
@@ -271,14 +257,12 @@ export function PostProvider({ children }: { children: ReactNode }) {
         return baseMediaData;
     });
 
-    // After all uploads complete, update the document
     Promise.all(uploadPromises).then(mediaUploads => {
         updateDoc(docRef, { media: mediaUploads });
         const finalPost = { ...optimisticPost, media: mediaUploads };
         setForYouPosts(prev => prev.map(p => p.id === optimisticPost.id ? finalPost : p));
     }).catch(uploadError => {
         console.error("Error during media upload, post created without media:", uploadError);
-        // Optionally update the post to indicate failed media upload
     });
 
     if (text) {

@@ -144,7 +144,6 @@ export default function HomePage() {
         if (isScrolledPastThreshold) {
             setHasScrolledFromTop(true);
         } else {
-            setShowNotification(false);
             setHasScrolledFromTop(false);
         }
     };
