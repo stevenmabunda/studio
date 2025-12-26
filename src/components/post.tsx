@@ -1042,12 +1042,16 @@ export function Post(props: PostProps) {
                                     ))}
                                 </div>
                             </div>
-                            <Button variant="ghost" size="icon" className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 text-white h-10 w-10 bg-black/30 hover:bg-black/50 hover:text-white rounded-full opacity-50 group-hover/viewer:opacity-100 transition-opacity" onClick={scrollPrev}>
-                                <ChevronLeft className="h-6 w-6"/>
-                            </Button>
-                            <Button variant="ghost" size="icon" className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 text-white h-10 w-10 bg-black/30 hover:bg-black/50 hover:text-white rounded-full opacity-50 group-hover/viewer:opacity-100 transition-opacity" onClick={scrollNext}>
-                                <ChevronRight className="h-6 w-6"/>
-                            </Button>
+                            {imageCount > 1 && (
+                                <>
+                                    <Button variant="ghost" size="icon" className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 text-white h-10 w-10 bg-black/30 hover:bg-black/50 hover:text-white rounded-full opacity-50 group-hover/viewer:opacity-100 transition-opacity" onClick={scrollPrev}>
+                                        <ChevronLeft className="h-6 w-6"/>
+                                    </Button>
+                                    <Button variant="ghost" size="icon" className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 text-white h-10 w-10 bg-black/30 hover:bg-black/50 hover:text-white rounded-full opacity-50 group-hover/viewer:opacity-100 transition-opacity" onClick={scrollNext}>
+                                        <ChevronRight className="h-6 w-6"/>
+                                    </Button>
+                                </>
+                            )}
                         </div>
                     </div>
 
