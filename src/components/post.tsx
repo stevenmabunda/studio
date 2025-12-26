@@ -523,7 +523,7 @@ export function Post(props: PostProps) {
 
 
   useEffect(() => {
-    if (isStandalone && user && user.uid !== authorId) {
+    if (user && user.uid !== authorId) {
         setFollowLoading(true);
         getIsFollowing(user.uid, authorId).then(status => {
             setIsFollowing(status);
@@ -532,7 +532,7 @@ export function Post(props: PostProps) {
     } else {
         setFollowLoading(false);
     }
-  }, [user, authorId, isStandalone]);
+  }, [user, authorId]);
   
   const needsTruncation = !isStandalone && !isExpanded && content.length > 280;
   const displayText = needsTruncation ? `${content.substring(0, 280)}` : content;
