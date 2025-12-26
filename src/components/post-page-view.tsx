@@ -93,8 +93,7 @@ export function PostPageView({ postId }: { postId: string }) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loadingComments, setLoadingComments] = useState(true);
   const [isReplyDialogOpen, setIsReplyDialogOpen] = useState(false);
-  const [showFloatingReply, setShowFloatingReply] = useState(false);
-
+  
   const mainCommentBoxRef = useRef<HTMLDivElement>(null);
   const commentSectionRef = useRef<HTMLDivElement>(null);
   
@@ -163,27 +162,6 @@ export function PostPageView({ postId }: { postId: string }) {
     };
   }, [postId]);
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-        ([entry]) => {
-            // Set true if the comment box is NOT intersecting (i.e., scrolled out of view)
-            setShowFloatingReply(!entry.isIntersecting);
-        },
-        { root: null, threshold: 0 } // threshold 0 means it triggers as soon as 1px is scrolled past
-    );
-
-    const currentRef = mainCommentBoxRef.current;
-    if (currentRef) {
-        observer.observe(currentRef);
-    }
-
-    return () => {
-        if (currentRef) {
-            observer.unobserve(currentRef);
-        }
-    };
-  }, [loadingPost]); // Rerun when post is loaded to attach observer
-
   const handleCreateComment = async (data: { text: string, media: ReplyMedia[] }) => {
     if (!user || !postId) return null;
     try {
@@ -195,26 +173,21 @@ export function PostPageView({ postId }: { postId: string }) {
     }
   }
 
-  const Header = ({ onBack, onReplyClick, showReplyButton }: { onBack: () => void, onReplyClick: () => void, showReplyButton: boolean }) => (
-    <header className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b bg-background/80 p-2 md:p-4 backdrop-blur-sm h-14">
-        <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="h-8 w-8 -ml-2" onClick={onBack}>
-                <ArrowLeft />
-            </Button>
-            <div>
-                <h1 className="text-xl font-bold">Post</h1>
-            </div>
+  const Header = ({ post, onBack }: { post: PostType | null, onBack: () => void }) => (
+    <header className="sticky top-0 z-10 flex items-center gap-4 border-b bg-background/80 p-2 md:p-4 backdrop-blur-sm h-14">
+        <Button variant="ghost" size="icon" className="h-8 w-8 -ml-2" onClick={onBack}>
+            <ArrowLeft />
+        </Button>
+        <div>
+            <h1 className="text-xl font-bold">{post ? 'Post' : 'Loading...'}</h1>
         </div>
-        {!isMobile && showReplyButton && (
-             <Button size="sm" className="rounded-full" onClick={onReplyClick}>Reply</Button>
-        )}
     </header>
   );
 
   if (loadingPost) {
     return (
         <div>
-            <Header onBack={handleBack} onReplyClick={() => {}} showReplyButton={false} />
+            <Header post={null} onBack={handleBack} />
             <PostSkeleton />
         </div>
     );
@@ -223,7 +196,7 @@ export function PostPageView({ postId }: { postId: string }) {
   if (!post) {
       return (
           <div>
-              <Header onBack={handleBack} onReplyClick={() => {}} showReplyButton={false} />
+              <Header post={null} onBack={handleBack} />
               <div className="p-8 text-center text-muted-foreground">
                 <h2 className="text-xl font-bold">Post not found</h2>
                 <p>This post may have been deleted.</p>
@@ -234,7 +207,7 @@ export function PostPageView({ postId }: { postId: string }) {
 
   return (
     <div className="h-screen flex flex-col">
-      <Header onBack={handleBack} onReplyClick={() => setIsReplyDialogOpen(true)} showReplyButton={showFloatingReply} />
+      <Header post={post} onBack={handleBack} />
       <div className="flex-1 overflow-y-auto">
         <Post {...post} isStandalone={true} />
         
