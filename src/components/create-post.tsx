@@ -373,33 +373,6 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
                <Button variant="ghost" size="icon" onClick={() => videoInputRef.current?.click()} disabled={!!hasContent || posting}>
                 <Film className="h-5 w-5 text-primary" />
               </Button>
-               <Popover open={isGifPopoverOpen} onOpenChange={setIsGifPopoverOpen}>
-                <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon" disabled={!!hasContent || posting}>
-                    <Clapperboard className="h-5 w-5 text-primary" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[550px] h-auto p-0">
-                  <SearchContextManager apiKey={process.env.NEXT_PUBLIC_GIPHY_API_KEY!}>
-                    <GiphyPicker onGifClick={onGifClick} />
-                  </SearchContextManager>
-                </PopoverContent>
-              </Popover>
-               <Popover open={isStickerPopoverOpen} onOpenChange={setIsStickerPopoverOpen}>
-                <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon" disabled={!!hasContent || posting}>
-                    <StickyNote className="h-5 w-5 text-primary" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[550px] h-auto p-0">
-                    <SearchContextManager apiKey={process.env.NEXT_PUBLIC_GIPHY_API_KEY!} options={{type: 'stickers'}}>
-                        <StickerPicker onStickerClick={onStickerClick} />
-                    </SearchContextManager>
-                </PopoverContent>
-              </Popover>
-              <Button variant="ghost" size="icon" onClick={togglePoll} disabled={!!hasContent || posting}>
-                <ListOrdered className="h-5 w-5 text-primary" />
-              </Button>
               <Popover>
                 <PopoverTrigger asChild>
                     <Button variant="ghost" size="icon" disabled={posting}>
@@ -421,9 +394,6 @@ export function CreatePost({ onPost, tribeId, communityId }: { onPost: (data: { 
                     </div>
                 </PopoverContent>
               </Popover>
-              <Button variant="ghost" size="icon" onClick={handleLocationClick} disabled={posting}>
-                <MapPin className={cn("h-5 w-5 text-primary", location && "fill-current text-primary")} />
-              </Button>
             </div>
             <Button size="sm" className="rounded-full" disabled={!isPostable || posting} onClick={handlePost}>
                 {posting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

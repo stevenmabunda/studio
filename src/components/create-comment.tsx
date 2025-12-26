@@ -229,36 +229,6 @@ export function CreateComment({ onComment, isDialog = false }: { onComment: (dat
                 <Button variant="ghost" size="icon" onClick={handleActionClick(() => videoInputRef.current?.click())} disabled={posting || hasMedia}>
                     <Film className="h-5 w-5 text-primary" />
                 </Button>
-                 <Popover open={isGifPopoverOpen} onOpenChange={setIsGifPopoverOpen}>
-                    <PopoverTrigger asChild>
-                      <Button variant="ghost" size="icon" disabled={hasMedia || posting}>
-                        <Clapperboard className="h-5 w-5 text-primary" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[300px] h-auto p-0">
-                      <SearchContextManager apiKey={process.env.NEXT_PUBLIC_GIPHY_API_KEY!}>
-                        <div className="flex flex-col">
-                            <SearchBar />
-                            <GiphyPickerContents onGifClick={onGifClick} />
-                        </div>
-                      </SearchContextManager>
-                    </PopoverContent>
-                  </Popover>
-                   <Popover open={isStickerPopoverOpen} onOpenChange={setIsStickerPopoverOpen}>
-                    <PopoverTrigger asChild>
-                      <Button variant="ghost" size="icon" disabled={hasMedia || posting}>
-                        <StickyNote className="h-5 w-5 text-primary" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[300px] h-auto p-0">
-                        <SearchContextManager apiKey={process.env.NEXT_PUBLIC_GIPHY_API_KEY!} options={{type: 'stickers'}}>
-                           <div className="flex flex-col">
-                              <SearchBar />
-                              <StickerPickerContents onStickerClick={onStickerClick} />
-                           </div>
-                        </SearchContextManager>
-                    </PopoverContent>
-                  </Popover>
                  <Popover>
                     <PopoverTrigger asChild>
                         <Button variant="ghost" size="icon" onClick={handleActionClick(() => {})} disabled={posting}>
