@@ -5,6 +5,7 @@ import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { VariantProps, cva } from "class-variance-authority"
 import { PanelLeft } from "lucide-react"
+import { motion, PanInfo } from "framer-motion";
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
@@ -177,6 +178,12 @@ const Sidebar = React.forwardRef<
     ref
   ) => {
     const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
+    
+    const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+      if (info.offset.x < -50 && info.velocity.x < -200) {
+        setOpenMobile(false);
+      }
+    };
 
     if (collapsible === "none") {
       return (
@@ -196,22 +203,26 @@ const Sidebar = React.forwardRef<
     if (isMobile) {
       return (
         <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
-          <SheetContent
-            data-sidebar="sidebar"
-            data-mobile="true"
-            className="w-[--sidebar-width] bg-sidebar p-0 text-sidebar-foreground"
-            style={
-              {
-                "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
-              } as React.CSSProperties
-            }
-            side={side}
-          >
-            <SheetHeader className="sr-only">
-              <SheetTitle>Main Navigation</SheetTitle>
-            </SheetHeader>
-            <div className="flex h-full w-full flex-col">{children}</div>
-          </SheetContent>
+            <SheetContent
+                data-sidebar="sidebar"
+                data-mobile="true"
+                className="w-[--sidebar-width] bg-sidebar p-0 text-sidebar-foreground"
+                style={{ "--sidebar-width": SIDEBAR_WIDTH_MOBILE } as React.CSSProperties}
+                side={side}
+                asChild
+            >
+                <motion.div
+                    drag="x"
+                    dragConstraints={{ left: 0, right: 0 }}
+                    onDragEnd={handleDragEnd}
+                    dragElastic={{ left: 0.8, right: 0 }}
+                >
+                    <SheetHeader className="sr-only">
+                        <SheetTitle>Main Navigation</SheetTitle>
+                    </SheetHeader>
+                    <div className="flex h-full w-full flex-col">{children}</div>
+                </motion.div>
+            </SheetContent>
         </Sheet>
       )
     }
