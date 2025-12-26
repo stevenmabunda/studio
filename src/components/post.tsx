@@ -998,47 +998,31 @@ export function Post(props: PostProps) {
                     
                     <div className="flex-1 flex flex-col min-h-0 md:h-full relative">
                         {/* Mobile Header for Image Viewer */}
-                         <div className="md:hidden absolute top-0 left-0 right-0 z-20 p-2 pt-4 space-y-2 bg-gradient-to-b from-black/60 to-transparent">
-                             <div className="flex items-center justify-between">
-                                <DialogClose asChild>
-                                    <Button variant="ghost" size="icon" className="h-9 w-9 text-white rounded-full bg-black/80 hover:bg-black/70">
-                                        <X />
-                                    </Button>
-                                </DialogClose>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="h-9 w-9 text-white rounded-full bg-black/30 hover:bg-black/50 -mr-1">
-                                            <MoreHorizontal />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent>
-                                        <DropdownMenuItem onSelect={handleCopyLink}>
-                                            <Copy className="mr-2 h-4 w-4" />
-                                            Copy link
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            </div>
-                             <div className="flex items-center justify-between pt-1">
-                                <div className="flex items-center gap-3">
-                                    <Avatar className="h-9 w-9">
-                                        <AvatarImage src={authorAvatar} alt={authorName} />
-                                        <AvatarFallback>{authorName.charAt(0)}</AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                        <p className="font-bold text-white text-sm">{authorName}</p>
-                                        <p className="text-xs text-neutral-300">@{authorHandle}</p>
-                                    </div>
+                         <div className="md:hidden absolute top-0 left-0 right-0 z-20 p-2 pt-4 flex items-center justify-between bg-gradient-to-b from-black/60 to-transparent">
+                             <DialogClose asChild>
+                                <Button variant="ghost" size="icon" className="h-9 w-9 text-white rounded-full bg-black/50 hover:bg-black/70">
+                                    <ChevronLeft />
+                                </Button>
+                            </DialogClose>
+                            <div className="flex items-center gap-3 text-white">
+                                <Avatar className="h-9 w-9">
+                                    <AvatarImage src={authorAvatar} alt={authorName} />
+                                    <AvatarFallback>{authorName.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                    <p className="font-bold text-sm">{authorName}</p>
+                                    <p className="text-xs text-neutral-300">@{authorHandle}</p>
                                 </div>
-                                {!isAuthor && user && (
-                                    <FollowButton
-                                        profileId={authorId}
-                                        isFollowing={isFollowing}
-                                        isLoading={followLoading}
-                                        onToggleFollow={setIsFollowing}
-                                    />
-                                )}
                             </div>
+                            
+                            {!isAuthor && user ? (
+                                <FollowButton
+                                    profileId={authorId}
+                                    isFollowing={isFollowing}
+                                    isLoading={followLoading}
+                                    onToggleFollow={setIsFollowing}
+                                />
+                            ) : <div className="w-24"/> /* Placeholder for alignment */}
                         </div>
 
 
